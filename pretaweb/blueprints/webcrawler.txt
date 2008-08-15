@@ -1,0 +1,44 @@
+
+WebCrawler
+==========
+
+>>> from os.path import dirname
+>>> from os.path import abspath
+>>> config = """
+... [transmogrifier]
+... pipeline =
+...     htmlcrawler
+...     printer
+...     
+... [htmlcrawler]
+... blueprint = pretaweb.blueprints.webcrawler
+... site_url  = file://%s/test_staticsite
+...
+... [printer]
+... blueprint = collective.transmogrifier.sections.tests.pprinter
+...
+... """ % abspath(dirname(__file__))
+
+>>> from collective.transmogrifier.tests import registerConfig
+>>> registerConfig(u'pretaweb.blueprints.webcrawler.test', config)
+
+>>> from collective.transmogrifier.transmogrifier import Transmogrifier
+>>> transmogrifier = Transmogrifier(plone)
+>>> transmogrifier(u'pretaweb.blueprints.webcrawler.test')
+{'text': None, '_type': 'Document', '_path': '/file.doc'}
+{'_path': '/file1.htm',
+ '_type': 'Document',
+ 'text': '<a href="file3.html" class="">file3.html</a>\n<a href="file2.htm" class="">file2.htm</a>\n\n\n'}
+{'_path': '/file2.htm',
+ '_type': 'Document',
+ 'text': '<a href="file2.htm" class="">file2.htm</a>\n<a href="file1.htm" class="">file1.htm</a>\n<a href="subfolder/subfile1.htm" class="">subfolder/subfile1.htm</a>\n'}
+{'text': '', '_type': 'Document', '_path': '/file3.html'}
+{'text': '', '_type': 'Document', '_path': '/file4.HTML'}
+{'_path': '/subfolder',
+ '_type': 'Folder',
+ 'text': '<BASE HREF="file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite/subfolder/">\n<A HREF="subfile1.htm">subfile1.htm</A>\n'}
+{'_path': '/subfolder/subfile1.htm',
+ '_type': 'Document',
+ 'text': '<a href="../file4.HTML" class="">../file4.HTML</a>\n<a href="../file.doc" class="">DOC FILE</a>\n'}
+
+

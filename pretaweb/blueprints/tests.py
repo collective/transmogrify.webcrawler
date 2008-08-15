@@ -1,54 +1,38 @@
+
 import unittest
 
-from zope.testing import doctestunit
-from zope.component import testing
-from Testing import ZopeTestCase as ztc
-
+from zope.testing import doctest
+from zope.component import provideUtility
 from Products.Five import zcml
-from Products.Five import fiveconfigure
-from Products.PloneTestCase import PloneTestCase as ptc
-from Products.PloneTestCase.layer import PloneSite
-ptc.setupPloneSite()
 
-import pretaweb.blueprints
+from collective.transmogrifier.tests import setUp as baseSetUp
+from collective.transmogrifier.tests import tearDown
+from collective.transmogrifier.sections.tests import PrettyPrinter
 
-class TestCase(ptc.PloneTestCase):
-    class layer(PloneSite):
-        @classmethod
-        def setUp(cls):
-            fiveconfigure.debug_mode = True
-            zcml.load_config('configure.zcml',
-                             pretaweb.blueprints)
-            fiveconfigure.debug_mode = False
+from pretaweb.blueprints.webcrawler import WebCrawler
 
-        @classmethod
-        def tearDown(cls):
-            pass
+
+def setUp(test):
+    baseSetUp(test)
+        
+    from collective.transmogrifier.transmogrifier import Transmogrifier
+    test.globs['transmogrifier'] = Transmogrifier(test.globs['plone'])
+    
+    import zope.component
+    import collective.transmogrifier.sections
+    zcml.load_config('meta.zcml', zope.app.component)
+    zcml.load_config('configure.zcml', collective.transmogrifier.sections)
+    
+    provideUtility(PrettyPrinter,
+        name=u'collective.transmogrifier.sections.tests.pprinter')
+    provideUtility(WebCrawler,
+        name=u'pretaweb.blueprints.webcrawler')
 
 
 def test_suite():
-    return unittest.TestSuite([
-
-        # Unit tests
-        #doctestunit.DocFileSuite(
-        #    'README.txt', package='pretaweb.blueprints',
-        #    setUp=testing.setUp, tearDown=testing.tearDown),
-
-        #doctestunit.DocTestSuite(
-        #    module='pretaweb.blueprints.mymodule',
-        #    setUp=testing.setUp, tearDown=testing.tearDown),
+    return unittest.TestSuite((
+        doctest.DocFileSuite('webcrawler.txt', setUp=setUp, tearDown=tearDown),
+    ))
 
 
-        # Integration tests that use PloneTestCase
-        #ztc.ZopeDocFileSuite(
-        #    'README.txt', package='pretaweb.blueprints',
-        #    test_class=TestCase),
 
-        #ztc.FunctionalDocFileSuite(
-        #    'browser.txt', package='pretaweb.blueprints',
-        #    test_class=TestCase),
-
-        ])
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='test_suite')

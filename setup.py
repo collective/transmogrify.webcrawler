@@ -10,11 +10,10 @@ setup(name='pretaweb.blueprints',
                        open(os.path.join("docs", "HISTORY.txt")).read(),
       # Get more strings from http://www.python.org/pypi?%3Aaction=list_classifiers
       classifiers=[
-        "Framework :: Plone",
         "Programming Language :: Python",
         "Topic :: Software Development :: Libraries :: Python Modules",
         ],
-      keywords='plone bluprints transmogrifier',
+      keywords='transmogrifier blueprint source plone import conversion microsoft office',
       author='Rok Garbas',
       author_email='rok.garbas@gmail.com',
       url='git://git.plone.si/~rok/pretaweb.blueprints.git',
@@ -26,7 +25,11 @@ setup(name='pretaweb.blueprints',
       install_requires=[
           'setuptools',
           # -*- Extra requirements: -*-
-      ],
+          'collective.transmogrifier',
+          'plone.app.transmogrifier',
+          'zope.testing',
+          'zope.component',
+          ],
       entry_points="""
       # -*- Entry points: -*-
       """,

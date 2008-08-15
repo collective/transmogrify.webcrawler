@@ -1,7 +1,14 @@
 <configure
     xmlns="http://namespaces.zope.org/zope"
-    xmlns:five="http://namespaces.zope.org/five"
     i18n_domain="pretaweb.blueprints">
 
+	  <include package="collective.transmogrifier" file="meta.zcml"/>
+	  <include package="collective.transmogrifier"/>
+	  <include package="plone.app.transmogrifier"/>
+	    
+    <utility component=".webcrawler.WebCrawler"
+             name="pretaweb.blueprints.webcrawler" />
+
+    <include package=".example"/>
 
 </configure>
