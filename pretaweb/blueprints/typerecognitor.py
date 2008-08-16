@@ -88,7 +88,7 @@ class TypeRecognitor(object):
             return dict(_type      = self.types_map[ctype][0], 
                         _transform = self.types_map[ctype][1], 
                         _mimetype  = ctype)
-        return dict(_type      = 'Folder', 
+        return dict(_type      = 'File', 
                     _transform = None, 
                     _mimetype  = ctype)
 
