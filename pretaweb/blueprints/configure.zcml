@@ -8,6 +8,8 @@
 	    
     <utility component=".webcrawler.WebCrawler"
              name="pretaweb.blueprints.webcrawler" />
+    <utility component=".typerecognitor.TypeRecognitor"
+             name="pretaweb.blueprints.typerecognitor" />
 
     <include package=".example"/>
 
