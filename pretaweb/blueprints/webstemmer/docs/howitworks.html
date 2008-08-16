@@ -1,0 +1,316 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+<title>Webstemmer - How it works?</title>
+<style type="text/css"><!--
+.patcomment { font-style: italic; }
+--></style>
+</head><body>
+
+<h2>Webstemmer - How it works?</h2>
+<p>
+<a href="index.html">back</a>
+<a href="howitworks-j.html">[Japanese]</a>
+
+<ul>
+<li> <a href="#overview">Introduction</a>
+<li> <a href="#analyze">Analyzing layouts - <code>analyze.py</code></a>
+<li> <a href="#extract">Extracting texts - <code>extract.py</code></a>
+<li> <a href="#pattern">Anatomy of pattern files</a>
+<li> <a href="#conclusion">Conclusion</a>
+</ul>
+
+<a name="overview">
+<hr noshade>
+<h3>Introduction</h3>
+<p>
+Webstemmer uses the following assumptions for analyzing web pages:
+<ul>
+<li> Most pages share (at most a handful of) common layout structures.
+<li> The location of the main text is consistent with each page layout.
+<li> Even if the main text changes, its layout structure doesn't change.
+<li> HTML tags used in banners and navigation texts don't change within the same page layout.
+</ul>
+<p>
+Webstemmer tries to identify a page layout by finding invariant
+features that are preserved across different pages.  Then it tries
+to remove unchanged parts (which are mostly banners and navigation
+links) within the same page layout.
+
+<h4>1. Cluster pages based on their layout structure.</h4>
+<p>
+<img src="nyt-layouts.png">
+<h4>2. Align pages which have the same layout.</h4>
+<p>
+<img src="nyt-group.png">
+<h4>3. Remove the common parts.</h4>
+<p>
+<img src="nyt-removecommon.png">
+
+<p>
+There are two techniques that are extensively used in this algorithm.
+One is called 
+<a href="http://en.wikipedia.org/wiki/Levenshtein_distance">edit distance 
+(levenshtein distance)</a>. This is used to calculate the similarity
+between two distinct strings. The other technique is clustering, which is to
+group similar objects based on their distance defined by an arbitrary
+metric. There have been developed mainly in 1960s.
+
+<hr noshade>
+<a name="analyze">
+<h3>Analyzing Layouts - analyze.py</h3>
+<p>
+Layout analysis is to extract a "pattern" of HTML pages by
+clustering pages which have similar structures (layouts) to each
+other.  To perform clustering, one has to compare multiple HTML
+pages and compute its similarity by comparing the features of each
+page. Group the pages which is similar to each other and extract
+common features as the pattern of the group (cluster).  Here is the basic
+algorithm to do this in <code>analyze.py</code> program.
+
+<h4>Step 1. Parsing the page</h4>
+<p>
+First <code>analyze.py</code> decomposes each HTML page into a
+sequence of "layout blocks" (Fig. 1). Though HTML elements normally forms a
+tree structure, we only take HTML block elements such as
+<code>&lt;p&gt;</code>, <code>&lt;div&gt;</code>, and
+<code>&lt;h1&gt;</code> and <code>&lt;title&gt;</code> element.
+We interpret an HTML page as a sequence of layout blocks. Layout
+blocks are used as features to compute the similarity of different
+pages. Here is an example of a HTML page and its layout blocks:
+<p><img src="layout.png"><br>
+<small>Fig. 1. Extracting a sequence of layout blocks from HTML.</small>
+
+<h4>Step 2. Computing similarity</h4>
+<p>
+The similarity between two pages is determined by the edit distance of the layout block sequences.
+This is similar to comparing two strings (i.e. diff).
+First obtain the maximum common sequence (MCS) of layout blocks and compute
+the ratio of common layout blocks (Fig. 2) between two sequences
+<i>A</i> and <i>B</i>, as in:
+<center>
+Sim(<i>A</i>, <i>B</i>) = [ &Sigma;<sub><i>e</i> in MCS(<i>A</i>,<i>B</i>)</sub> Weight(<i>e</i>) ] / [ &Sigma;<sub><i>e</i> in <i>A</i></sub> Weight(<i>e</i>) + &Sigma;<sub><i>e</i> in <i>B</i></sub> Weight(<i>e</i>) ]
+</center>
+This way, we can tolerate a redundant element which is accidentaly inserted in the middle of the sequences. We used the number of alphabets contained each layout block <i>e</i> as its weight.
+<p><img src="compare.png"><br>
+<small>Fig. 2. Comparing layout block sequences.</small>
+<p>
+
+<h4>Step 3. Clustering and generating a layout pattern</h4>
+<p>
+To perform clustering, one need to compute the similarity scores
+for all possible combinations of <em>N</em> pages, namely
+<em>N</em> x <em>N</em> pairs.  The algorithm used in the
+<code>analyze.py</code> program tries to reduce the number of
+combinations, so the actual number of similarities might be less
+than <em>N</em> x <em>N</em>.  A pages whose similarity exceeds a
+certain threshold is grouped into the same cluster. The clustering
+is performed in a hierarchical manner. This threshold is given by
+'<code>-t</code>' option in the <code>analayze.py</code> program.
+After obtaining clusters, extract the common layout blocks
+contained in all the pages in a group (cluster) (Fig. 3).  These layout
+blocks form a "layout pattern" which is the output of this
+program.
+<p><img src="extract.png"><br>
+<small>Fig. 3. Generating a layout pattern.</small>
+
+<h4>Step 4. Removing banners and navigation links</h4>
+<P>
+The next step is to find banners and/or navigation links from each
+layout pattern.  Each layout block is given a value called
+"DiffScore", which indicates how much the texts in a block varies
+to each other:
+<center>
+DiffScore(<i>E</i>) = [ &Sigma;<sub><i>s1,s2</i> in <i>E</i></sub>
+Weight(<i>s1</i>) + Weight(<i>s2</i>) - 2 &times; |MCS(<i>s1</i>, <i>s2</i>)|
+] / [ &Sigma;<sub><i>s1,s2</i> in <i>E</i></sub>
+Weight(<i>s1</i>) + Weight(<i>s2</i>)
+]
+</center>
+where <i>s<sub>i</sub></i> is a string contained in a particular
+layout block type <i>E</i> from all the pages that have the same layout.
+A layout block whose DiffScore is less than a
+certain threshold is considered as static, and is therefore
+removed in the later stage (Fig. 4), because most ads or banners do not
+change within the same layout.  The threshold of the DiffScore is
+given by '<code>-T</code>' option in <code>extract.py</code>
+program.
+<p>
+<img src="removecommon.png"><br>
+<small>Fig. 4. Finding the common texts between different pages.</small>
+
+<h4>Step 5. Discovering the title and main text</h4>
+<P>
+After filtering out static texts, we try to discover a layout
+block which is the page title. The title block is determined by
+comparing the text contained in that block and one of anchor texts
+(a string surrounded by a link tag <code>&lt;a&gt;
+... &lt;/a&gt;</code>) which refer to that page. In most of the
+news sites, it is known that the anchor text of a link to an
+article represents the title of that article. So compute the
+similarity between texts from each layout block and the anchor
+texts, and choose the block which has the hightest similarity
+(Arrow 1. in Fig. 5). This is also based on the edit distance of
+strings.  The title block is determined in the clustering process
+(i.e. <code>analyze.py</code>), whereas the range of main texts
+can be adjusted dynamically in the text extraction.
+<p>
+There is an alternative way to find a title block.  When there is
+no anchor text available for that page, we consider the layout
+block that is most similar to one of the main text and appears
+before that text block, as a title (Arrow 2. in Fig. 5).  This was
+the only way of finding a title in the previous versions of
+Webstemmer. But this is a "fallback" method now, because the
+accuracy of title detection is not as good as the first
+method. The threshold of the similarity between title and main
+text is given by '<code>-T</code>' option in
+<code>analyze.py</code>.
+<p>
+<img src="titlebody1.png"><br>
+<small>Fig. 5. Discovering the title and main text from the page.</small>
+<p>
+In order to find the main text of each page, we compute the
+"MainScore" for each layout block, which shows how much significant
+text is included within that block:
+<center>
+MainScore(<i>E</i>) = DiffScore(<i>E</i>) &times; [ &Sigma;<sub><i>s</i> in <i>E</i></sub> Weight(s) ] / |E|
+</center>
+A layout block that is not a
+title and whose MainScore exceeds a certain threshold, is
+considered as a main text block. Since main texts are often split
+into several layout blocks, we take every layout block whose
+MainScore exceeds the threshold. This threshold is given by
+'<code>-M</code>' option in <code>extract.py</code> program.
+<p>
+The sequence of layout blocks in each cluster is stored in a
+layout pattern file. Each layout block in a cluster has a
+DiffScore and MainScore. Then, each cluster can have the score of
+significence, indicating how much that cluster is important. This
+is based on the number of significant characters (excluding anchor
+texts) in the main text and the number of pages in the cluster:
+<center>
+LayoutPatternScore(<i>P</i>) = log(|<i>P</i>|) &times; &Sigma;<sub><i>E</i> in <i>P</i></sub> MainScore(<i>E</i>) 
+</center>
+<p>
+The detail of the patter file format is described in <a
+href="#pattern">Anatomy of Pattern Files</a>.
+
+<a name="extract">
+<hr noshade>
+<h3>Extracting Texts - extract.py</h3>
+<p>
+The <code>extract.py</code> program takes a layout pattern file
+generated by <code>analyze.py</code> and extract the main text and
+its title from HTML pages. First it decomposes each HTML page into
+layout blocks in the same way as the analyzer. Then it tries to
+find the most similar sequence of layout blocks from the pattern
+file (Fig. 6).  If the similarity exceeds a certain threshold (given by
+'<code>-t</code>' option), it is considered that the page has
+the same layout pattern as the one in the pattern file.
+
+<p>
+<img src="findpat.png"><br>
+<small>Fig 6. Searching a layout pattern which matches the given page.</small>
+
+<P>
+You can add an extra restriction by using "strict mode"
+(<code>-S</code> option) which prevents incomplete matching. In
+the strict mode, the program rejects a layout pattern if any of
+its layout block is missing in the page, no matter how many layout
+blocks are overlapping.  This allows you to identify page layout
+improved accuracy.  However, in some newspapers (such as several
+U.S. newspapers, which use slightly different layouts on each
+day,) you might get lower recall, which means the number of
+matching pages might be decreased.
+<p>
+After determining the page layout pattern, the program extracts
+texts from the layout blocks selected by the user-specified
+thresholds, and output them as either <code>TITLE:</code>,
+<code>MAIN:</code> or <code>SUB:</code> according to its
+DiffScore and MainScore value.
+
+<hr noshade>
+<a name="pattern">
+<h3>Anatomy of Pattern Files</h3>
+<p>
+<code>analyze.py</code> outputs patterns as a text file.  It has
+one layout pattern per line. Each pattern contains several values
+formatted by Python's <code>repr()</code> function.  An empty line
+and a line which begins with a '<code>#</code>' is regarded as a
+comment. Each pattern follows a couple of comment lines which shows
+the score of the pattern (indicating how likely the page is an article)
+and original page IDs that belong to that pattern when learning.
+<p>
+The following sample pattern was obtained from cnn.com.
+(For reader's convenience, a pattern is split into multiple lines,
+which is not allowed in an actual pattern file.)
+<small><blockquote style="line-height:100%"><pre>
+### version=0.6.0                <span class="patcomment">(Webstemmer Version)</span>
+### fname='cnn.200511210103.zip' <span class="patcomment">(Source file used for learning)</span>
+### cluster_threshold=0.970000   <span class="patcomment">(Clustering threshold of page similarity)</span>
+### title_threshold=0.600000     <span class="patcomment">(Threshold for detecting a title)</span>
+### pages=74                     <span class="patcomment">(Total number of pages used for learning)</span>
+
+# 3759.96885103 &lt;200511210103/www.cnn.com/2005/EDUCATION/11/18/principal.shaming.ap/index.html&gt; <span class="patcomment">(pattern 1)</span>
+#       <span class="patcomment">(Pages which belong to this cluster)</span>
+#       200511210103/www.cnn.com/2005/EDUCATION/11/18/principal.shaming.ap/index.html
+#       200511210103/www.cnn.com/2005/WORLD/meast/11/20/iran.nuclear.ap/index.html
+#       200511210103/www.cnn.com/2005/EDUCATION/11/18/student.progress.ap/index.html
+#       200511210103/www.cnn.com/2005/TRAVEL/DESTINATIONS/11/18/homer.exhibit.ap/index.html
+#       200511210103/www.cnn.com/2005/US/11/20/lost.in.morgue.ap/index.html
+(3759.9688510285455,                                            <span class="patcomment">(Overall score of the cluster)</span>
+ '200511210103/www.cnn.com/2005/EDUCATION/11/18/principal.shaming.ap/index.html', <span class="patcomment">(Cluster ID)</span>
+ 9,                                                             <span class="patcomment">(Index of the title layout block in the sequence)</span>
+ [                                                              <span class="patcomment">(List of layout blocks)</span>
+  <span class="patcomment"># (diffscore, mainscore, block feature)</span>
+  (0.54130434782608694, 24.899999999999999, 'title'), 
+  (0.0, 0.0, 'table:align=right/tr:valign=middle/td:class=cnnceilb'),
+  (0.0, 0.0, 'table:id=cnnceil/tr/td:class=cnnceilw'),
+  (0.052631578947368418, 0.0, 'ul:id=nav/li/div'),
+  (0.0, 0.0, 'ul:id=nav/li:class=money/div'),
+  (0.0,0.0, 'ul:id=nav/li:class=sports/div'),
+  (0.047314578005115092, 0.0, 'ul:id=nav/li/div'),
+  (0.0, 0.0, 'ul:id=nav/li:class=autos/div'),
+  (0.0, 0.0, 'td:id=cnnnavbar:rowspan=2/div:class=cnnnavbot/div'),
+  (0.76451612903225807, 23.699999999999999, 'tr:valign=top/td:id=cnnarticlecontent/h1'),
+  (0.085365853658536592, 1.3999999999999999, 'div:class=cnninteractiveelementscontainer/div:class=cnnieheader/h3'),
+  (0.73124999999999996, 23.399999999999999, 'div:class=cnniebox/div:class=cnnieboxcontent/div:class=cnnemailalertoptionrow'),
+  (0.0, 0.0, 'div:class=cnniebox/div:class=cnnieboxcontent/div:class=cnnalertsbuttonrow'),
+  (0.0, 0.0, 'div:class=cnninteractiveelementscontainer/div:class=cnniebox/div:class=cnnieboxcontent cnnalertsfooterrow'),
+  (0.99176016830294533, 2262.8000000000002, 'tr:valign=top/td:id=cnnarticlecontent/p'),
+  (0.0, 0.0, 'td:id=cnnarticlecontent/div:class=cnnstorycontrib/p'),
+  (0.0, 0.0, 'tr:valign=top/td/div:class=cnnstorytools'),
+  (0.0, 0.0, 'table:id=cnnstorytoolstimebox/tr/td'),
+  (0.37226277372262773, 0.0, 'tr:valign=top/td/div:class=cnnbinnav'),
+  (0.7265625, 0.0, 'table:class=cnnstoryrelatedstopstory/tr/td'),
+  (0.66804979253112029, 0.0, 'td/div:class=cnnstorybinsublk/div'),
+  (0.0, 0.0, 'tr:valign=top/td/div:class=cnnbinnav'),
+  (0.0, 0.0, 'table:class=cnnstoryrelatedstopstory/tr/td'),
+  (0.0, 0.0, 'td/div:class=cnnstorybinsublk/div'),
+  (0.0, 0.0, 'tr/td/div:class=cnn4pxlpad'),
+  (0.0, 0.0, 'table/tr/td'),
+  (0.0, 0.0, 'table/tr/td:align=right:class=cnn7pxrpad'),
+  (0.0, 0.0, 'table:id=cnnfoot/tr:valign=top/td'),
+  (0.0, 0.0, 'table/tr/td:valign=top'),
+  (0.0, 0.0, 'table/tr:class=cnnnopad/td')
+  ]
+)
+</pre></blockquote></small>
+
+
+<hr noshade>
+<a name="conclusion">
+<h3>Conclusion</h3>
+<P>
+Well, in most web pages texts might be extracted in a much easier way,
+like picking up lines with a certain number of words or
+punctuations... So the attempt explained within this page is
+basically nonsense. However, it just looks cool.
+
+
+<hr noshade>
+<p>
+<!-- hhmts start -->
+Last Modified: Thu Sep  6 12:58:13 JST 2007
+<!-- hhmts end -->
+<address>Yusuke Shinyama</address>
+</body></html>

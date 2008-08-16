@@ -27,8 +27,6 @@ setup(name='pretaweb.blueprints',
           # -*- Extra requirements: -*-
           'collective.transmogrifier',
           'plone.app.transmogrifier',
-          'zope.testing',
-          'zope.component',
           ],
       entry_points="""
       # -*- Entry points: -*-

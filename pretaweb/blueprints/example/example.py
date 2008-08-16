@@ -17,7 +17,7 @@ class ExampleImport(BrowserView):
 
     def test(self):
         # run transmogrifier
-        transmogrifier = Transmogrifier(getUtility(ISiteRoot))
+        transmogrifier = Transmogrifier(self.context)
         transmogrifier(u'exampleimport')
         return 'ok'
 

@@ -1,0 +1,759 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Webstemmer</title>
+<style type="text/css"><!--
+blockquote { background: #eeeeee; }
+--></style>
+</head><body>
+
+<h2>Webstemmer</h2>
+<p>
+<a href="../index.html">back</a>
+<a href="index-j.html">[Japanese]</a>
+
+<ul>
+<li> <a href="#usage">How to Use</a>
+<li> <a href="#crawler">Web Crawler</a>
+<li> <a href="#analyze">Layout Analyzer</a>
+<li> <a href="#extract">Text Extractor</a>
+<li> <a href="#urldb">URLDB Utility</a>
+<li> <a href="#html2txt">HTML2TXT Utility</a>
+<li> <a href="#bugs">Bugs</a>
+<li> <a href="#license">Terms and Conditions</a>
+</ul>
+
+<a name="download">
+<p><strong>Download:</strong>
+<a href="http://www.unixuser.org/~euske/python/webstemmer/webstemmer-0.6.1.tar.gz"><code><strong>webstemmer-0.6.1.tar.gz</strong></code></a> (Python 2.4 or newer is required)
+
+<a name="intro">
+<hr noshade>
+<h3>What's it?</h3>
+<p>
+Webstemmer is a web crawler and HTML layout analyzer that
+automatically extracts main text of a news site without having
+banners, ads and/or navigation links mixed up
+(Here is a <a href="#sample">sample output</a>).
+<p>
+Generally, extracting text contents from web sites (especially
+news sites) ends up with lots of unnecessary stuff: ads and
+banners.  You could craft some regular expression patterns
+to pick up only desired parts, but to construct such a pattern is
+often a tricky and time consuming task. Furthermore, some
+patterns need to be aware of the surrounding contexts. 
+Some news sites even have several different layouts.
+<p>
+Webstemmer analyzes the layout of each page in a certain web site
+and figures out where the main text is located. Analysis can be
+done in a fully automatic manner with little human intervention.
+You only need to give a URL of the top page.  For more details,
+see <a href="howitworks.html">How It Works?</a> page.
+
+<p>
+The algorithm works for most of well-known news sites.
+The following table shows the average number of successfully
+extracted pages among all the obtained pages from each site a day.
+We got about 90% of the pages correctly for most of the sites:
+<table>
+<tr><th>News Site</th><th>Avg. Extracted/Obtained</th></tr>
+<tr><td><a href="http://www.nytimes.com/">New York Times</a></td><td align=right>488.8/552.2 (88%)</td></tr>
+<tr><td><a href="http://www.newsday.com/">Newsday</a></td><td align=right>373.7/454.7 (82%)</td></tr>
+<tr><td><a href="http://www.washingtonpost.com/">Washington Post</a></td><td align=right>342.6/367.3 (93%)</td></tr>
+<tr><td><a href="http://www.boston.com/news/">Boston Globe</a></td><td align=right>332.9/354.9 (93%)</td></tr>
+<tr><td><a href="http://abcnews.go.com/">ABC News</a></td><td align=right>299.7/344.4 (87%)</td></tr>
+<tr><td><a href="http://www.bbc.co.uk/">BBC</a></td><td align=right>283.3/337.4 (84%)</td></tr>
+<tr><td><a href="http://www.latimes.com/">Los Angels Times</td><td align=right>263.2/345.5 (76%)</td></tr>
+<tr><td><a href="http://www.reuters.com/">Reuters</td><td align=right>188.2/206.9 (91%)</td><tr>
+<tr><td><a href="http://www.cbsnews.com/">CBS News</td><td align=right>171.8/190.1 (90%)</td><tr>
+<tr><td><a href="http://seattletimes.nwsource.com/">Seattle Times</td><td align=right>164.4/185.4 (89%)</td><tr>
+<tr><td><a href="http://www.nydailynews.com/">NY Daily News</td><td align=right>144.3/147.4 (98%)</td><tr>
+<tr><td><a href="http://www.iht.com/">International Herald Tribune</td><td align=right>125.5/126.5 (99%)</td><tr>
+<tr><td><a href="http://www.channelnewsasia.com/">Channel News Asia</td><td align=right>119.5/126.2 (94%)</td><tr>
+<tr><td><a href="http://www.cnn.com/">CNN</td><td align=right>65.3/73.9 (89%)</td><tr>
+<tr><td><a href="http://www.voanews.com/english/">Voice of America</td><td align=right>58.3/62.6 (94%)</td><tr>
+<tr><td><a href="http://news.independent.co.uk/">Independent</td><td align=right>58.1/58.5 (99%)</td><tr>
+<tr><td><a href="http://www.ft.com/">Financial Times</td><td align=right>55.7/56.6 (98%)</td><tr>
+<tr><td><a href="http://www.usatoday.com/">USA Today</td><td align=right>44.5/46.7 (96%)</td><tr>
+<tr><td><a href="http://www.ny1.com/">NY1</td><td align=right>35.7/37.1 (95%)</td><tr>
+<tr><td><a href="http://www.1010wins.com/">1010 Wins</td><td align=right>14.3/16.1 (88%)</td><tr>
+<tr><td>Total</td><td align=right>3829.1/4349.2 (88%)</td></tr>
+</table>
+
+
+<a name="usage">
+<hr noshade>
+<h3>How to Use</h3>
+<p>
+Text extraction with Webstemmer has the following steps:
+<ol>
+<li> Obtain a number of "seed" pages from a particular site.
+<li> Learn the layout patterns from the obtained pages.
+<li> Later on, obtain updated pages from the same site.
+<li> Extract texts from the newly obtained pages using the learned patterns.
+</ol>
+<p>
+Step 1. and 2. are only required at the first time.  Once you
+learned the layout patterns, you can use them to extract texts
+from a newly obtained page from the same website by repeting step
+3. and 4.  until its layout is drastically changed.
+<p>
+Webstemmer package includes the following programs:
+<ul>
+<li> <a href="#crawler"><code>textcrawler.py</code></a> (web crawler)
+<li> <a href="#analyze"><code>analyze.py</code></a> (layout analyzer)
+<li> <a href="#extract"><code>extract.py</code></a> (text extractor)
+<li> <a href="#urldb"><code>urldbutils.py</code></a> (URLDB utility)
+<li> <a href="#html2txt"><code>html2txt.py</code></a> (simpler text extractor)
+</ul>
+<p>
+In the previous versions (&lt;= 0.3), all these programs
+(web crawler, layout analyzer and text extractor) were combined into one command. 
+Now they are separated in Webstemmer version 0.5 or newer.
+
+<h4>Step 1. Obtain seed pages</h4>
+<p>
+To learn layout patterns, you first need to run a web crawler to
+obtain the seed pages. The crawler recursively follows the links in
+each page until it reaches a certain depth (the default is 1 -- i.e.
+the crawler follows each link from the top page only once) and
+stores the pages into a .zip file.
+<p>
+<em>(Crawl CNN from its top page.)</em>
+<blockquote><pre>
+$ <strong>./textcrawler.py -o cnn http://www.cnn.com/</strong>
+Writing: 'cnn.200511210103.zip'
+Making connection: 'www.cnn.com'...
+...
+</pre></blockquote>
+<p>
+An obtained .zip file contains a list of HTML files.
+Each file name in the archive includes a timestamp at which the crawling is performed.
+You can use the .zip file as a seed for learning layout patterns (step 2.)
+or extracting texts from new pages (step 4.)
+<p>
+<em>(View the list of obtained pages.)</em>
+<blockquote><pre>
+$ <strong>zipinfo cnn.200511210103.zip</strong>
+Archive:  cnn.200511210103.zip   699786 bytes   75 files
+-rwx---     2.0 fat    59740 b- defN 21-Nov-05 01:03 200511210103/www.cnn.com/
+-rw----     2.0 fat    32060 b- defN 21-Nov-05 01:03 200511210103/www.cnn.com/privacy.html
+-rw----     2.0 fat    41039 b- defN 21-Nov-05 01:03 200511210103/www.cnn.com/interactive_legal.html
+-rw----     2.0 fat    33760 b- defN 21-Nov-05 01:03 200511210103/www.cnn.com/INDEX/about.us/
+...
+</pre></blockquote>
+
+<h4>Step 2. Learn the layout patterns</h4>
+<p>
+Then you can learn the layout patterns from obtained
+pages with <code>analyze.py</code>.  The program take one or more
+zip files as input and outputs obtained layout patterns into
+the standard output.
+<p>
+<em>(Learn the layout patterns from obtained pages and save it as <code>cnn.pat</code>.)</em>
+<blockquote><pre>
+$ <strong>./analyze.py cnn.200511210103.zip &gt; cnn.pat</strong>
+Opening: 'cnn.200511210103.zip'...
+Added: 1: 200511210103/www.cnn.com/
+Added: 2: 200511210103/www.cnn.com/privacy.html
+Added: 3: 200511210103/www.cnn.com/interactive_legal.html
+Added: 4: 200511210103/www.cnn.com/INDEX/about.us/
+...
+Fixating....................................................
+</pre></blockquote>
+<p>
+It takes O(n^2) time to learn layout patterns,
+e.g. when learning 100 pages takes a couple of minutes,
+learning about 1,000 pages takes a couple of hours.
+<p>
+The obtained layout patterns are represented in plain-text format.
+For more details, see <a href="howitworks.html#pattern">Anatomy of pattern files</a>.
+
+<h4>Step 3. Obtain new pages</h4>
+<p>
+Some time later, suppose you obtained a set of new pages from the same website.
+<p>
+(Crawl again from CNN top page.)
+<blockquote><pre>
+$ <strong>./textcrawler.py -o cnn http://www.cnn.com/</strong>
+Writing: 'cnn.200603010455.zip'
+Making connection: 'www.cnn.com'...
+...
+</pre></blockquote>
+<p>
+<em>(View the obtained html pages.)</em>
+<blockquote><pre>
+$ <strong>zipinfo cnn.200603010455.zip</strong>
+Archive:  cnn.200603010455.zip   850656 bytes   85 files
+-rwx---     2.0 fat    66507 b- defN  1-Mar-06 04:55 200603010455/www.cnn.com/
+-rw----     2.0 fat    33759 b- defN  1-Mar-06 04:55 200603010455/www.cnn.com/privacy.html
+-rw----     2.0 fat    42738 b- defN  1-Mar-06 04:55 200603010455/www.cnn.com/interactive_legal.html
+-rw----     2.0 fat       85 b- defN  1-Mar-06 04:55 200603010455/www.cnn.com/INDEX/about.us/
+...
+</pre></blockquote>
+
+<h4>Step 4. Extract texts from the newly obtained pages</h4>
+<p>
+Now you can extract the main texts from the newly obtained pages by
+using the acquired pattern <code>cnn.pat</code>.
+
+<blockquote><pre>
+$ <strong>./extract.py cnn.pat cnn.200603010455.zip &gt; cnn.txt</strong>
+Opening: 'cnn.200603010455.zip...
+</pre></blockquote>
+<p>
+Extracted texts are saved as <code>cnn.txt</code>.
+<p>
+<a name="sample">
+<blockquote><pre>
+$ <strong>cat cnn.txt</strong>
+!UNMATCHED: 200511210103/www.cnn.com/                                             <em>(unmatched page)</em>
+
+!UNMATCHED: 200511210103/www.cnn.com/privacy.html                                 <em>(unmatched page)</em>
+
+!UNMATCHED: 200511210103/www.cnn.com/interactive_legal.html                       <em>(unmatched page)</em>
+...
+
+!MATCHED: 200603010455/www.cnn.com/2006/HEALTH/02/09/billy.interview/index.html   <em>(matched page)</em>
+PATTERN: 200511210103/www.cnn.com/2005/POLITICS/11/20/bush.murtha/index.html      <em>(layout pattern name)</em>
+SUB-0: CNN.com - Too busy to cook? Not so fast - Feb 9, 2006                      <em>(supplementary section)</em>
+TITLE: Too busy to cook? Not so fast                                              <em>(article title)</em>
+SUB-10: Leading chef shares his secrets for speedy, healthy cooking               <em>(supplementary section)</em>
+SUB-17: Corporate Governance                                                      <em>(supplementary section)</em>
+SUB-17: Lifestyle (House and Home)
+SUB-17: New You Resolution
+SUB-17: Billy Strynkowski
+MAIN-20: (CNN) -- A busy life can put the squeeze on healthy eating. But that     <em>(main text)</em>
+         doesn't have to be the case, according to Billy Strynkowski, executive
+         chef of Cooking Light magazine. He says cooking healthy, tasty meals
+         at home can be done in 20 minutes or less.
+MAIN-20: CNN's Jason White interviewed Chef Billy to learn his secrets for
+         healthy cooking on the run.
+...
+SUB-25: Health care difficulties in the Big Easy                                  <em>(supplementary section)</em>
+
+!MATCHED: 200603010455/www.cnn.com/2006/EDUCATION/02/28/teaching.evolution.ap/index.html  <em>(another matched page)</em>
+PATTERN: 200511210103/www.cnn.com/2005/POLITICS/11/20/bush.murtha/index.html      <em>(layout pattern name)</em>
+SUB-0: CNN.com - Evolution debate continues - Feb 28, 2006                        <em>(supplementary section)</em>
+TITLE: Evolution debate continues                                                 <em>(article title)</em>
+SUB-17: Schools                                                                   <em>(supplementary section)</em>
+SUB-17: Education
+MAIN-20: SALT LAKE CITY (AP) -- House lawmakers scuttled a bill that would have   <em>(main text)</em>
+         required public school students to be told that evolution is not
+         empirically proven -- the latest setback for critics of evolution.
+...
+</pre></blockquote>
+<p>
+Each article is delimited with an empty line.
+Each article begins with a header line that has a form of
+either "<code>!MATCHED <em>pageID</em></code>" or "<code>!UNMATCHED <em>pageID</em></code>",
+which indicates whether the page's layout was identified or not.
+<code><em>pageID</em></code> is the name of the page included in the zip archive.
+<p>
+When a page layout is identified, it is followed by
+"<code>PATTERN:</code>" line that shows the layout pattern name
+which matched to the page and one or more text lines.
+Each text line begins with either "<code>TITLE:</code>", 
+"<code>MAIN-<em>n</em>:</code>", or "<code>SUB-<em>n</em>:</code>", 
+which means the article title section, main text sections, 
+or other supplementary sections, respectively.
+Each paragraph in a text section appears in a separate line.
+<p>
+Each text line begins with a capitalized header,
+and is separated exactly one newline character.
+(In the above example, extra newlines are inserted for readability's sake.)
+Therefore you can easily get the desired part with simple text processing like
+<code>perl</code> or <code>grep</code>.
+A line which begins with "<code>SUB-<em>n</em>:</code>" is a supplementary section,
+which is identified as neither a article title nor main text, but still considered
+as meaningful text. The section ID <em>n</em> is different depending on the layout pattern.
+
+<h4>Installation</h4>
+<p>
+<a href="#download">Download the tar.gz file</a>.
+You need <a href="http://www.python.org/">Python 2.4 or newer</a> to run this software.
+There is no special configuration or installation process required.
+Just type <code>./analyze.py</code> or <code>./extract.py</code> in the command line.
+
+<a name="crawler">
+<hr noshade>
+<h3><code>textcrawler.py</code> (web crawler)</h3>
+<p>
+<code>textcrawler.py</code> is a simple web crawler which
+recursively crawls within a given site and collects text (HTML)
+files. The crawler is suitable to obtain a middle-scale website
+(up to 10,000 pages).
+<p>
+<code>textcrawler.py</code> stores obtained pages in a single .zip
+file.  It supports Mozilla-style cookie files, persistent HTTP
+connection, and gzip compression. To reduce its traffic, it allows
+a user to have strict control over its crawling behavior, such as
+specifying recursion depth and/or URL patterns it may (or may not)
+obtain. Furthermore, it supports a persistent URL database
+(URLDB) which maintains URLs that have been visited so far and 
+avoids to crawl the same URL repeatedly. Since most news sites 
+have a unique URL for each distinct article, this greatly helps
+reducing the network traffic.
+<p>
+<code>textcrawler.py</code> tries to use HTTP persistent
+connections or gzip compressions as much as possible. It also
+tries to obey a <code>robots.txt</code> file in the site.  Each
+HTTP connection is made only to the IP address which was given to
+the program first, i.e. it doesn't support crawling across
+different hosts.  All links that refer to other hosts are ignored.
+<p>
+Most news sites use unique URLs to point different articles.
+Therefore, normally you don't have to retrieve the same URL twice.
+<code>textcrawler.py</code> supports <code>-U</code> option
+(specifying URLDB filename). When a URLDB is specified,
+<code>textcrawler.py</code> preserves the MD5 hash value and
+last-visited time for each URL in the persistent file. Currently,
+Berkeley DBM (bsddb) is used for this purpose. This will greatly
+save the crawling time and disk space, since the crawler doesn't
+store a page if its URL is already contained in the URLDB.  A
+URLDB file can be inflated as the number of the URLs it contains
+is increased. Use <a href="#urldb"><code>urldbutils.py</code></a>
+command to reorganize an inflated URLDB file.
+<P>
+<code>textcrawler.py</code> follows a set of regular expression patterns
+that define which URLs may (or may not) be crawled. A regexp pattern can be specified
+<code>-a</code> (Accept) or <code>-j</code> (reJect) options from command line.
+The crawling permission of a URL is determined by checking
+regexp patterns sequentially in the specified order.
+By default, it accepts all URLs that include the start URL as its substring.
+
+<h4>Syntax</h4>
+<blockquote><pre>
+$ textcrawler.py -o <u>output_filename</u> [<u>options</u>] <u>start_url</u> ...
+</pre></blockquote>
+<p>
+You need to specify an output filename. A timestamp (<code>YYYYMMDDHHMM</code>)
+and the extension <code>.zip</code> is automatically appended to this name.
+<p>
+<h5>Examples:</h5>
+<blockquote><pre>
+(Start from http://www.asahi.com/ with maximum recursion being 2,
+ and store the files into asahi.*.zip. Assume euc-jp as a default charset.)
+$ <strong>textcrawler.py -o asahi -m2 -c euc-jp http://www.asahi.com/</strong>
+
+(Start from http://www.boston.com/news/globe/, but the pages in
+ the upper directory "http://www.boston.com/news/" is also allowed.
+ Use the URLDB file boston.urldb.)
+$ <strong>textcrawler.py -o boston -U boston.urldb -a'^http://www\.boston\.com/news/' http://www.boston.com/news/globe/</strong>
+</pre></blockquote>
+
+
+<h4>Options</h4>
+<dl>
+<dt> <code>-o <u>output_filename</u></code>
+<dd> This option is mandatory.
+It specifies the prefix of a zip filename where all the crawled pages
+are stored. The actual filename will be in the form of "filename.timestamp.zip",
+where a timestamp (or a string specified by <code>-b</code> option)
+is appended after the specified filename.
+<P>
+<dt> <code>-m <u>maximum_depth_of_recursive_crawling</u></code>
+<dd> Specifies the maximum depth which is allowed to crawl. Default is 1.
+When you increase this number, it increases the number of crawled pages exponentially.
+(In most news sites, depth=1 covers about 100 pages, whereas depth=2 covers about 1000 pages.)
+<p>
+<dt> <code>-k <u>cookie_filename</u></code>
+<dd> Specifies a cookie file (which should be in Mozilla's cookie.txt format) to use
+in crawling. Some news sites require cookies to identify users. When the cookie file
+is specified, <code>textcrawler.py</code> automatically uses them when necessary.
+<code>textcrawler.py</code> does not store any cookie it obtains during crawling.
+<p>
+<dt> <code>-c <u>default_character_set</u></code>
+<dd> Usually <code>textcrawler.py</code> tries to follow the HTML charset
+declared (by &lt;meta&gt; tag) in a page header. If there is no charset declaration, the default
+value (such as "<code>euc-jp</code>" or "<code>utf-8</code>")  is used. 
+<code>textcrawler.py</code> does not detect the character set automatically.
+<p>
+<dt> <code>-a <u>accept_url_pattern</u></code> 
+<dd> Specifies a regular expression pattern that defines a URL which
+is allowed to obtain.
+When combined with <code>-j</code> option, the patterns
+are checked in the specified order.
+<p>
+<dt> <code>-j <u>reject_url_pattern</u></code> 
+<dd> Specifies a regular expression pattern that defines a prohibited URL.
+When combined with <code>-a</code> option, the patterns
+are checked in the specified order.
+By default, all the URLs which ends with
+<code>jpg, jpeg, gif, png, tiff, swf, mov, wmv, wma, ram, rm, rpm, gz, zip, or class</code> 
+is rejected.
+<p>
+<dt> <code>-U <u>URLDB_filename</u></code>
+<dd> When specified, <code>textcrawler.py</code> records
+a URL that was once visited to a persistent URL database (URLDB) and
+does not crawl the URL again. A URLDB file contains the md5 hash of URLs (as keys) 
+and the last-visited times (as values). When the crawler finds a new URL,
+it dynamically checks the database and filters out those which have been
+already visited. However, when the crawler haven't yet reached its maximum recursion depth,
+the intermediate pages are still crawled to obtain links.
+When you crawl the same site again and again, and you can assume an interesting
+page has always a unique URL, this reduces the crawling time.
+<p>
+<dt> <code>-b <u>timestamp_string</u></code>
+<dd> Overrides the timestamp string.
+The string specified here is appended to the
+filename you specified with <code>-o</code> option.
+It is also prepended to the name of each page in the zip file,
+like "<code>200510291951/www.example.com/...</code>".
+By default, the string is automatically determined from the current time
+when the program is started, in the form of <code>YYYYMMDDHHMM</code>.
+<P>
+<dt> <code>-i <u>index_html_filename</u></code>
+<dd> When a URL ends with the "<code>/</code>" character,
+the filename specified here is appended to that URL.
+The default value is a null string (nothing is added).
+Note that in some sites the URLs
+"<code>http://host/dir/</code>" and "<code>http://host/dir/index.html</code>" is
+distinguished (especially when they're using Apache's mod_dir module.)
+<p>
+<dt> <code>-D <u>delay_secs</u></code>
+<dd> When this option is specified,
+the crawler waits for the <em>N</em> second(s) each time
+it crawls a new page. The default value is 0 (no waiting).
+<p>
+<dt> <code>-T <u>timeout_secs</u></code>
+<dd> Specifies the duration of network timeout in seconds.
+The default value is 300. (5 mins)
+<p>
+<dt> <code>-L <u>linkinfo_filename</u></code>
+<dd> By default, <code>textcrawler.py</code> stores all the anchor texts
+(a text which is surrounded by <code>&lt;a&gt;</code> tag) into
+a zip file as a file called "<code>linkinfo</code>".
+Later this information is used by <code>analyze.py</code> to
+locate the page titles. This option changes the linkinfo filename.
+When this option is set to an empty string, the crawler doesn't
+store any anchor text.
+<p>
+<dt> <code>-d</code> 
+<dd> Raises the debug level and displays extra messages.
+<p>
+</dl>
+
+<a name="analyze">
+<hr noshade>
+<h3><code>analyze.py</code> (layout analyzer)</h3>
+<p>
+<code>analyze.py</code> performs layout clustering
+based on the HTML files <code>textcrawler.py</code> has obtained,
+and outputs the learned pattern file into the standard output.
+It might take more than several hours depending on the number 
+of pages to analyze. For example, my machine (with Xeon 2GHz)
+took 30 mins to learn the layouts from 300+ pages.
+(For some reason, Psyco, a Python optimizer, doesn't
+accelerate this sort of program. It simply took a huge amount of memory but
+doesn't make the program run faster.)
+
+<p>
+Each layout pattern that <code>analyze.py</code> outputs has the
+"score" of the pattern, which shows how likely that page is an
+article. The score is calculated based on the number of
+alphanumeric characters in each section of a page.  So normally
+you can remove non-article pages by simply using <code>-S</code>
+option to filter out low-scored layouts. 
+(You can even tune those patterns manually. 
+See <a href="howitworks.html#pattern">Anatomy of pattern files</a>.)
+
+<h4>Syntax</h4>
+<blockquote><pre>
+$ analyze.py [<u>options</u>] <u>input_file</u> ... &gt; <u>layout_pattern_file</u>
+</pre></blockquote>
+<p>
+Normally it takes a zip file that <code>textcrawler.py</code> has generated.
+Multiple input files are accepted.
+This is useful for using pages obtained from a single site in multiple days.
+
+<h5>Examples:</h5>
+<blockquote><pre>
+(Learn the layout from cnn.200511171335.zip and cnn.200511210103.zip
+ and save the patterns to cnn.pat)
+$ <strong>analyze.py cnn.200511171335.zip cnn.200511210103.zip &gt; cnn.pat</strong>
+</pre></blockquote>
+<p>
+It can also take a list of filenames instead of a .zip file
+that contains HTML files obtained by other HTTP clients such as
+<code>wget</code>:
+<blockquote><pre>
+$ <strong>find 200511171335/ -type f | ./analyze.py - linkinfo &gt; cnn.pat</strong>
+</pre></blockquote>
+In this case, the hierarchy of the directory must be 
+the same as one used by <code>textcrawler.py</code>,
+i.e. each filename should be in the form of
+<code><i>timestamp</i>/<i>URL</i></code>. 
+
+<h4>Options</h4>
+<p>
+Some options are very technical. 
+You might need to understand <a href="howitworks.html">the algorithm</a>
+to change them to get a desired effect.
+<dl>
+<dt> <code>-c <u>default_character_set</u></code>
+<dd> Specifies the default character set that is used when
+there is no charset declaration (&lt;meta&gt; tag) in an HTML file.
+A different character set is not automatically detected.
+<p>
+<dt> <code>-a <u>accept_url_pattern</u></code>
+<dd> Specifies a regular expression pattern that defines a URL which
+is allowed to analyze in the same manner as <code>textcrawler.py</code>.
+When combined with <code>-j</code> option, the patterns
+are checked in the specified order.
+<p>
+<dt> <code>-j <u>reject_url_pattern</u></code>
+<dd> Specifies a regular expression pattern that defines a prohibited URL.
+When combined with <code>-a</code> option, the patterns
+are checked in the specified order. By default, <code>analyze.py</code>
+tries to use all the pages contained in a given zip file.
+<p>
+<dt> <code>-t <u>clustering_threshold</u></code>
+<dd> Specifies the threshold of layout clustering in fraction, from 0.0 to 1.0.
+Two pages are brought into the same cluster (i.e. same layout)
+if the similarity of the two pages is equal or more than the threshold.
+Using the higher threshold causes making more strict distinction between pages.
+However, a high threshold may lower the number of matching pages, making
+each cluster smaller. The default value is 0.97. In some news sites,
+setting this value to 0.99 or 0.95 may improve the performance
+of layout detection.
+<p>
+<dt> <code>-T <u>title_detection_threshold</u></code>
+<dd> Specifies the threshold of title detection. A layout section
+whose similarity to the reference anchor text is equal or more than
+this value is used as a candidate of the page title.
+<p>
+<dt> <code>-S <u>page_score_threshold</u></code>
+<dd> Specifies the threshold of page usefulness.
+Each layout pattern comes with the "score" of the pages,
+which indicates how likely the pages that has that layout are
+an article, based on the number of total characters in distinct sections.
+A layout pattern that has a score lower than this threshold is 
+automatically filtered. The default value is 100.
+Generally, a layout whose score is lower than this value is not an
+article page. In many news sites, most article pages have a layout
+whose score is more than 1000.
+Setting this value to <code>-1</code> preserves all the layouts obtained.
+<p>
+<dt> <code>-L <u>linkinfo_filename</u></code> 
+<dd> By default, <code>analyze.py</code> tries to use
+a <code>linkinfo</code> file that is created by
+<code>textcrawler.py</code> and stored in a zip file.
+This file contains one or multiple anchor texts
+(a text which is surrounded by <code>&lt;a&gt;</code> tag) referring to each page
+and is used by the analyzer to locate page titles.
+This option changes the linkinfo filename it searches in
+a zip file. When this option is set to an empty string, 
+the analyzer tries to find anchor texts by itself
+without using <code>linkinfo</code> file, which may result
+in the slower running speed.
+<p>
+<dt> <code>-d</code> 
+<dd> Raises the debug level and displays extra messages.
+<p>
+</dl>
+
+<a name="extract">
+<hr noshade>
+<h3><code>extract.py</code> (text extractor)</h3>
+<p>
+<code>extract.py</code> receives a layout pattern file
+and tries to extract the texts from a set of HTML pages.
+This program takes a zip file (or directory name otherwise)
+and outputs the extracted text into stdout.
+
+<h4>Syntax</h4>
+<blockquote><pre>
+$ extract.py [<u>options</u>] <u>pattern_filename</u> <u>input_filename</u> ... &gt; output_text
+</pre></blockquote>
+<h5>Example:</h5>
+<blockquote><pre>
+(Extract the texts from asahi.200510220801.zip using pattern file asahi.pat,
+   and store them in shift_jis encoding into file asahi.200510220801.txt)
+$ <strong>extract.py -C shift_jis asahi.pat asahi.200510220801.zip &gt; asahi.200510220801.txt</strong>
+</pre></blockquote>
+
+<h4>Options</h4>
+<dl>
+<dt> <code>-C <u>output_text_encoding</u></code>
+<dd> Specifies the encoding of output texts (page titles and main texts).
+The default value is <code>utf-8</code>.
+<p>
+<dt> <code>-c <u>default_character_set</u></code>
+<dd> Specifies the default character set that is used when
+there is no charset declaration (&lt;meta&gt; tag) in an HTML file.
+A different character set is not automatically detected.
+<p>
+<dt> <code>-a <u>accept_url_pattern</u></code>
+<dd> Specifies a regular expression pattern that defines a URL which
+is allowed to use in the same manner as <code>textcrawler.py</code>.
+When combined with <code>-j</code> option, the patterns
+are checked in the specified order.
+<p>
+<dt> <code>-j <u>reject_url_pattern</u></code>
+<dd> Specifies a regular expression pattern that defines a prohibited URL.
+When combined with <code>-a</code> option, the patterns
+are checked in the specified order. By default, <code>extract.py</code>
+tries to use all the pages contained in a given zip file.
+<p>
+<dt> <code>-t <u>layout_similarity_threshold</u></code> 
+<dd> Specifies the minimum similarity score for comparing each page
+with layout patterns. The default value is 0.8.
+<code>extract.py</code> tries to identify the layout of a page
+by finding the most similar layout pattern. But the page is rejected
+if the highest similarity is still less than this threshold,
+and "<code>!UNMATCHED</code>" is printed.
+Usually you don't need to change this value.
+<p>
+<dt> <code>-S</code> 
+<dd> Strict mode. It requires that each page should have
+all the layout blocks of any layout pattern.
+This allows to obtain only strictly conforming pages,
+but it may lower the number of pages that are successfully
+extracted.
+<p>
+<dt> <code>-T <u>diffscore_threshold</u></code> 
+<dd> If the diffscore of a layout block is equal or more than this value,
+<code>extract.py</code> recognizes it as "variable blocks".
+The default value is 0.5.
+<p>
+<dt> <code>-M <u>mainscore_threshold</u></code> 
+<dd> If the mainscore of a layout block is equal or more than this value,
+<code>extract.py</code> recognizes it as "main blocks".
+The default value is 50.
+<p>
+<dt> <code>-d</code> 
+<dd> Raises the debug level and displays extra messages.
+<p>
+</dl>
+
+
+<a name="urldb">
+<hr noshade>
+<h3><code>urldbutils.py</code> (URLDB utility)</h3>
+<p>
+<code>urldbutils.py</code> removes redundant URLs from a URLDB file to shrink it.
+When <code>textcrawler.py</code> uses a URLDB, it keeps adding a newly found
+(the md5 hash of) URL into the database file,
+which causes the file size increase gradually.
+It also records the time that each URL is last seen.
+If a URL is not seen for a certain time, it can be safely removed from the database.
+
+<h4>Syntax</h4>
+<blockquote><pre>
+$ urldbutils.py {-D | -R} [<u>options</u>] <u>filename</u> [<u>old_filename</u>]
+</pre></blockquote>
+<p>
+You need to choose either display mode (<code>-D</code>) or
+reorganize mode (<code>-R</code>). The display mode is mainly for a debugging purpose.
+When you rebuild a DBM file, two filenames (new and old) should be specified.
+For the safety reason, it does not run when the new file already exists.
+<h5>Example:</h5>
+<blockquote><pre>
+(Remove URLs which haven't been seen for 10 or more days, and
+    rebuild a new URLDB file myurldb.new.)
+$ <strong>urldbutils.py -R -t 10 myurldb.new myurldb</strong>
+$ <strong>mv -i myurldb.new myurldb</strong>
+mv: overwrite `urldb'? <strong>y</strong>
+</pre></blockquote>
+
+<h4>Options</h4>
+<dl>
+<dt> <code>-D</code>
+<dd> Displays the content of the URLDB file (md5 hash + last seen time).
+<p>
+<dt> <code>-R</code>
+<dd> Removes the URLs in the URLDB file which haven't been seen 
+for a certain time, and rebuild a new URLDB file.
+You need to specify two filenames (new, old) and 
+<code>-t</code> option (threshold).
+<p>
+<dt> <code>-t <u>days</u></code>
+<dd> Specifies the maximum duration for a URL in days.
+<p>
+<dt> <code>-v</code> 
+<dd> Verbose mode. Display the entries that are removed in <code>-R</code> mode.
+<p>
+</dl>
+
+
+<a name="html2txt">
+<hr noshade>
+<h3><code>html2txt.py</code> (simpler text extractor)</h3>
+<p>
+<code>html2txt.py</code> is a much simpler text extractor
+(or an HTML tag ripper) without using any sort of predefined pattern.
+It just removes all HTML tags from the input files.
+It also removes javascript or stylesheet contents surrounded by
+<code>&lt;script&gt;</code>...<code>&lt;/script&gt;</code> or
+<code>&lt;style&gt;</code>...<code>&lt;/style&gt;</code> tag.
+
+<h4>Syntax</h4>
+<blockquote><pre>
+$ html2txt.py [<u>options</u>] <u>input_filename</u> ... &gt; output_text
+</pre></blockquote>
+<h5>Example:</h5>
+<blockquote><pre>
+$ <strong>html2txt.py index.html &gt; index.txt</strong>
+</pre></blockquote>
+
+<h4>Options</h4>
+<dl>
+<dt> <code>-C <u>output_text_encoding</u></code>
+<dd> Specifies the encoding of output texts (page titles and main texts).
+The default value is <code>utf-8</code>.
+<p>
+<dt> <code>-c <u>default_character_set</u></code>
+<dd> Specifies the default character set that is used when
+there is no charset declaration (&lt;meta&gt; tag) in an HTML file.
+A different character set is not automatically detected.
+</dl>
+
+<a name="bugs">
+<hr noshade>
+<h3>Bugs</h3>
+<ul>
+<li> Slow.
+<li> Sometimes titles are missing.
+<li> Parser can crash with a nasty HTML! (e.g. 1000 nested tags.)
+</ul>
+
+
+<a name="license">
+<hr noshade>
+<small>
+<h2>Terms and Conditions</h2>
+<p>
+(This is so-called MIT/X License.)
+<p>
+Copyright (c) 2005-2007  Yusuke Shinyama &lt;yusuke at cs dot nyu dot edu&gt;
+<p>
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+<p>
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+<p>
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+</small>
+
+<hr noshade>
+<p>
+<!-- hhmts start -->
+Last Modified: Thu Sep  6 17:19:18 JST 2007
+<!-- hhmts end -->
+<address>Yusuke Shinyama</address>
+</body></html>
