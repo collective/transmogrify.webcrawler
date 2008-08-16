@@ -10,6 +10,7 @@ from collective.transmogrifier.tests import tearDown
 from collective.transmogrifier.sections.tests import PrettyPrinter
 
 from pretaweb.blueprints.webcrawler import WebCrawler
+from pretaweb.blueprints.typerecognitor import TypeRecognitor
 
 
 def setUp(test):
@@ -27,11 +28,14 @@ def setUp(test):
         name=u'collective.transmogrifier.sections.tests.pprinter')
     provideUtility(WebCrawler,
         name=u'pretaweb.blueprints.webcrawler')
+    provideUtility(TypeRecognitor,
+        name=u'pretaweb.blueprints.typerecognitor')
 
 
 def test_suite():
     return unittest.TestSuite((
         doctest.DocFileSuite('webcrawler.txt', setUp=setUp, tearDown=tearDown),
+        doctest.DocFileSuite('typerecognitor.txt', setUp=setUp, tearDown=tearDown),
     ))
 
 
