@@ -1,6 +1,4 @@
-
-
-WebCrawler
+TypeRecognitor
 ==========
 
 >>> from os.path import dirname
@@ -9,12 +7,16 @@ WebCrawler
 ... [transmogrifier]
 ... pipeline =
 ...     webcrawler
+...     treeserializer
 ...     typerecognitor
 ...     printer
 ...     
 ... [webcrawler]
 ... blueprint = pretaweb.blueprints.webcrawler
 ... site_url  = file://%s/test_staticsite
+...
+... [treeserializer]
+... blueprint = pretaweb.blueprints.treeserializer
 ...
 ... [typerecognitor]
 ... blueprint = pretaweb.blueprints.typerecognitor
@@ -30,8 +32,8 @@ WebCrawler
 >>> from collective.transmogrifier.transmogrifier import Transmogrifier
 >>> transmogrifier = Transmogrifier(plone)
 >>> transmogrifier(u'pretaweb.blueprints.typerecognitor.test')
-{'_mimetype': 'image/png',
- '_path': '/plone_schema.png',
+{'_mimetype': 'image/jpeg',
+ '_path': '/cia-plone-view-source.jpg',
  '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
  '_transform': None,
  '_type': 'Image'}
@@ -40,23 +42,13 @@ WebCrawler
  '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
  '_transform': None,
  '_type': 'Image'}
-{'_mimetype': 'image/jpeg',
- '_path': '/cia-plone-view-source.jpg',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
- '_transform': None,
- '_type': 'Image'}
-{'_mimetype': 'text/html',
- '_path': '/file4.HTML',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
- '_transform': None,
- '_type': 'Document'}
 {'_mimetype': 'application/msword',
  '_path': '/file.doc',
  '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
  '_transform': 'doc_to_html',
  '_type': 'Document'}
 {'_mimetype': 'text/html',
- '_path': '/subfolder',
+ '_path': '/file1.htm',
  '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
  '_transform': None,
  '_type': 'Document'}
@@ -66,19 +58,28 @@ WebCrawler
  '_transform': None,
  '_type': 'Document'}
 {'_mimetype': 'text/html',
- '_path': '/subfolder/subfile1.htm',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
- '_transform': None,
- '_type': 'Document'}
-{'_mimetype': 'text/html',
  '_path': '/file3.html',
  '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
  '_transform': None,
  '_type': 'Document'}
 {'_mimetype': 'text/html',
- '_path': '/file1.htm',
+ '_path': '/file4.HTML',
  '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
  '_transform': None,
  '_type': 'Document'}
-
+{'_mimetype': 'image/png',
+ '_path': '/plone_schema.png',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
+ '_transform': None,
+ '_type': 'Image'}
+{'_mimetype': 'text/html',
+ '_path': '/subfolder',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
+ '_transform': None,
+ '_type': 'Document'}
+{'_mimetype': 'text/html',
+ '_path': '/subfolder/subfile1.htm',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
+ '_transform': None,
+ '_type': 'Document'}
 
