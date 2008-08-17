@@ -11,8 +11,6 @@ from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 
 from pretaweb.blueprints.external.webchecker import MyURLopener
-from pretaweb.blueprints.external.webchecker import MyStringIO
-
 
 
 class TypeRecognitor(object):
@@ -43,21 +41,33 @@ class TypeRecognitor(object):
 
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
+        self.open_url = MyURLopener().open
 
-        # TODO :: some way of updating self.types_map
     
     def __iter__(self):
         for item in self.previous:
-            
+            # dont except bad links 
+            if '_bad_url' in item:
+                yield item; continue
+
             # needed parameters to be able to recognize
-            if '_path' not in item or '_site_url' not in item:
-                continue
+            if '_path' not in item or \
+               '_site_url' not in item:
+                yield item; continue
             
+            # if type is defined then dont mess with it
+            if '_type' in item:
+                yield item; continue
+
             url = item['_site_url'] + item['_path'] 
-            
-            f = MyURLopener().open(url)
+            try:
+                f = self.open_url(url)
+            except:
+                print 'BAD URL :: ' + url
+                continue
             if f:
                 item.update(self.getFileType(f.info(), url))
+                self.close_handler(f)
             
             yield item
         
@@ -71,25 +81,23 @@ class TypeRecognitor(object):
         else:
             ctype, encoding = mimetypes.guess_type(url)
 
-        # is file a folder
-        #isFolder = False
-        #for item in file_list:
-        #    if file is not item['_path'] and \
-        #       item['_path'][len(file):len(file)+1] is '/' and \
-        #       item['_path'].startswith(file):
-        #        isFolder = True
-        #        break
-        #if isFolder:
-        #    return dict(_type      = 'Folder', 
-        #                _transform = None, 
-        #                _mimetype  = None)
-
         if ctype in self.types_map:
             return dict(_type      = self.types_map[ctype][0], 
                         _transform = self.types_map[ctype][1], 
                         _mimetype  = ctype)
+
         return dict(_type      = 'File', 
                     _transform = None, 
                     _mimetype  = ctype)
 
-
+    def close_handler(self, f):
+        try:
+            url = f.geturl()
+        except AttributeError:
+            pass
+        else:
+            if url[:4] == 'ftp:' or url[:7] == 'file://':
+                # Apparently ftp connections don't like to be closed
+                # prematurely...
+                text = f.read()
+        f.close()

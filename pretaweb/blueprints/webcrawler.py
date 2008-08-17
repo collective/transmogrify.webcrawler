@@ -15,7 +15,7 @@ class WebCrawler(object):
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
         
-        CHECKEXT = 0        # Check external references (1 deep)
+        CHECKEXT = False    # Check external references (1 deep)
         VERBOSE = 0         # Verbosity level (0-3)
         MAXPAGE = 150000    # Ignore files bigger than this
         ROUNDSIZE = 50      # Number of links processed per round
@@ -56,5 +56,5 @@ class WebCrawler(object):
         
         # there are also bad links (files)
         for file in checker.bad:
-            yield dict(_bad_url = file[0])
+            yield dict(_bad_url = file[0], info=file)
 
