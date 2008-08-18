@@ -65,13 +65,14 @@ class TreeSerializer(object):
         tree_serializer(tree, '/')
 
         # first page
-        for front_page in ['/front-page', '/index_html', '/first-page']:
-            if front_page not in item_list:
-                item_list[front_page] = item_list['/']
-                item_list[front_page]['_type'] = 'Page'
-                item_list['/'] = dict(_path        = '/',
-                                      _type        = None,
-                                      _defaultpage = front_page)
+        if '/' in item_list:
+            for front_page in ['/front-page', '/index_html', '/first-page']:
+                if front_page not in item_list:
+                    item_list[front_page] = item_list['/']
+                    item_list[front_page]['_type'] = 'Page'
+                    item_list['/'] = dict(_path        = '/',
+                                          _type        = None,
+                                          _defaultpage = front_page)
 
         item_list_paths = item_list.keys()
         item_list_paths.sort()
