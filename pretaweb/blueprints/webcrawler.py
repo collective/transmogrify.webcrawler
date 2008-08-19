@@ -6,6 +6,7 @@ from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 
 from pretaweb.blueprints.external.webchecker import Checker
+from pretaweb.blueprints.external.webchecker import MyURLopener
 
 
 class WebCrawler(object):
@@ -14,6 +15,7 @@ class WebCrawler(object):
     
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
+        self.open_url = MyURLopener().open
         
         CHECKEXT = False    # Check external references (1 deep)
         VERBOSE = 0         # Verbosity level (0-3)
@@ -49,8 +51,19 @@ class WebCrawler(object):
             if file[0].startswith(self.site_url):
                 file_path = file[0][len(self.site_url):]
                 if file_path:
-                    yield dict(_path      = file_path,
-                               _site_url  = self.site_url,)
+                    # TODO :: we should subclass webchecker so it read files only once
+                    try:
+                        content = self.open_url(self.site_url+file_path)
+                        yield dict(_path         = file_path,
+                                   _site_url     = self.site_url,
+                                   _content      = content.read(),
+                                   _content_info = content.info(),)
+                    except:
+                        yield dict(_bad_url = self.site_url+file_path)
+                        continue
+                    self.close_handler(content)
+
+                    
             else:
                 yield dict(_bad_url = file[0])
         
@@ -58,3 +71,14 @@ class WebCrawler(object):
         for file in checker.bad:
             yield dict(_bad_url = file[0], info=file)
 
+    def close_handler(self, f):
+        try:
+            url = f.geturl()
+        except AttributeError:
+            pass
+        else:
+            if url[:4] == 'ftp:' or url[:7] == 'file://':
+                # Apparently ftp connections don't like to be closed
+                # prematurely...
+                text = f.read()
+        f.close()
