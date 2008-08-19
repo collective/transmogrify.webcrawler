@@ -6,9 +6,9 @@ from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 from collective.transmogrifier.utils import Matcher
 
+from webstemmer.analyze import PageFeeder, LayoutAnalyzer
 
-
-class WebCrawler(object):
+class TemplateFinder(object):
     classProvides(ISectionBlueprint)
     implements(ISection)
 
@@ -33,16 +33,25 @@ class WebCrawler(object):
 
           feeder = PageFeeder(analyzer, linkinfo=linkinfo, acldb=acldb,
                                 default_charset=default_charset, debug=debug)
-
+          
+          items = []
           for item in self.previous:
               feeder.feed_page(item['_path'], item['text'])
+              items.append(item)
           feeder.close()
+          
+          cluster = {}
           for c in analyzer.analyze(cluster_threshold, title_threshold):
             if c.pattern and score_threshold <= c.score:
-              c.dump()
-          return
-
-
-
+                for p in pages:
+                    cluster[p] = c
+                    
+          for item in items:
+              c = cluster.get(item['_path'])
+              if c:
+                  for diffscore, diffscorewight, path in c.pattern:
+                      xp = toxpath(path)
+                      item['title'] = transform(item[text], xp)
+              yield item
 
 

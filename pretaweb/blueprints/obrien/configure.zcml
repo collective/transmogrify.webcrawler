@@ -1,0 +1,20 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:transmogrifier="http://namespaces.plone.org/transmogrifier"
+    i18n_domain="pretaweb.blueprints">
+
+    <transmogrifier:registerConfig
+        name="obrienimport"
+        title="Obrien import"
+        description=""
+        configuration="example.cfg" />
+
+    <browser:page
+        for="*"
+        name="obrien-import"
+        class=".example.ExampleImport"
+        permission="zope2.View"
+        />
+      
+</configure>

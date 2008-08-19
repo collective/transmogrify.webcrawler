@@ -12,7 +12,11 @@
              name="pretaweb.blueprints.treeserializer" />
     <utility component=".typerecognitor.TypeRecognitor"
              name="pretaweb.blueprints.typerecognitor" />
+    <utility component=".templatefinder.TemplateFinder"
+             name="pretaweb.blueprints.templatefinder" />
 
     <include package=".example"/>
+    <include package=".smithandsmith"/>
+    <include package=".obrien"/>
 
 </configure>

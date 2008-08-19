@@ -52,7 +52,9 @@ class TypeRecognitor(object):
 
             # needed parameters to be able to recognize
             if '_path' not in item or \
-               '_site_url' not in item:
+               '_site_url' not in item or \
+               '_content' not in item or \
+               '_content_info' not in item:
                 yield item; continue
             
             # if type is defined then dont mess with it
@@ -60,14 +62,18 @@ class TypeRecognitor(object):
                 yield item; continue
 
             url = item['_site_url'] + item['_path'] 
-            try:
-                f = self.open_url(url)
-            except:
-                print 'BAD URL :: ' + url
-                continue
-            if f:
-                item.update(self.getFileType(f.info(), url))
-                self.close_handler(f)
+            item.update(self.getFileType(item['_content_info'], url))
+          
+            # if content is not html then copy its content to 
+            # appropriate field
+            if item['_type'] == 'File':
+                item['file'] = item['_content']
+            elif item['_type'] == 'Image':
+                item['image'] = item['_content']
+            elif item['_type'] == 'Document' and \
+                 (item['_transform'] == 'pdf_to_html' or \
+                 item['_transform'] == 'doc_to_html'):
+                item['text'] = item['_content']
             
             yield item
         
@@ -90,14 +96,3 @@ class TypeRecognitor(object):
                     _transform = None, 
                     _mimetype  = ctype)
 
-    def close_handler(self, f):
-        try:
-            url = f.geturl()
-        except AttributeError:
-            pass
-        else:
-            if url[:4] == 'ftp:' or url[:7] == 'file://':
-                # Apparently ftp connections don't like to be closed
-                # prematurely...
-                text = f.read()
-        f.close()
