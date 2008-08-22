@@ -1,0 +1,38 @@
+Relinker
+==========
+
+>>> from os.path import dirname
+>>> from os.path import abspath
+>>> config = """
+... [transmogrifier]
+... pipeline =
+...     webcrawler
+...     treeserializer
+...     typerecognitor
+...     relinker
+...     printer
+...     
+... [webcrawler]
+... blueprint = pretaweb.blueprints.webcrawler
+... site_url  = file://%s/test_staticsite
+...
+... [treeserializer]
+... blueprint = pretaweb.blueprints.treeserializer
+...
+... [typerecognitor]
+... blueprint = pretaweb.blueprints.typerecognitor
+...
+... [relinker]
+... blueprint = pretaweb.blueprints.relinker
+...
+... [printer]
+... blueprint = collective.transmogrifier.sections.tests.pprinter
+...
+... """ % abspath(dirname(__file__))
+
+>>> from collective.transmogrifier.tests import registerConfig
+>>> registerConfig(u'pretaweb.blueprints.typerecognitor.test', config)
+
+>>> from collective.transmogrifier.transmogrifier import Transmogrifier
+>>> transmogrifier = Transmogrifier(plone)
+>>> transmogrifier(u'pretaweb.blueprints.typerecognitor.test')

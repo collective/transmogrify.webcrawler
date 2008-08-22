@@ -12,6 +12,8 @@
              name="pretaweb.blueprints.treeserializer" />
     <utility component=".typerecognitor.TypeRecognitor"
              name="pretaweb.blueprints.typerecognitor" />
+    <utility component=".relinker.Relinker"
+             name="pretaweb.blueprints.relinker" />
 
     <include package=".example"/>
 
