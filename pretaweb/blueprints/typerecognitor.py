@@ -64,15 +64,12 @@ class TypeRecognitor(object):
             url = item['_site_url'] + item['_path'] 
             item.update(self.getFileType(item['_content_info'], url))
           
-            # if content is not html then copy its content to 
-            # appropriate field
+            # copy content to appropriate field
             if item['_type'] == 'File':
                 item['file'] = item['_content']
             elif item['_type'] == 'Image':
                 item['image'] = item['_content']
-            elif item['_type'] == 'Document' and \
-                 (item['_transform'] == 'pdf_to_html' or \
-                 item['_transform'] == 'doc_to_html'):
+            elif item['_type'] == 'Document':
                 item['text'] = item['_content']
             
             yield item

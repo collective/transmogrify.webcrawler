@@ -14,6 +14,8 @@
              name="pretaweb.blueprints.typerecognitor" />
     <utility component=".templatefinder.TemplateFinder"
              name="pretaweb.blueprints.templatefinder" />
+    <utility component=".relinker.Relinker"
+             name="pretaweb.blueprints.relinker" />
 
     <include package=".example"/>
     <include package=".smithandsmith"/>
