@@ -14,6 +14,7 @@ from pretaweb.blueprints.treeserializer import TreeSerializer
 from pretaweb.blueprints.typerecognitor import TypeRecognitor
 from templatefinder import TemplateFinder
 from pretaweb.blueprints.relinker import Relinker
+from pretaweb.blueprints.simplexpath import SimpleXPath
 from plone.i18n.normalizer import urlnormalizer
 
 
@@ -41,6 +42,8 @@ def setUp(test):
     provideUtility(urlnormalizer)
     provideUtility(Relinker,
         name=u'pretaweb.blueprints.relinker')
+    provideUtility(SimpleXPath,
+        name=u'pretaweb.blueprints.simplexpath')
 
 def test_suite():
     return unittest.TestSuite((
@@ -49,6 +52,7 @@ def test_suite():
         doctest.DocFileSuite('typerecognitor.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('templatefinder.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('relinker.txt', setUp=setUp, tearDown=tearDown),
+        doctest.DocFileSuite('simplexpath.txt', setUp=setUp, tearDown=tearDown),
     ))
 
 

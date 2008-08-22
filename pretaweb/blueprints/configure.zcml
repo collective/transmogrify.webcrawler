@@ -16,6 +16,8 @@
              name="pretaweb.blueprints.templatefinder" />
     <utility component=".relinker.Relinker"
              name="pretaweb.blueprints.relinker" />
+    <utility component=".simplexpath.SimpleXPath"
+             name="pretaweb.blueprints.simplexpath" />
 
     <include package=".example"/>
     <include package=".smithandsmith"/>

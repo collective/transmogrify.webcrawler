@@ -1,0 +1,51 @@
+SimpleXPath
+==========
+
+>>> from os.path import dirname
+>>> from os.path import abspath
+>>> config = """
+... [transmogrifier]
+... pipeline =
+...     webcrawler
+...     treeserializer
+...     typerecognitor
+...     relinker
+...     simplexpath-title
+...     simplexpath-text
+...     printer
+...     
+... [webcrawler]
+... blueprint = pretaweb.blueprints.webcrawler
+... site_url  = file://%s/test_staticsite
+...
+... [treeserializer]
+... blueprint = pretaweb.blueprints.treeserializer
+...
+... [typerecognitor]
+... blueprint = pretaweb.blueprints.typerecognitor
+...
+... [relinker]
+... blueprint = pretaweb.blueprints.relinker
+...
+... [simplexpath-title]
+... blueprint = pretaweb.blueprints.simplexpath
+... from_key = text
+... key = title
+... xpath = //title
+...
+... [simplexpath-text]
+... blueprint = pretaweb.blueprints.simplexpath
+... key = text
+... xpath = //div[@id="content"]
+...
+... [printer]
+... blueprint = collective.transmogrifier.sections.tests.pprinter
+...
+... """ % abspath(dirname(__file__))
+
+>>> from collective.transmogrifier.tests import registerConfig
+>>> registerConfig(u'pretaweb.blueprints.typerecognitor.test', config)
+
+>>> from collective.transmogrifier.transmogrifier import Transmogrifier
+>>> transmogrifier = Transmogrifier(plone)
+>>> transmogrifier(u'pretaweb.blueprints.typerecognitor.test')
