@@ -12,12 +12,12 @@ WebCrawler
 ...     
 ... [webcrawler]
 ... blueprint = pretaweb.blueprints.webcrawler
-... site_url  = file://%s/test_staticsite
+... site_url  = file:///%s/test_staticsite
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
 ...
-... """ % abspath(dirname(__file__))
+... """ % abspath(dirname(__file__)).replace('\\','/')
 
 >>> from collective.transmogrifier.tests import registerConfig
 >>> registerConfig(u'pretaweb.blueprints.webcrawler.test', config)
@@ -26,22 +26,22 @@ WebCrawler
 >>> transmogrifier = Transmogrifier(plone)
 >>> transmogrifier(u'pretaweb.blueprints.webcrawler.test')
 {'_path': '/plone_schema.png',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
 {'_path': '/egenius-plone.gif',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
 {'_path': '/cia-plone-view-source.jpg',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
 {'_path': '/file4.HTML',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
 {'_path': '/file.doc',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
 {'_path': '/subfolder',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
 {'_path': '/file2.htm',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
 {'_path': '/subfolder/subfile1.htm',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
 {'_path': '/file3.html',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
 {'_path': '/file1.htm',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}

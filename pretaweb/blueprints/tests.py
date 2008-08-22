@@ -12,6 +12,7 @@ from collective.transmogrifier.sections.tests import PrettyPrinter
 from pretaweb.blueprints.webcrawler import WebCrawler
 from pretaweb.blueprints.treeserializer import TreeSerializer
 from pretaweb.blueprints.typerecognitor import TypeRecognitor
+from templatefinder import TemplateFinder
 
 
 def setUp(test):
@@ -33,13 +34,15 @@ def setUp(test):
         name=u'pretaweb.blueprints.treeserializer')
     provideUtility(TypeRecognitor,
         name=u'pretaweb.blueprints.typerecognitor')
-
+    provideUtility(TemplateFinder,
+        name=u'pretaweb.blueprints.templatefinder')
 
 def test_suite():
     return unittest.TestSuite((
         doctest.DocFileSuite('webcrawler.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('treeserializer.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('typerecognitor.txt', setUp=setUp, tearDown=tearDown),
+        doctest.DocFileSuite('templatefinder.txt', setUp=setUp, tearDown=tearDown),
     ))
 
 

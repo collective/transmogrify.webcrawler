@@ -7,6 +7,7 @@ from collective.transmogrifier.interfaces import ISection
 from collective.transmogrifier.utils import Matcher
 
 from webstemmer.analyze import PageFeeder, LayoutAnalyzer
+from webstemmer.zipdb import ACLDB
 
 class TemplateFinder(object):
     classProvides(ISectionBlueprint)
@@ -34,10 +35,12 @@ class TemplateFinder(object):
           feeder = PageFeeder(analyzer, linkinfo=linkinfo, acldb=acldb,
                                 default_charset=default_charset, debug=debug)
           
+          import pdb; pdb.set_trace()
           items = []
           for item in self.previous:
-              feeder.feed_page(item['_path'], item['text'])
-              items.append(item)
+              if item.get('_path',None) and item.get('_content',None):
+                  feeder.feed_page(item['_path'], item['_content'])
+                  items.append(item)
           feeder.close()
           
           cluster = {}
