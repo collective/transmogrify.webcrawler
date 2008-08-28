@@ -71,6 +71,7 @@ class TypeRecognitor(object):
                 item['image'] = item['_content']
             elif item['_type'] == 'Document':
                 item['text'] = item['_content']
+            del item['_content']
             
             yield item
         
