@@ -15,9 +15,21 @@ class Relinker(object):
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
         self.locale = getattr(options, 'locale', 'en')
-        self.normalize = queryUtility(IURLNormalizer).normalize
+        util = queryUtility(IURLNormalizer)
+        if util:
+            self.normalize = util.normalize
+        else:
+            from external.normalize import baseNormalize
+            self.normalize = baseNormalize
+    
     
     def __iter__(self):
+        
+        #TODO: this shouldn't skip other types. they need to be normalised
+        #TODO: needs to take input as to what new name should be so other blueprints can decide
+        #TODO: needs allow complete changes to path so can move structure
+        #TODO: needs to change file extentions of converted docs. or allow others to change that 
+        
         items = []
         for item in self.previous:
 
@@ -48,5 +60,5 @@ class Relinker(object):
 
     def normalize_path(self, path):
         for part in path.split('/')[1:]:
-            yield self.normalize(part, self.locale), part
+            yield self.normalize(part), part
         
