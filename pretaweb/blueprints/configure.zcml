@@ -16,6 +16,8 @@
              name="pretaweb.blueprints.templatefinder" />
     <utility component=".relinker.Relinker"
              name="pretaweb.blueprints.relinker" />
+    <utility component=".safeportaltransforms.SafePortalTransforms"
+             name="pretaweb.blueprints.safeportaltransforms" />
     <utility component=".simplexpath.SimpleXPath"
              name="pretaweb.blueprints.simplexpath" />
 

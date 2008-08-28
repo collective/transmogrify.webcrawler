@@ -35,12 +35,17 @@ class TemplateFinder(object):
           feeder = PageFeeder(analyzer, linkinfo=linkinfo, acldb=acldb,
                                 default_charset=default_charset, debug=debug)
           
-          import pdb; pdb.set_trace()
           items = []
+          import pdb; pdb.set_trace()
           for item in self.previous:
-              if item.get('_path',None) and item.get('_content',None):
-                  feeder.feed_page(item['_path'], item['_content'])
+              path = item.get('_path',None)
+              content = item.get('_content',None) or item.get('text',None)
+              mimetype = item.get('_mimetype',None)
+              if  path and content and mimetype in ['text/xhtml', 'text/html']:
+                  feeder.feed_page(item.get('_site_url'), content)
                   items.append(item)
+              else:
+                  yield item
           feeder.close()
           
           cluster = {}
@@ -50,11 +55,14 @@ class TemplateFinder(object):
                     cluster[p] = c
                     
           for item in items:
-              c = cluster.get(item['_path'])
-              if c:
+              path = item.get('_path')
+              c = cluster.get(path)
+              if path and c:
                   for diffscore, diffscorewight, path in c.pattern:
+                      #TODO: need to make this section work
                       xp = toxpath(path)
                       item['title'] = transform(item[text], xp)
+                      
               yield item
 
 

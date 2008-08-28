@@ -28,6 +28,7 @@ setup(name='pretaweb.blueprints',
           'lxml',
           'collective.transmogrifier',
           'plone.app.transmogrifier',
+          'plone.i18n'
           ],
       entry_points="""
       # -*- Entry points: -*-
