@@ -16,7 +16,7 @@ SimpleXPath
 ...     
 ... [webcrawler]
 ... blueprint = pretaweb.blueprints.webcrawler
-... site_url  = file://%s/test_staticsite
+... site_url  = file:///%s/test_staticsite
 ...
 ... [treeserializer]
 ... blueprint = pretaweb.blueprints.treeserializer
@@ -41,7 +41,7 @@ SimpleXPath
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
 ...
-... """ % abspath(dirname(__file__))
+... """ % abspath(dirname(__file__)).replace('\\','/')
 
 >>> from collective.transmogrifier.tests import registerConfig
 >>> registerConfig(u'pretaweb.blueprints.typerecognitor.test', config)

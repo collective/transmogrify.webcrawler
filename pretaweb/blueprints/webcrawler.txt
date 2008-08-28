@@ -13,6 +13,20 @@ WebCrawler
 ... [webcrawler]
 ... blueprint = pretaweb.blueprints.webcrawler
 ... site_url  = file:///%s/test_staticsite
+... patterns =
+...		(?s)<SCRIPT.*Abbreviation"\) 
+...		(?s)MakeLink\('(?P<u>[^']*)','(?P<a>[^']*)'\)
+...     (?s)State=.*<body[^>]*>
+... subs = 
+...     </head><body>
+...		<a href="\g<u>">\g<a></a>
+...     <br>
+...
+... [transform-doc]
+... blueprint = pretaweb.blueprints.safeportaltransforms
+... transform = word_to_html
+... keys = text
+... condition = python:"_transform" in item and item["_transform"] == "doc_to_html"
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
