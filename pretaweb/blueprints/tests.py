@@ -12,6 +12,7 @@ from collective.transmogrifier.sections.tests import PrettyPrinter
 from pretaweb.blueprints.webcrawler import WebCrawler
 from pretaweb.blueprints.treeserializer import TreeSerializer
 from pretaweb.blueprints.typerecognitor import TypeRecognitor
+from pretaweb.blueprints.safeportaltransforms import  SafePortalTransforms
 from templatefinder import TemplateFinder
 from pretaweb.blueprints.relinker import Relinker
 from pretaweb.blueprints.simplexpath import SimpleXPath
@@ -44,6 +45,11 @@ def setUp(test):
         name=u'pretaweb.blueprints.relinker')
     provideUtility(SimpleXPath,
         name=u'pretaweb.blueprints.simplexpath')
+    provideUtility(SafePortalTransforms,
+        name=u'pretaweb.blueprints.safeportaltransforms')
+    from backlinkstitle import BacklinksTitle
+    provideUtility(BacklinksTitle,
+        name=u'pretaweb.blueprints.backlinkstitle')
 
 def test_suite():
     return unittest.TestSuite((
@@ -53,6 +59,8 @@ def test_suite():
         doctest.DocFileSuite('templatefinder.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('relinker.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('simplexpath.txt', setUp=setUp, tearDown=tearDown),
+        doctest.DocTestSuite('pretaweb.blueprints.templatefinder', setUp=setUp, tearDown=tearDown),
+
     ))
 
 

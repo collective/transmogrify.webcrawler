@@ -22,13 +22,13 @@ class TypeRecognitor(object):
         'text/plain':                     ('Document',  None),
         'text/xhtml':                     ('Document',  None),
         'text/html':                      ('Document',  None),
-        'application/msword':             ('Document',  'doc_to_html'),
-        'application/vnd.ms-word':        ('Document',  'doc_to_html'), 
-        'application/pdf':                ('Document',  'pdf_to_html'), 
-        'application/x-pdf':              ('Document',  'pdf_to_html'),
-        'application/vnd.ms-excel':       ('Document',  'excel_to_html'), 
-        'application/msexcel':            ('Document',  'excel_to_html'),
-        'application/vnd.ms-powerpoint':  ('Document',  'ppt_to_html'),
+        'application/msword':             ('File',  'doc_to_html'),
+        'application/vnd.ms-word':        ('File',  'doc_to_html'), 
+        'application/pdf':                ('File',  'pdf_to_html'), 
+        'application/x-pdf':              ('File',  'pdf_to_html'),
+        'application/vnd.ms-excel':       ('File',  'excel_to_html'), 
+        'application/msexcel':            ('File',  'excel_to_html'),
+        'application/vnd.ms-powerpoint':  ('File',  'ppt_to_html'),
         'image/bmp':                      ('Image',     None),
 	      'image/jpeg2000':                 ('Image',     None),
         'image/png':                      ('Image',     None),
@@ -86,11 +86,14 @@ class TypeRecognitor(object):
             ctype, encoding = mimetypes.guess_type(url)
 
         if ctype in self.types_map:
-            return dict(_type      = self.types_map[ctype][0], 
-                        _transform = self.types_map[ctype][1], 
-                        _mimetype  = ctype)
+            transform = self.types_map[ctype][1],
+            if transform: 
+                return dict(_type      = self.types_map[ctype][0], 
+                            _mimetype  = ctype)
+            else:
+                return dict(_type      = self.types_map[ctype][0],
+                            _mimetype  = ctype)
 
         return dict(_type      = 'File', 
-                    _transform = None, 
                     _mimetype  = ctype)
 

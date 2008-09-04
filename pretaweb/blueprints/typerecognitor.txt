@@ -4,6 +4,7 @@ TypeRecognitor
 >>> from os.path import dirname
 >>> from os.path import abspath
 >>> config = """
+... 
 ... [transmogrifier]
 ... pipeline =
 ...     webcrawler

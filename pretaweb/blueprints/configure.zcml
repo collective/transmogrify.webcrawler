@@ -20,9 +20,9 @@
              name="pretaweb.blueprints.safeportaltransforms" />
     <utility component=".simplexpath.SimpleXPath"
              name="pretaweb.blueprints.simplexpath" />
+    <utility component=".backlinkstitle.BacklinksTitle"
+             name="pretaweb.blueprints.backlinkstitle" />
 
     <include package=".example"/>
-    <include package=".smithandsmith"/>
-    <include package=".obrien"/>
 
 </configure>
