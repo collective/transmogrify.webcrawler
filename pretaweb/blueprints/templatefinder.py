@@ -86,39 +86,45 @@ class TemplateFinder(object):
         else:
             items = self.previous
                     
-        import pdb; pdb.set_trace()
         for item in items:
             path,content = self.ishtml(item)
             if not path:
                 yield item
                 continue
             tree = lxml.html.soupparser.fromstring(item['text'])
-            for group in self.groups.values():
-                res = ''
-                title = ''
-                failed = False
+            auto = self.groups.get(path,{})
+            groups = self.groups.values() + [auto]
+            for group in groups:
                 if group.get('path',path) != path:
                     continue
-                for field,xps in group.items():
-                    for xp in xps:
-                        result = tree.xpath(xp,namespaces=ns)
-                        if not result:
-                            failed = True
-                            if group.get('path',None):
-                                import pdb; pdb.set_trace()
-                            break
-                        import pdb; pdb.set_trace()
-                        for node in result:
-                            if field == 'Title':
-                                title += etree.tostring(node,method='text',encoding='utf8')+' '
-                            else:
-                                res += etree.tostring(node,method='html')
-                
-                if not failed and res and title:
-                    item['text'] = res
-                    item['Title'] = ' '.join(title.split())
+                title,text = self.extract(group.items(),tree)
+                if title or text:
+                    if text:
+                        item['text'] = text
+                    if title:
+                        item['title'] = ' '.join(title.split())
+                    item['_template'] = True #TODO: make it the real template
                     break
             yield item
+
+
+    def extract(self, pats, tree):
+        res = ''
+        title = ''
+        for field,xps in pats:
+            for xp in xps:
+                result = tree.xpath(xp,namespaces=ns)
+                if not result:
+                    return '',''
+                for node in result:
+                    if field == 'title':
+                        title += etree.tostring(node,method='text',encoding='utf8')+' '
+                    else:
+                        res += etree.tostring(node,method='html')
+                if result:
+                    #TODO create a template without content
+                    pass
+        return title,res
 
     def ishtml(self, item):
               path = item.get('_path',None)
@@ -167,7 +173,7 @@ class TemplateFinder(object):
                   #tree = etree.parse(StringIO(item['text']), parser)
                   tree = lxml.html.soupparser.fromstring(item['text'])
                   failed = False
-                  group = {'text':[],'Title':[],'path':path}
+                  group = {'text':[],'title':[],'path':path}
                   index = 0
                   for diffscore, diffscorewight, pat in c.pattern:
                       #TODO: need to make this section work
@@ -176,7 +182,7 @@ class TemplateFinder(object):
                       xp = toXPath(pat)
                       print path,pat,xp,c.title_sectno==index
                       if c.title_sectno == index:
-                          group['Title'].append(xp)
+                          group['title'].append(xp)
                       else:
                           group['text'].append(xp)
                       index = index +1
