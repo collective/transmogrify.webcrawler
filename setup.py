@@ -25,7 +25,7 @@ setup(name='pretaweb.blueprints',
       install_requires=[
           'setuptools',
           # -*- Extra requirements: -*-
-          'lxml',
+          'lxml==2.1.1',
           'BeautifulSoup',
           'collective.transmogrifier',
           'plone.app.transmogrifier',
