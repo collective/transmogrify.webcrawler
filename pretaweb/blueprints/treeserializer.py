@@ -31,6 +31,7 @@ class TreeSerializer(object):
         top_object = None
         item_list_paths = item_list.keys()
         item_list_paths.sort()
+        #import pdb; pdb.set_trace()
         for item in item_list_paths:
             # path should be defined as absolute
             if item_list[item]['_path'][0:1] == '/' and \
@@ -42,13 +43,13 @@ class TreeSerializer(object):
                     del object_list[-1]
                 
                 def set_object(tree, object, sub_objects):
-                    tree[object] = {}
+                    tree.setdefault(object, {})
                     if len(sub_objects) != 0:
                         tree[object] = set_object(tree[object], 
                                                   sub_objects[0], 
                                                   sub_objects[1:])
                     return tree
-                tree.update(set_object({}, object_list[0], object_list[1:]))
+                tree.update(set_object(tree, object_list[0], object_list[1:]))
                 #print object_list
         
         # serialize tree
