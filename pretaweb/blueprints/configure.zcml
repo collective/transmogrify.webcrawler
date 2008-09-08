@@ -22,6 +22,8 @@
              name="pretaweb.blueprints.simplexpath" />
     <utility component=".backlinkstitle.BacklinksTitle"
              name="pretaweb.blueprints.backlinkstitle" />
+    <utility component=".isindex.IsIndex"
+             name="pretaweb.blueprints.isindex" />
 
     <include package=".example"/>
 
