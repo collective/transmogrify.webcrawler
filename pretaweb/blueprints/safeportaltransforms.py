@@ -26,6 +26,7 @@ class SafePortalTransforms(PortalTransformsSection):
 
     def __init__(self, transmogrifier, name, options, previous):
         PortalTransformsSection.__init__(self, transmogrifier, name, options, previous)
+        self.destination = options.get('destination')
         if not getattr(self,'from_',None):
             self.from_field = options.get('mimetype_field')
             assert self.from_field, "either from_ or mimetype_field must be set"
@@ -45,19 +46,32 @@ class SafePortalTransforms(PortalTransformsSection):
                 else:
                     from_ = self.from_ or item[self.from_field] 
                     try:
-                        data = self.ptransforms.convertToData(
+                        print "Converting: %s %s->%s %i" % (item['_path'],from_,self.target,len(item[key]))
+                        data = self.ptransforms.convertTo(
                                                               self.target, item[key], mimetype=from_)
-                    except:
+                        print "Converting: result %i" % len(str(data))
+                    except Exception:
+                        print "ERROR: Failed to convert %s" % item['_path']
+                        raise
                         continue
-                    #TODO: we should be able to get images etc too
-                    #for sub in data.getSubObjects():
-
-                    #    yield dict(_type='Image',
-                    #               _path='/'.join([item['_path'],sub['name']]),
-                    #               data=sub)
-                    item[key] = str(data)
+                    if data is None:
+                        print "ERROR: Failed to convert %s" % item['_path']
+                        continue
+                    if self.destination:
+                        item[self.destination] = str(data)
+                        del item[key]
+                    else:
+                        item[key] = str(data)
                     if self.from_field:
                         item[self.from_field] = self.target
+                    if hasattr(data,'getSubObjects'):
+                        base = '/'.join(item['_path'].split('/')[:-1])
+                        for name,data in data.getSubObjects().items():
+                            #TODO: maybe shouldn't hard code this
+                            yield dict(_type='Image',
+                                   _path='/'.join([base,name]),
+                                   _site_url=item.get('_site_url'),
+                                   image=data)
                                                 
             yield item
 
