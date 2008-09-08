@@ -50,6 +50,9 @@ def setUp(test):
     from backlinkstitle import BacklinksTitle
     provideUtility(BacklinksTitle,
         name=u'pretaweb.blueprints.backlinkstitle')
+    from isindex import IsIndex
+    provideUtility(IsIndex,
+        name=u'pretaweb.blueprints.isindex')
 
 def test_suite():
     return unittest.TestSuite((

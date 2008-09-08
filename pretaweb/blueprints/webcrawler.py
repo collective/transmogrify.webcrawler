@@ -95,6 +95,9 @@ class WebCrawler(object):
 
         class MyChecker(Checker):
             link_names = {} #store link->[name]
+            def message(self, format, *args):
+                pass # stop printing out crap
+
             def readhtml(self, url_pair):
                 url, fragment = url_pair
                 self.last_text = text = None
@@ -128,6 +131,8 @@ class WebCrawler(object):
                 for p,r in zip(pattern.split('\n'),replace.split('\n')):
                     if p and r:
                         text,n = re.subn(p,r,text)
+                        if n:
+                            print "patching %s with %i * %s" % (url,n,p)
                 return text
                 
 
