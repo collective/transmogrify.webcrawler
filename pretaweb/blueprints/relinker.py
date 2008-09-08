@@ -7,7 +7,10 @@ from plone.i18n.normalizer.interfaces import IURLNormalizer
 from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 import urllib
-
+from lxml import etree
+import lxml
+from urlparse import urljoin
+from external.relative_url import relative_url
 
 class Relinker(object):
     classProvides(ISectionBlueprint)
@@ -28,31 +31,55 @@ class Relinker(object):
         
         #TODO: needs to take input as to what new name should be so other blueprints can decide
         #TODO: needs allow complete changes to path so can move structure
-        #TODO: needs to change file extentions of converted docs. or allow others to change that 
+        #TODO: needs to change file extentions of converted docs. or allow others to change that
+        #TODO need to fix relative links 
         
-        items = []
+
+        changes = {}
         for item in self.previous:
-            items.append(item)
+            path = item.get('_path',None)
+            if not path:
+                yield item
+                continue
+            norm = lambda part: self.normalize(urllib.unquote_plus(part))
+            newpath = '/'.join([norm(part) for part in path.split('/')])
+            origin = item.get('_origin')
+            if not origin:
+                origin = item['_origin'] = path
+            item['_path'] = newpath
+            changes[urljoin(item['_site_url'],origin)] = item                
 
-        changes = []
-        for item in items:
-            for url_part in self.normalize_path(item.get('_path','')):
-                changes.append(url_part)
-
-        new_items = []
-        for item in items:
-            for change in changes:
-               if item.get('_mimetype') in ['text/xhtml', 'text/html']: 
-                    item['text'] = item['text'].replace(change[1], change[0])
-               if '_path' in item:
-                    item['_path'] = item['_path'].replace(change[1], change[0])
-            new_items.append(item)
-
-        new_items.sort()
-        for item in new_items:
+        for item in changes.values():
+            if 'text' in item and item.get('_mimetype') in ['text/xhtml', 'text/html']: 
+                path = item['_path']
+                base = urljoin(item['_site_url'],path)
+                def replace(link):
+                    #import pdb; pdb.set_trace()
+                    linked = changes.get(link)
+                    if linked:
+                        linkedpath = linked['_path']
+                        return relative_url(base, linkedpath)
+                    else:
+                        return relative_url(base, link)
+                try:
+                    tree = lxml.html.soupparser.fromstring(item['text'])
+                    tree.rewrite_links(replace, base_href=base)
+                    item['text'] = etree.tostring(tree,pretty_print=True)
+                except:
+                    pass
+            del item['_origin']
+            #rewrite the backlinks too
+            backlinks = item.get('_backlinks',[])
+            newbacklinks = []
+            for origin,name in backlinks:
+                #assume absolute urls
+                backlinked= changes.get(origin)
+                if backlinked:
+                    newbacklinks.append((urljoin(backlinked['_site_url'],backlinked['_path'],name)))
+                else:
+                    newbacklinks.append((origin,name))
+            item['_backlinks'] = newbacklinks                        
+                
+                
             yield item
-
-    def normalize_path(self, path):
-        for part in path.split('/')[1:]:
-            yield self.normalize(urllib.unquote_plus(part)), part
         
