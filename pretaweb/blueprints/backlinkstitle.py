@@ -19,26 +19,22 @@ You can specify an option 'ignore' option to specify titles never to use
 
 """
 
-
-
-
 class BacklinksTitle(object):
     classProvides(ISectionBlueprint)
     implements(ISection)
 
-
-
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
-        self.ignore=options.get('ignore','').split('\n')
+        self.toignore=options.get('ignore','').strip().split('\n')
 
     def __iter__(self):
         for item in self.previous:
             backlinks = item.get('_backlinks')
-            title = item.get('Title')
+            title = item.get('title')
             if not backlinks or title:
                 yield item
                 continue
+            #import pdb; pdb.set_trace()
             names = [name for url, name in backlinks if not self.ignore(name)]
             # do a vote
             votes = {}
@@ -47,12 +43,12 @@ class BacklinksTitle(object):
             votes = [(c,name) for name,c in votes.items()]
             votes.sort()
             if votes:
-                c,item['Title'] = votes[-1]
+                c,item['title'] = votes[-1]
             yield item
 
     def ignore(self, name):
-        for pat in self.ignore:
-            if re.find(pat,name):
+        for pat in self.toignore:
+            if re.search(pat,name):
                 return True
         return False
 
