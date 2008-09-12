@@ -13,6 +13,7 @@ import lxml.html
 import lxml.html.soupparser
 
 from StringIO import StringIO
+from sys import stderr
 
 
 """
@@ -63,6 +64,7 @@ class IsIndex(object):
             if not path:
                 yield item
                 continue
+            #import pdb; pdb.set_trace()
             tree = lxml.html.soupparser.fromstring(html)
             base = item.get('_site_url','/')
             tree.make_links_absolute(base+path)
@@ -83,7 +85,7 @@ class IsIndex(object):
                 if not links:
                     continue
                 count, dir, rest = self.indexof(links)
-                print count,len(links),dir,path,item.get('_template'), rest
+                print >>stderr, (count,len(links),dir,path,item.get('_template'), rest)
                 if self.isindex(count,links):
                     indexes.setdefault(dir,[]).append((count,item,path,links,dir))
     

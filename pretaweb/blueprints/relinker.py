@@ -11,6 +11,7 @@ from lxml import etree
 import lxml
 from urlparse import urljoin
 from external.relative_url import relative_url
+from sys import stderr
 
 class Relinker(object):
     classProvides(ISectionBlueprint)
@@ -47,25 +48,31 @@ class Relinker(object):
             if not origin:
                 origin = item['_origin'] = path
             item['_path'] = newpath
-            changes[urljoin(item['_site_url'],origin)] = item                
+            changes[item.get('_site_url','')+origin] = item                
 
         for item in changes.values():
             if 'text' in item and item.get('_mimetype') in ['text/xhtml', 'text/html']: 
                 path = item['_path']
-                base = urljoin(item['_site_url'],path)
+                oldbase = item['_site_url']+item['_origin']
+                newbase = item['_site_url']+path
                 def replace(link):
                     #import pdb; pdb.set_trace()
                     linked = changes.get(link)
                     if linked:
-                        linkedpath = linked['_path']
-                        return relative_url(base, linkedpath)
+                        linkedurl = item['_site_url']+linked['_path']
+                        return relative_url(newbase, linkedurl)
                     else:
-                        return relative_url(base, link)
+                        if link.count('html'):
+                            pass
+                            #print >>stderr, "WARNING: relinker link %s not found from %s"%(link,path) 
+                        return relative_url(newbase, link)
+                
                 try:
                     tree = lxml.html.soupparser.fromstring(item['text'])
-                    tree.rewrite_links(replace, base_href=base)
-                    item['text'] = etree.tostring(tree,pretty_print=True)
-                except:
+                    tree.rewrite_links(replace, base_href=oldbase)
+                    item['text'] = etree.tostring(tree,pretty_print=True,encoding="utf8")
+                except Exception:
+                    print >>stderr, "ERROR: relinker parse error %s, %s" % (path,str(Exception))
                     pass
             del item['_origin']
             #rewrite the backlinks too
@@ -75,10 +82,11 @@ class Relinker(object):
                 #assume absolute urls
                 backlinked= changes.get(origin)
                 if backlinked:
-                    newbacklinks.append((urljoin(backlinked['_site_url'],backlinked['_path'],name)))
+                    newbacklinks.append(('/'.join([backlinked['_site_url'],backlinked['_path']]),name))
                 else:
                     newbacklinks.append((origin,name))
-            item['_backlinks'] = newbacklinks                        
+            if backlinks:
+                item['_backlinks'] = newbacklinks                        
                 
                 
             yield item

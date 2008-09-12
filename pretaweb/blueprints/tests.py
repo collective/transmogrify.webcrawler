@@ -4,6 +4,9 @@ import unittest
 from zope.testing import doctest
 from zope.component import provideUtility
 from Products.Five import zcml
+from zope.component import provideUtility
+from zope.interface import classProvides, implements
+from collective.transmogrifier.interfaces import ISectionBlueprint, ISection
 
 from collective.transmogrifier.tests import setUp as baseSetUp
 from collective.transmogrifier.tests import tearDown
@@ -17,6 +20,26 @@ from templatefinder import TemplateFinder
 from pretaweb.blueprints.relinker import Relinker
 from pretaweb.blueprints.simplexpath import SimpleXPath
 from plone.i18n.normalizer import urlnormalizer
+
+class HTMLSource(object):
+    classProvides(ISectionBlueprint)
+    implements(ISection)
+    
+    def __init__(self, transmogrifier, name, options, previous):
+        self.previous = previous
+        def item(path, text):
+            i = dict(_mimetype="text/html",_site_url="http://test.com/")
+            i.update(dict(_path=key,text=value,_mimetype="text/html"))
+            return i
+        self.items = [item(key,value) for key,value in options.items() if key!='blueprint']
+        
+    def __iter__(self):
+        for item in self.previous:
+            yield item
+            
+        for item in self.items:
+            yield item
+
 
 
 def setUp(test):
@@ -53,6 +76,16 @@ def setUp(test):
     from isindex import IsIndex
     provideUtility(IsIndex,
         name=u'pretaweb.blueprints.isindex')
+    from pathmover import PathMover
+    provideUtility(PathMover,
+        name=u'pretaweb.blueprints.pathmover')
+    from safeatschemaupdater import SafeATSchemaUpdaterSection
+    provideUtility(SafeATSchemaUpdaterSection,
+        name=u'pretaweb.blueprints.safeatschemaupdater')
+
+    provideUtility(HTMLSource,
+        name=u'pretaweb.blueprints.test.htmlsource')
+
 
 def test_suite():
     return unittest.TestSuite((
@@ -61,10 +94,9 @@ def test_suite():
         doctest.DocFileSuite('typerecognitor.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('templatefinder.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('relinker.txt', setUp=setUp, tearDown=tearDown),
+        doctest.DocFileSuite('pathmover.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('simplexpath.txt', setUp=setUp, tearDown=tearDown),
-        doctest.DocTestSuite('pretaweb.blueprints.templatefinder', setUp=setUp, tearDown=tearDown),
+        #doctest.DocTestSuite('pretaweb.blueprints.templatefinder', setUp=setUp, tearDown=tearDown),
 
     ))
-
-
 

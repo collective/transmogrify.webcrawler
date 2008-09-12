@@ -6,6 +6,7 @@ from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 import shutil
 from plone.app.transmogrifier.portaltransforms import PortalTransformsSection
+from sys import stderr
 
 # monkey patch to ignore errors due to some weird windows timing thing
 from Products.PortalTransforms.libtransforms.commandtransform import commandtransform
@@ -42,20 +43,22 @@ class SafePortalTransforms(PortalTransformsSection):
                         item[key] = self.ptransforms(self.transform, item[key])
                     except:
                         # we get Illegal html errorrs etc sometimes
+                        raise
                         continue
                 else:
                     from_ = self.from_ or item[self.from_field] 
                     try:
-                        print "Converting: %s %s->%s %i" % (item['_path'],from_,self.target,len(item[key]))
                         data = self.ptransforms.convertTo(
                                                               self.target, item[key], mimetype=from_)
-                        print "Converting: result %i" % len(str(data))
-                    except Exception:
-                        print "ERROR: Failed to convert %s" % item['_path']
-                        raise
+                        print >>stderr, "Converted: %s %s->%s %i->%i" % \
+                        (item['_path'],from_,self.target,len(item[key]),len(str(data)))
+       
+                    except:
+                        print >>stderr, "ERROR: Failed to convert %s" % item['_path']
+                        #raise
                         continue
                     if data is None:
-                        print "ERROR: Failed to convert %s" % item['_path']
+                        print >>stderr, "ERROR: Failed to convert %s" % item['_path']
                         continue
                     if self.destination:
                         item[self.destination] = str(data)

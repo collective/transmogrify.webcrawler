@@ -1,26 +1,27 @@
 Relinker
 ==========
 
->>> from os.path import dirname
->>> from os.path import abspath
+>>> from collective.transmogrifier.tests import registerConfig
+>>> from collective.transmogrifier.transmogrifier import Transmogrifier
 >>> config = """
 ... [transmogrifier]
 ... pipeline =
 ...     webcrawler
-...     treeserializer
-...     typerecognitor
+...     moves
 ...     relinker
 ...     printer
 ...     
 ... [webcrawler]
-... blueprint = pretaweb.blueprints.webcrawler
-... site_url  = file:///%s/test_staticsite
+... blueprint = pretaweb.blueprints.test.htmlsource
+... level3/index=<a href="../level2/index">Level 2</a>
+... level2/index=<a href="../level3/index">Level 3</a><img src="+&image">
+... level2/+&image=<h1>content</h1>
 ...
-... [treeserializer]
-... blueprint = pretaweb.blueprints.treeserializer
-...
-... [typerecognitor]
-... blueprint = pretaweb.blueprints.typerecognitor
+... [moves]
+... blueprint = pretaweb.blueprints.pathmover
+... moves =
+... 	level2	level3
+... 	level3	level2
 ...
 ... [relinker]
 ... blueprint = pretaweb.blueprints.relinker
@@ -28,11 +29,21 @@ Relinker
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
 ...
-... """ % abspath(dirname(__file__)).replace('\\','/')
+... """ 
 
->>> from collective.transmogrifier.tests import registerConfig
->>> registerConfig(u'pretaweb.blueprints.typerecognitor.test', config)
-
->>> from collective.transmogrifier.transmogrifier import Transmogrifier
+>>> registerConfig(u'test', config)
 >>> transmogrifier = Transmogrifier(plone)
->>> transmogrifier(u'pretaweb.blueprints.typerecognitor.test')
+>>> transmogrifier(u'test')
+{'_mimetype': 'text/html',
+ '_path': 'level2/index',
+ '_site_url': 'http://test.com/',
+ 'text': '<html>\n  <a href="../level3/index">Level 2</a>\n</html>\n'}
+{'_mimetype': 'text/html',
+ '_path': 'level3/index',
+ '_site_url': 'http://test.com/',
+ 'text': '<html>\n  <a href="../level2/index">Level 3</a>\n  <img src="image"/>\n</html>\n'}
+ {'_mimetype': 'text/html',
+ '_path': 'level3/image',
+ '_site_url': 'http://test.com/',
+ 'text': '<html>\n  <h1>content</h1>\n</html>\n'}
+ 

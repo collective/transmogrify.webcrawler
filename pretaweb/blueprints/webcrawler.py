@@ -7,59 +7,23 @@ from collective.transmogrifier.interfaces import ISection
 
 from pretaweb.blueprints.external import webchecker
 from pretaweb.blueprints.external.webchecker import Checker,Page
-from pretaweb.blueprints.external.webchecker import MyHTMLParser
+from pretaweb.blueprints.external.webchecker import MyHTMLParser,MyStringIO
 import re
 from htmlentitydefs import entitydefs
 import urllib,os
+from sys import stderr
+from lxml import etree
+import lxml.html
+import lxml.html.soupparser
+from lxml.html.clean import Cleaner
+import urlparse
 
-#patch webcheckers parser to do entities
-
-def link_attr(self, attributes, *args):
-        for name, value in attributes:
-            if name in args:
-                if value: value = value.strip()
-                if value:
-                    for entity,repl in entitydefs.items():
-                        value = value.replace('&%s;'%entity,repl) 
-                    self.links.setdefault(value,[])
-                    self.last_link = value
-
-def start_a(self, attributes):
-    self.link_attr(attributes, 'href')
-    self.check_name_id(attributes)
-    if 'href' in [a for a,v in attributes]:
-        self.text = ''
-
-def handle_data(self, data):
-    text = getattr(self,'text',None)
-    if text is not None:
-        self.text += data
-
-def end_a(self): 
-    last = getattr(self,'last_link',None)
-    text = getattr(self,'text',None)
-    if last and text:
-        text = ' '.join(text.split())
-        self.links.setdefault(last,[]).append(text.strip())
-    self.last_link = self.text = None
-
-MyHTMLParser.link_attr = link_attr
-MyHTMLParser.start_a = start_a
-MyHTMLParser.handle_data = handle_data
-MyHTMLParser.end_a = end_a
-
-
-real_getlinkinfos = Page.getlinkinfos 
-def getlinkinfos(self):
-    infos = real_getlinkinfos(self)
-    for link, rawlink, fragment in infos:
-            #override to get link text
-            names = [(self.url,name) for name in self.parser.links.get(rawlink,[])]
-            self.checker.link_names.setdefault(link,[]).extend(names)
-    return infos
-
-Page.getlinkinfos = getlinkinfos
-
+VERBOSE = 0                             # Verbosity level (0-3)
+MAXPAGE = 0                        # Ignore files bigger than this
+CHECKEXT = False    # Check external references (1 deep)
+VERBOSE = 0         # Verbosity level (0-3)
+MAXPAGE = 150000    # Ignore files bigger than this
+NONAMES = 0         # Force name anchor checking
 
 
 class WebCrawler(object):
@@ -70,19 +34,17 @@ class WebCrawler(object):
         self.previous = previous
         self.open_url = MyURLopener().open
         self.options = options
+        self.ignore_re = [re.compile(pat.strip()) for pat in options.get("ignore",'').split('\n') if pat]
         
-        CHECKEXT = False    # Check external references (1 deep)
-        VERBOSE = 0         # Verbosity level (0-3)
-        MAXPAGE = 150000    # Ignore files bigger than this
-        ROUNDSIZE = 50      # Number of links processed per round
-        NONAMES = 0         # Force name anchor checking
 
         self.checkext  = options.get('checkext', CHECKEXT)
         self.verbose   = options.get('verbose', VERBOSE)
         self.maxpage   = options.get('maxpage', MAXPAGE)
-        self.roundsize = options.get('roundsize', ROUNDSIZE)
         self.nonames   = options.get('nonames', NONAMES)
         self.site_url  = options.get('site_url', None)
+        # make sure we end with a / 
+        if self.site_url[-1] != '/':
+            self.site_url=self.site_url+'/'
 
     def __iter__(self):
         for item in self.previous:
@@ -92,84 +54,83 @@ class WebCrawler(object):
             return
         
         options = self.options
+        infos = {}
+        files = {}
+        redirected = {}
 
         class MyChecker(Checker):
             link_names = {} #store link->[name]
             def message(self, format, *args):
                 pass # stop printing out crap
 
-            def readhtml(self, url_pair):
-                url, fragment = url_pair
-                self.last_text = text = None
-                f, url = self.openhtml(url_pair)
-                if f:
-                    text = f.read()
-                    rtext = self.reformat(text,url)
-                    if text != rtext:
-                        pass
-                    self.last_text = text = rtext
-                    f.close()
-                return text, url
             
             def openhtml(self, url_pair):
-                url, fragment = url_pair
+                oldurl, fragment = url_pair
                 f = self.openpage(url_pair)
-                self.last_info = None
                 if f:
                     url = f.geturl()
-                    self.last_info = info = f.info()
+                    redirected[oldurl] = url
+                    infos[url] = info = f.info()
                     if not self.checkforhtml(info, url):
-                        self.last_text = f.read()
+                        files[url] = f.read()
                         self.safeclose(f)
                         f = None
+                else:
+                    url = oldurl
                 return f, url
-            
-            def reformat(self, text, url):
-                pattern = options.get('patterns','')
-                replace = options.get('subs','')
-                #import pdb; pdb.set_trace()
-                for p,r in zip(pattern.split('\n'),replace.split('\n')):
-                    if p and r:
-                        text,n = re.subn(p,r,text)
-                        if n:
-                            print "patching %s with %i * %s" % (url,n,p)
-                return text
                 
 
+        def pagefactory(text, url, verbose=VERBOSE, maxpage=MAXPAGE, checker=None):
+            return LXMLPage(text,url,verbose,maxpage,checker,options)
+
+        webchecker.Page = pagefactory
         
         checker = MyChecker()
         checker.setflags(checkext   = self.checkext, 
                          verbose    = self.verbose,
                          maxpage    = self.maxpage, 
-                         roundsize  = self.roundsize,
                          nonames    = self.nonames)
         checker.addroot(self.site_url)
 
+        #import pdb; pdb.set_trace()
         while checker.todo:
             urls = checker.todo.keys()
             urls.sort()
             del urls[1:]
-            for url in urls:
-                checker.dopage(url)
-                names = checker.link_names.get(url[0],[])
-
-                # pass preccesed files
-                if url[0].startswith(self.site_url):
-                    file_path = url[0][len(self.site_url):]
-                    if file_path:
-                        if checker.last_info:
-#                            content = self.open_url(self.site_url+file_path)
-                            yield dict(_path         = file_path,
+            for url,part in urls:
+                if self.ignore(url):
+                    checker.markdone((url,part))
+                    print >> stderr, "Ignoring: "+ str(url)
+                    yield dict(_bad_url = url)
+                else:
+                    print >> stderr, "Crawling: "+ str(url)
+                    checker.dopage((url,part))
+                    page = checker.name_table.get(url) #have to usse unredirected
+                    url = redirected.get(url,url)
+                    names = checker.link_names.get(url,[])
+                    path = url[len(self.site_url):]
+                    path = '/'.join([p for p in path.split('/') if p])
+                    #if path.count('file'):
+                    #    import pdb; pdb.set_trace()
+                    info = infos.get(url)
+                    file = files.get(url)
+                    if info and (page or file):
+                        text = page and page.html() or file
+                        yield dict(_path         = path,
                                        _site_url     = self.site_url,
                                        _backlinks    = names,
-                                       _content      = checker.last_text,
-                                       _content_info = checker.last_info,)
-                        else:
-                            yield dict(_bad_url = self.site_url+file_path)
-                            continue
-                else:
-                    yield dict(_bad_url = url[0])
+                                       _content      = text,
+                                       _content_info = info,)
+                    else:
+                            yield dict(_bad_url = self.site_url+path)
 
+    def ignore(self, url):
+        if not url.startswith(self.site_url):
+            return True
+        for pat in self.ignore_re:
+            if pat and pat.search(url):
+                return True
+        return False
 
 class MyURLopener(urllib.FancyURLopener):
 
@@ -211,3 +172,92 @@ class MyURLopener(urllib.FancyURLopener):
         return urllib.FancyURLopener.open_file(self, url)
             
 webchecker.MyURLopener = MyURLopener
+
+
+# do tidy and parsing and links via lxml. also try to encode page properly
+class LXMLPage:
+
+    def __init__(self, text, url, verbose=VERBOSE, maxpage=MAXPAGE, checker=None, options=None):
+        self.text = text
+        self.url = url
+        self.verbose = verbose
+        self.maxpage = maxpage
+        self.checker = checker
+        self.options = options
+
+        # The parsing of the page is done in the __init__() routine in
+        # order to initialize the list of names the file
+        # contains. Stored the parser in an instance variable. Passed
+        # the URL to MyHTMLParser().
+        size = len(self.text)
+        if self.maxpage and size > self.maxpage:
+            self.note(0, "Skip huge file %s (%.0f Kbytes)", self.url, (size*0.001))
+            self.parser = None
+            return
+        
+        if options:
+            text = self.reformat(text, url)
+        self.checker.note(2, "  Parsing %s (%d bytes)", self.url, size)
+        self.parser = lxml.html.soupparser.fromstring(text)
+#        MyHTMLParser(url, verbose=self.verbose,
+#                                   checker=self.checker)
+#        self.parser.feed(self.text)
+
+    def note(self, level, msg, *args):
+        pass
+
+    # Method to retrieve names.
+    def getnames(self):
+        #if self.parser:
+        #    return self.parser.names
+        #else:
+            return []
+        
+    def html(self):
+        if self.parser is None:
+            return ''
+        html = etree.tostring(self.parser, encoding="utf8", method="html",pretty_print=True)
+        #cleaner = Cleaner(page_structure=False, links=False)
+        #rhtml = cleaner.clean_html(html)
+        return html
+
+    def getlinkinfos(self):
+        # File reading is done in __init__() routine.  Store parser in
+        # local variable to indicate success of parsing.
+
+        # If no parser was stored, fail.
+        if self.parser is None: return []
+
+        base = urlparse.urljoin(self.url, self.parser.base_url or "")
+        infos = []
+        for element, attribute, rawlink, pos in self.parser.iterlinks():
+            t = urlparse.urlparse(rawlink)
+            # DON'T DISCARD THE FRAGMENT! Instead, include
+            # it in the tuples which are returned. See Checker.dopage().
+            fragment = t[-1]
+            t = t[:-1] + ('',)
+            rawlink = urlparse.urlunparse(t)
+            link = urlparse.urljoin(base, rawlink)
+            if link[-1] == '/':
+                link = link[:-1]
+            #override to get link text
+            if attribute == 'href':
+                name = ' '.join(element.text_content().split())
+                self.checker.link_names.setdefault(link,[]).extend([(self.url,name)])
+            #and to filter list
+            infos.append((link, rawlink, fragment))
+
+        return infos
+
+            
+    def reformat(self, text, url):
+            pattern = self.options.get('patterns','')
+            replace = self.options.get('subs','')
+            #import pdb; pdb.set_trace()
+            for p,r in zip(pattern.split('\n'),replace.split('\n')):
+                if p and r:
+                    text,n = re.subn(p,r,text)
+                    if n:
+                        print >>stderr, "patching %s with %i * %s" % (url,n,p)
+            return text
+

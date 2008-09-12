@@ -13,6 +13,7 @@ import lxml.html
 import lxml.html.soupparser
 
 from StringIO import StringIO
+from sys import stderr
 
 
 """
@@ -100,7 +101,7 @@ class TemplateFinder(object):
                 title,text = self.extract(group.items(),tree)
                 if title or text:
                     if text:
-                        item['text'] = text
+                        item['text'] = '<div>%s</div>' % text
                     if title:
                         item['title'] = ' '.join(title.split())
                     item['_template'] = True #TODO: make it the real template
@@ -113,6 +114,7 @@ class TemplateFinder(object):
         title = ''
         for field,xps in pats:
             for xp in xps:
+                #import pdb; pdb.set_trace()
                 result = tree.xpath(xp,namespaces=ns)
                 if not result:
                     return '',''
@@ -180,7 +182,7 @@ class TemplateFinder(object):
                       if not pat:
                           continue
                       xp = toXPath(pat)
-                      print path,pat,xp,c.title_sectno==index
+                      print >> stderr, path,pat,xp,c.title_sectno==index
                       if c.title_sectno == index:
                           group['title'].append(xp)
                       else:

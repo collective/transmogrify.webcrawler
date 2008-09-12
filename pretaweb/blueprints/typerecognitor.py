@@ -67,8 +67,12 @@ class TypeRecognitor(object):
             # copy content to appropriate field
             if item['_type'] == 'File':
                 item['file'] = item['_content']
+                item['file.filename'] = item['_path'].split('/')[-1]
+                item['file.mimetype'] = item['_mimetype'] 
             elif item['_type'] == 'Image':
                 item['image'] = item['_content']
+                item['image.filename'] = item['_path'].split('/')[-1]
+                item['image.mimetype'] = item['_mimetype'] 
             elif item['_type'] == 'Document':
                 item['text'] = item['_content']
             del item['_content']

@@ -24,6 +24,12 @@
              name="pretaweb.blueprints.backlinkstitle" />
     <utility component=".isindex.IsIndex"
              name="pretaweb.blueprints.isindex" />
+    <utility component=".pathmover.PathMover"
+             name="pretaweb.blueprints.pathmover" />
+<utility
+    component=".safeatschemaupdater.SafeATSchemaUpdaterSection"
+    name="pretaweb.blueprints.safeatschemaupdater"
+    />
 
     <include package=".example"/>
 

@@ -31,7 +31,11 @@ class BacklinksTitle(object):
         for item in self.previous:
             backlinks = item.get('_backlinks')
             title = item.get('title')
-            if not backlinks or title:
+            if not backlinks:
+                yield item
+                continue
+            if title:
+                import pdb; pdb.set_trace()
                 yield item
                 continue
             #import pdb; pdb.set_trace()

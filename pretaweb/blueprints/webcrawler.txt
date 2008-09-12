@@ -2,12 +2,12 @@
 WebCrawler
 ==========
 
->>> from os.path import dirname
->>> from os.path import abspath
+>>> from os.path import dirname, abspath
 >>> config = """
 ... [transmogrifier]
 ... pipeline =
 ...     webcrawler
+...     clean
 ...     printer
 ...     
 ... [webcrawler]
@@ -21,12 +21,15 @@ WebCrawler
 ...     </head><body>
 ...		<a href="\g<u>">\g<a></a>
 ...     <br>
-...
-... [transform-doc]
-... blueprint = pretaweb.blueprints.safeportaltransforms
-... transform = word_to_html
-... keys = text
-... condition = python:"_transform" in item and item["_transform"] == "doc_to_html"
+... [clean]
+... blueprint = collective.transmogrifier.sections.manipulator
+... #keys = file
+... #destination = python:item.get("_mimetype") in ["text/html"] and 'text'
+... delete = 
+...		file 
+... 	image 
+... 	text 
+...		_content
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
