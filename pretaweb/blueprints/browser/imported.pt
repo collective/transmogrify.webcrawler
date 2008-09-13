@@ -1,0 +1,8 @@
+<div >
+<form tal:attributes="action request/URL">
+<select name="id">
+<option tal:repeat="id view/ids|nothing" tal:attributes="value id" tal:content="id">importer</option>
+</select>
+<input type="submit">
+</form>
+</div>

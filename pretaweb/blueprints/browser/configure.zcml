@@ -1,0 +1,17 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    i18n_domain="pretaweb.obrienimport">
+
+
+    <browser:page
+        for="*"
+        name="import"
+        class=".importers.Import"
+        permission="zope2.View"
+        />
+
+
+
+</configure>
