@@ -7,7 +7,6 @@ Relinker
 ... [transmogrifier]
 ... pipeline =
 ...     webcrawler
-...     moves
 ...     relinker
 ...     printer
 ...     
@@ -17,20 +16,22 @@ Relinker
 ... level2/index=<a href="../level3/index">Level 3</a><img src="+&image">
 ... level2/+&image=<h1>content</h1>
 ...
+... [relinker]
+... blueprint = pretaweb.blueprints.relinker
+... link_expr = python:item['_path']+'/image_web'
+...
 ... [moves]
 ... blueprint = pretaweb.blueprints.pathmover
 ... moves =
 ... 	level2	level3
 ... 	level3	level2
 ...
-... [relinker]
-... blueprint = pretaweb.blueprints.relinker
-...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
 ...
 ... """ 
 
+#... link_expr = python:getattr(item,'_type',None)=='Image' and item['_path']+'/image_web' or item['_path']
 >>> registerConfig(u'test', config)
 >>> transmogrifier = Transmogrifier(plone)
 >>> transmogrifier(u'test')

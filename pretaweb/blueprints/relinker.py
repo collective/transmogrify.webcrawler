@@ -12,6 +12,7 @@ import lxml
 from urlparse import urljoin
 from external.relative_url import relative_url
 from sys import stderr
+from collective.transmogrifier.utils import Expression
 
 class Relinker(object):
     classProvides(ISectionBlueprint)
@@ -20,6 +21,11 @@ class Relinker(object):
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
         self.locale = getattr(options, 'locale', 'en')
+        self.link_expr = None
+        if options.get('link_expr', None):
+            self.link_expr = Expression(
+                    options['link_expr'],
+                    transmogrifier, name, options)
         util = queryUtility(IURLNormalizer)
         if util:
             self.normalize = util.normalize
@@ -56,10 +62,12 @@ class Relinker(object):
                 oldbase = item['_site_url']+item['_origin']
                 newbase = item['_site_url']+path
                 def replace(link):
-                    #import pdb; pdb.set_trace()
                     linked = changes.get(link)
                     if linked:
-                        linkedurl = item['_site_url']+linked['_path']
+                        if self.link_expr:
+                            linkedurl = item['_site_url']+self.link_expr(linked)
+                        else:
+                            linkedurl = item['_site_url']+linked['_path']
                         return relative_url(newbase, linkedurl)
                     else:
                         return relative_url(newbase, link)
