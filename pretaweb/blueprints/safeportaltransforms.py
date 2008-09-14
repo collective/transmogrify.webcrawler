@@ -46,7 +46,7 @@ class SafePortalTransforms(PortalTransformsSection):
                         raise
                         continue
                 else:
-                    from_ = self.from_ or item[self.from_field] 
+                    from_ = self.from_ or item[self.from_field]
                     try:
                         data = self.ptransforms.convertTo(
                                                               self.target, item[key], mimetype=from_)
@@ -68,11 +68,13 @@ class SafePortalTransforms(PortalTransformsSection):
                     if self.from_field:
                         item[self.from_field] = self.target
                     if hasattr(data,'getSubObjects'):
-                        base = '/'.join(item['_path'].split('/')[:-1])
+                        tmp = item['_path'].split('/')
+                        base = '/'.join(tmp[:-1])
+                        doc_id = tmp[-1]
                         for name,data in data.getSubObjects().items():
                             #TODO: maybe shouldn't hard code this
                             yield dict(_type='Image',
-                                   _path='/'.join([base,name]),
+                                   _path='/'.join([base,doc_id+'-'+name]),
                                    _site_url=item.get('_site_url'),
                                    image=data)
                                                 
