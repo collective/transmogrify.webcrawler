@@ -1,0 +1,27 @@
+SafeATSchemaUpdater
+===================
+
+>>> from collective.transmogrifier.tests import registerConfig
+>>> from collective.transmogrifier.transmogrifier import Transmogrifier
+>>> config = """
+... [transmogrifier]
+... pipeline =
+...     source
+...     safeatschemaupdater
+...     
+... [source]
+... blueprint = pretaweb.blueprints.tests.safeatschemaupdatersource
+... 
+... [safeatschemaupdater]
+... blueprint = pretaweb.blueprints.safeatschemaupdater
+... """
+>>> registerConfig(u'test', config)
+>>> transmogrifier = Transmogrifier(plone)
+>>> transmogrifier(u'test')
+
+
+>>> plone.getField('file')._file_filename == 'image.jpg'
+True
+>>> plone.getField('file')._file_mimetype == 'image/jpeg'
+True
+

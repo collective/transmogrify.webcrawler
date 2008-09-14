@@ -48,10 +48,10 @@ class Relinker(object):
             if not origin:
                 origin = item['_origin'] = path
             item['_path'] = newpath
-            changes[item.get('_site_url','')+origin] = item                
+            changes[item.get('_site_url','')+origin] = item
 
         for item in changes.values():
-            if 'text' in item and item.get('_mimetype') in ['text/xhtml', 'text/html']: 
+            if 'text' in item and item.get('_mimetype') in ['text/xhtml', 'text/html']:
                 path = item['_path']
                 oldbase = item['_site_url']+item['_origin']
                 newbase = item['_site_url']+path
@@ -62,9 +62,6 @@ class Relinker(object):
                         linkedurl = item['_site_url']+linked['_path']
                         return relative_url(newbase, linkedurl)
                     else:
-                        if link.count('html'):
-                            pass
-                            #print >>stderr, "WARNING: relinker link %s not found from %s"%(link,path) 
                         return relative_url(newbase, link)
                 
                 try:
@@ -86,7 +83,7 @@ class Relinker(object):
                 else:
                     newbacklinks.append((origin,name))
             if backlinks:
-                item['_backlinks'] = newbacklinks                        
+                item['_backlinks'] = newbacklinks
                 
                 
             yield item

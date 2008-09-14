@@ -11,6 +11,7 @@ from collective.transmogrifier.interfaces import ISectionBlueprint, ISection
 from collective.transmogrifier.tests import setUp as baseSetUp
 from collective.transmogrifier.tests import tearDown
 from collective.transmogrifier.sections.tests import PrettyPrinter
+from collective.transmogrifier.sections.tests import SampleSource
 
 from pretaweb.blueprints.webcrawler import WebCrawler
 from pretaweb.blueprints.treeserializer import TreeSerializer
@@ -87,6 +88,62 @@ def setUp(test):
         name=u'pretaweb.blueprints.test.htmlsource')
 
 
+def SafeATSchemaUpdaterSetUp(test):
+    setUp(test)
+
+    from Products.Archetypes.interfaces import IBaseObject
+    class MockPortal(object):
+        implements(IBaseObject)
+        
+        def unrestrictedTraverse(self, path, default):
+            return self
+
+        _file_value = None
+        _file_filename = None
+        _file_mimetype = None
+        _file_field = None
+
+        def set(self, name, value, **arguments):
+            self._file_field = name
+            self._file_value = value
+            if 'mimetype' in arguments:
+                self._file_mimetype = arguments['mimetype']
+            if 'filename' in arguments:
+                self._file_filename = arguments['filename']
+
+        def get(self, name):
+            return self._file_value
+        
+        def checkCreationFlag(self):
+            pass
+
+        def unmarkCreationFlag(self):
+            pass
+
+        def getField(self, name):
+            return self
+
+    test.globs['plone'] = MockPortal()
+    test.globs['transmogrifier'].context = test.globs['plone']
+
+    class SafeATSchemaUpdaterSectionSource(SampleSource):
+        classProvides(ISectionBlueprint)
+        implements(ISection)
+
+        def __init__(self, *args, **kw):
+            super(SafeATSchemaUpdaterSectionSource, self).__init__(*args, **kw)
+            self.sample = (
+                {'_path': '/dummy',
+                 'file': 'image content',
+                 'file.filename': 'image.jpg',
+                 'file.mimetype': 'image/jpeg',},
+            )
+    provideUtility(SafeATSchemaUpdaterSectionSource,
+        name=u'pretaweb.blueprints.tests.safeatschemaupdatersource')
+
+
+
+
 def test_suite():
     return unittest.TestSuite((
         doctest.DocFileSuite('webcrawler.txt', setUp=setUp, tearDown=tearDown),
@@ -96,7 +153,8 @@ def test_suite():
         doctest.DocFileSuite('relinker.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('pathmover.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('simplexpath.txt', setUp=setUp, tearDown=tearDown),
-        #doctest.DocTestSuite('pretaweb.blueprints.templatefinder', setUp=setUp, tearDown=tearDown),
-
+        doctest.DocFileSuite('safeatschemaupdater.txt', 
+                setUp=SafeATSchemaUpdaterSetUp, 
+                tearDown=tearDown),
     ))
 

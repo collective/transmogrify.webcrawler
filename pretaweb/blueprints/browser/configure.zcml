@@ -12,6 +12,4 @@
         permission="zope2.View"
         />
 
-
-
 </configure>
