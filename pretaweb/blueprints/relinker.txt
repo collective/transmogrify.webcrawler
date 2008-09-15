@@ -31,20 +31,19 @@ Relinker
 ...
 ... """ 
 
-#... link_expr = python:getattr(item,'_type',None)=='Image' and item['_path']+'/image_web' or item['_path']
 >>> registerConfig(u'test', config)
 >>> transmogrifier = Transmogrifier(plone)
 >>> transmogrifier(u'test')
 {'_mimetype': 'text/html',
- '_path': 'level2/index',
- '_site_url': 'http://test.com/',
- 'text': '<html>\n  <a href="../level3/index">Level 2</a>\n</html>\n'}
-{'_mimetype': 'text/html',
  '_path': 'level3/index',
  '_site_url': 'http://test.com/',
- 'text': '<html>\n  <a href="../level2/index">Level 3</a>\n  <img src="image"/>\n</html>\n'}
- {'_mimetype': 'text/html',
- '_path': 'level3/image',
+ 'text': '<html>\n  <a href="../level2/index/image_web">Level 2</a>\n</html>\n'}
+{'_mimetype': 'text/html',
+ '_path': 'level2/index',
+ '_site_url': 'http://test.com/',
+ 'text': '<html>\n  <a href="../level3/index/image_web">Level 3</a>\n  <img src="image/image_web"/>\n</html>\n'}
+{'_mimetype': 'text/html',
+ '_path': 'level2/image',
  '_site_url': 'http://test.com/',
  'text': '<html>\n  <h1>content</h1>\n</html>\n'}
  
