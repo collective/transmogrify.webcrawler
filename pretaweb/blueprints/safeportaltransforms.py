@@ -7,6 +7,8 @@ from collective.transmogrifier.interfaces import ISection
 import shutil
 from plone.app.transmogrifier.portaltransforms import PortalTransformsSection
 from sys import stderr
+import logging
+logger = logging.getLogger('Plone')
 
 # monkey patch to ignore errors due to some weird windows timing thing
 from Products.PortalTransforms.libtransforms.commandtransform import commandtransform
@@ -47,18 +49,21 @@ class SafePortalTransforms(PortalTransformsSection):
                         continue
                 else:
                     from_ = self.from_ or item[self.from_field]
+                    conversion = "%s %s->%s %i" % \
+                    (item['_path'],from_,self.target,len(item[key]))
+                    
                     try:
-                        data = self.ptransforms.convertTo(
-                                                              self.target, item[key], mimetype=from_)
-                        print >>stderr, "Converted: %s %s->%s %i->%i" % \
-                        (item['_path'],from_,self.target,len(item[key]),len(str(data)))
-       
+                        data = self.ptransforms.convertTo(self.target, item[key], mimetype=from_)
+                        msg = "Converted: %s->%i" % (conversion,len(str(data)))
+                        logger.log(logging.DEBUG, msg, exc_info=True)
                     except:
-                        print >>stderr, "ERROR: Failed to convert %s" % item['_path']
+                        msg = "ERROR: Failed to convert %s" % conversion
+                        logger.log(logging.ERROR, msg, exc_info=True)
                         #raise
                         continue
                     if data is None:
-                        print >>stderr, "ERROR: Failed to convert %s" % item['_path']
+                        message = "ERROR: 9 bytes converting %s" % conversion
+                        logger.log(logging.ERROR, message)
                         continue
                     if self.destination:
                         item[self.destination] = str(data)
@@ -81,5 +86,6 @@ class SafePortalTransforms(PortalTransformsSection):
                                    'image.filename':  name}
                                                 
             yield item
+
 
 
