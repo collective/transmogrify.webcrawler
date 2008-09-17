@@ -44,16 +44,20 @@ class MakeAttachments(object):
         # split items on subitems and other
         items, subitems = [], {}
         for item in self.previous:
-            backlinks = item.get('_backlinks',{})
+            backlinks = item.get('_backlinks',[])
+            #if self.condition(item):
+            #    import pdb; pdb.set_trace()
             if len(backlinks) == 1 and self.condition(item):
-                subitems.setdefault(backlinks.keys()[0], [])
-                subitems[backlinks.keys()[0]].append(item)
+                link,name = backlinks[0]
+                subitems.setdefault(link, [])
+                subitems[link].append(item)
             else:
                 items.append(item)
 
         # apply new fields from subitems to items 
         for item in items:
             fullurl = item.get('_site_url','') + item.get('_path','')
+            #import pdb; pdb.set_trace()
             if subitems.get(fullurl, None):
                 for i, subitem in enumerate(subitems[fullurl]):
                     item.update(self.fields(item, subitem=subitem, num=i))

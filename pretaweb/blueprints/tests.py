@@ -87,6 +87,9 @@ def setUp(test):
     from constructor import SafeConstructorSection
     provideUtility(SafeConstructorSection,
         name=u'pretaweb.blueprints.constructor')
+    from makeattachments import MakeAttachments
+    provideUtility(MakeAttachments,
+        name=u'pretaweb.blueprints.makeattachments')
 
     provideUtility(HTMLSource,
         name=u'pretaweb.blueprints.test.htmlsource')

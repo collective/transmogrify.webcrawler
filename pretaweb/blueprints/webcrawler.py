@@ -244,6 +244,9 @@ class LXMLPage:
             if attribute == 'href':
                 name = ' '.join(element.text_content().split())
                 self.checker.link_names.setdefault(link,[]).extend([(self.url,name)])
+            elif attribute == 'src':
+                name = element.get('alt','')
+                self.checker.link_names.setdefault(link,[]).extend([(self.url,name)])
             #and to filter list
             infos.append((link, rawlink, fragment))
 

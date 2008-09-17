@@ -41,7 +41,7 @@ class SafeConstructorSection(object):
             context = self.context.unrestrictedTraverse(container, None)
             if context is None:                       # container doesn't exist
                 msg = "constructor: no folder for %s:%s" % (type_,path)
-                logger.log(logging.ERROR, msg,exc_info=True)
+                logger.log(logging.ERROR, msg)
                 yield item; continue
             
             if getattr(aq_base(context), id, None) is not None: # item exists
@@ -57,5 +57,7 @@ class SafeConstructorSection(object):
             obj = fti._finishConstruction(obj)
             if obj.getId() != id:
                 item[pathkey] = '%s/%s' % (container, obj.getId())
+            msg = "constructor: contructed %s:%s" % (type_,item[pathkey])
+            logger.log(logging.DEBUG, msg)
             
             yield item
