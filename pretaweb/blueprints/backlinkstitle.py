@@ -5,8 +5,10 @@ from zope.interface import implements
 from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 from collective.transmogrifier.utils import Matcher
-
+from urllib import unquote
 import re
+import logging
+logger = logging.getLogger('Plone')
 
 """
 Backlinks Title
@@ -17,6 +19,8 @@ and if not Title field has been given to the item it will attempt to guess
 it from the link names that linked to this document.
 You can specify an option 'ignore' option to specify titles never to use
 
+If it can't guess it from the backlinks it will default to using the file name after
+cleaning it up somewhat
 """
 
 class BacklinksTitle(object):
@@ -29,13 +33,15 @@ class BacklinksTitle(object):
 
     def __iter__(self):
         for item in self.previous:
+            path = item.get('_path')
             backlinks = item.get('_backlinks')
             title = item.get('title')
             if not backlinks:
+                self.titlefromid(item)
+
                 yield item
                 continue
             if title:
-                import pdb; pdb.set_trace()
                 yield item
                 continue
             #import pdb; pdb.set_trace()
@@ -48,6 +54,10 @@ class BacklinksTitle(object):
             votes.sort()
             if votes:
                 c,item['title'] = votes[-1]
+                msg = "backlinkstitle %s (%s)" % (path,item['title'])
+                logger.log(logging.DEBUG, msg)
+            else:
+                self.titlefromid(item)
             yield item
 
     def ignore(self, name):
@@ -56,3 +66,13 @@ class BacklinksTitle(object):
                 return True
         return False
 
+    def titlefromid(self, item):
+        path = item.get('_path')
+        if not path:
+            return
+        title = [p for p in path.split('/') if p][-1]
+        title = unquote(title)
+        title = title.split('.')[0]
+        item['title'] = title
+        msg = "backlinkstitle %s (%s)" % (path,item['title'])
+        logger.log(logging.DEBUG, msg)

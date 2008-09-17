@@ -24,6 +24,7 @@ class TreeSerializer(object):
             if '_site_url' not in item or '_path' not in item:
                 yield item
                 continue
+            #import pdb; pdb.set_trace()
             path = item['_path']
             site_url = item['_site_url']
             parts = [p for p in path.split('/') if p][:-1]

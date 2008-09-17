@@ -40,11 +40,15 @@ class PathMover(object):
         #if path.count('Information'):
         #    import pdb; pdb.set_trace()
         for origin,target in self.moves:
+            if not target:
+                continue
             origin = unquote(origin)
             if path==origin[:-1] or path.startswith(origin):
                 newpath = target+path[len(origin):]
                 if not item.get('_origin'):
                     item['_origin'] = item.get('_path')
+                #import pdb; pdb.set_trace()
                 item['_path'] = quote(newpath)
                 return
+        
         

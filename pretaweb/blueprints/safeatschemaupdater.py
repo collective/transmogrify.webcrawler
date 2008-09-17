@@ -4,6 +4,8 @@ from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 from collective.transmogrifier.utils import Matcher
 from collective.transmogrifier.utils import defaultKeys
+import logging
+logger = logging.getLogger('Plone')
 
 from Products.Archetypes.interfaces import IBaseObject
 #from Products.Archetypes.event import ObjectInitializedEvent
@@ -37,6 +39,8 @@ class SafeATSchemaUpdaterSection(object):
                 yield item; continue
             
             path = item[pathkey]
+#            if item.get('text','').count('fpAnimswapImgFP1'):
+#                    import pdb; pdb.set_trace()
             
             obj = self.context.unrestrictedTraverse(path.lstrip('/'), None)
             if obj is None:         # path doesn't exist
@@ -71,8 +75,8 @@ class SafeATSchemaUpdaterSection(object):
                     try:
                         oldvalue = field.get(obj)
                     except Exception,e:
-                        from sys import stderr
-                        print >>stderr,"ERROR: _safeatschemaupdater:error %s, %s" %(path,e)
+                        msg = "ERROR: _safeatschemaupdater:error %s, %s" %(path,e)
+                        logger.log(logging.ERROR, msg, exc_info=True)
                         errors.append(str(e))
                     else:
                         oldvalue = None
@@ -81,9 +85,11 @@ class SafeATSchemaUpdaterSection(object):
                         if oldvalue != value:
                             field.set(obj, value, **arguments)
                             changed = True
+                            msg = "safeatschemaupdater: updated %s, %s" %(path,(key,arguments))
+                            logger.log(logging.DEBUG, msg)
                     except Exception,e:
-                        from sys import stderr
-                        print >>stderr,"ERROR: _safeatschemaupdater:error %s, %s" %(path,e)
+                        msg = "ERROR: _safeatschemaupdater:error %s, %s" %(path,e)
+                        logger.log(logging.ERROR, msg, exc_info=True)
                         errors.append(str(e))
                         continue
                     
@@ -98,6 +104,7 @@ class SafeATSchemaUpdaterSection(object):
                 elif changed:
                     #event.notify(ObjectEditedEvent(obj))
                     obj.at_post_edit_script()
+
             
             yield item
 

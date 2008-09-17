@@ -13,6 +13,9 @@ from urlparse import urljoin
 from external.relative_url import relative_url
 from sys import stderr
 from collective.transmogrifier.utils import Expression
+import logging
+logger = logging.getLogger('Plone')
+
 
 class Relinker(object):
     classProvides(ISectionBlueprint)
@@ -63,6 +66,7 @@ class Relinker(object):
                 newbase = item['_site_url']+path
                 def replace(link):
                     linked = changes.get(link)
+                    #import pdb; pdb.set_trace()
                     if linked:
                         if self.link_expr:
                             linkedurl = item['_site_url']+self.link_expr(linked)
@@ -77,8 +81,8 @@ class Relinker(object):
                     tree.rewrite_links(replace, base_href=oldbase)
                     item['text'] = etree.tostring(tree,pretty_print=True,encoding="utf8")
                 except Exception:
-                    print >>stderr, "ERROR: relinker parse error %s, %s" % (path,str(Exception))
-                    pass
+                    msg = "ERROR: relinker parse error %s, %s" % (path,str(Exception))
+                    logger.log(logging.ERROR, msg, exc_info=True)
             del item['_origin']
             #rewrite the backlinks too
             backlinks = item.get('_backlinks',[])

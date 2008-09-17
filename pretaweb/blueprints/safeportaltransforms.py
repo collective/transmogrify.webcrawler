@@ -54,17 +54,17 @@ class SafePortalTransforms(PortalTransformsSection):
                     
                     try:
                         data = self.ptransforms.convertTo(self.target, item[key], mimetype=from_)
-                        msg = "Converted: %s->%i" % (conversion,len(str(data)))
-                        logger.log(logging.DEBUG, msg, exc_info=True)
                     except:
                         msg = "ERROR: Failed to convert %s" % conversion
                         logger.log(logging.ERROR, msg, exc_info=True)
                         #raise
                         continue
                     if data is None:
-                        message = "ERROR: 9 bytes converting %s" % conversion
+                        message = "ERROR: 0 bytes converting %s" % conversion
                         logger.log(logging.ERROR, message)
                         continue
+                    msg = "Converted: %s->%i" % (conversion,len(str(data)))
+                    logger.log(logging.DEBUG, msg)
                     if self.destination:
                         item[self.destination] = str(data)
                         del item[key]

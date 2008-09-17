@@ -64,12 +64,13 @@ class IsIndex(object):
             if not path:
                 yield item
                 continue
-            #import pdb; pdb.set_trace()
+            import pdb; pdb.set_trace()
+            
             tree = lxml.html.soupparser.fromstring(html)
             base = item.get('_site_url','/')
             tree.make_links_absolute(base+path)
             if '_origin' in item:
-                self.moved['_origin'] = path
+                self.moved[item['_origin']] = path
             links = []
             items[path] = (item,path,links)
             for element, attribute, link, pos in tree.iterlinks():
