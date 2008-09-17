@@ -83,6 +83,9 @@ def setUp(test):
     from safeatschemaupdater import SafeATSchemaUpdaterSection
     provideUtility(SafeATSchemaUpdaterSection,
         name=u'pretaweb.blueprints.safeatschemaupdater')
+    from constructor import SafeConstructorSection
+    provideUtility(SafeConstructorSection,
+        name=u'pretaweb.blueprints.constructor')
 
     provideUtility(HTMLSource,
         name=u'pretaweb.blueprints.test.htmlsource')

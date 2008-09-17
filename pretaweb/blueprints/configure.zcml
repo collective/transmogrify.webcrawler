@@ -32,6 +32,12 @@
     component=".safeatschemaupdater.SafeATSchemaUpdaterSection"
     name="pretaweb.blueprints.safeatschemaupdater"
     />
+    
+<utility
+    component=".constructor.SafeConstructorSection"
+    name="pretaweb.blueprints.constructor"
+    />
+    
 
     <include package=".example"/>
 

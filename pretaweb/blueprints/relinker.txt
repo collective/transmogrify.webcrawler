@@ -13,8 +13,8 @@ Relinker
 ... [webcrawler]
 ... blueprint = pretaweb.blueprints.test.htmlsource
 ... level3/index=<a href="../level2/index">Level 2</a>
-... level2/index=<a href="../level3/index">Level 3</a><img src="+&image">
-... level2/+&image=<h1>content</h1>
+... level2/index=<a href="../level3/index">Level 3</a><img src="+&image%20blah">
+... level2/+&image%20blah=<h1>content</h1>
 ...
 ... [relinker]
 ... blueprint = pretaweb.blueprints.relinker
@@ -41,9 +41,8 @@ Relinker
 {'_mimetype': 'text/html',
  '_path': 'level2/index',
  '_site_url': 'http://test.com/',
- 'text': '<html>\n  <a href="../level3/index/image_web">Level 3</a>\n  <img src="image/image_web"/>\n</html>\n'}
+ 'text': '<html>\n  <a href="../level3/index/image_web">Level 3</a>\n  <img src="image-blah/image_web"/>\n</html>\n'}
 {'_mimetype': 'text/html',
- '_path': 'level2/image',
+ '_path': 'level2/image-blah',
  '_site_url': 'http://test.com/',
  'text': '<html>\n  <h1>content</h1>\n</html>\n'}
- 
