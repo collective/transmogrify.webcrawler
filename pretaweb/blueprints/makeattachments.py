@@ -1,19 +1,9 @@
 
-import fnmatch
 from zope.interface import classProvides
 from zope.interface import implements
 from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
-from collective.transmogrifier.utils import Matcher
-
-from webstemmer.analyze import PageFeeder, LayoutAnalyzer
-from webstemmer.zipdb import ACLDB
-from lxml import etree
-import lxml.html
-import lxml.html.soupparser
-
-from StringIO import StringIO
-from sys import stderr
+from collective.transmogrifier.utils import Condition, Expression
 
 
 """
@@ -32,7 +22,7 @@ for example
 
 ... [attachments]
 ... blueprint = pretaweb.blueprints.makeattachments
-... attachmentfields = python: ['attachment'+str(i) for i in range(1,5) if 'attachment'+str(i) not in item.keys()
+... fields = python:{'attachment'+num+'Title': item['title'], 'attachment'+num+'Image': item['image']}
 ... condition = python: item.get('_type') in ['Image']
 
 will add attachment1, attachment2 etc fields to the html item.
@@ -40,43 +30,35 @@ will add attachment1, attachment2 etc fields to the html item.
 
 """
 
-class IsIndex(object):
+class MakeAttachments(object):
     classProvides(ISectionBlueprint)
     implements(ISection)
 
-
-
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
-        self.fields=options.get('attachmentfields',None)
-        self.condition=options.get('condition',None)
-            
+        self.fields=Expression(options.get('fields',''), transmogrifier, name, options)
+        self.condition=Condition(options.get('condition',''), transmogrifier, name, options)
 
     def __iter__(self):
-      
-        #Stri
-      
-        items = []
-        tomerge = {}
+
+        # split items on subitems and other
+        items, subitems = [], {}
         for item in self.previous:
-            back = item.get('_backlinks',{})
-            if len(back) == 1:
-                tomerge.setdefault(back.keys()[0],[]).append(item)
+            backlinks = item.get('_backlinks',{})
+            if len(backlinks) == 1 and self.condition(item):
+                subitems.setdefault(backlinks.keys()[0], [])
+                subitems[backlinks.keys()[0]].append(item)
             else:
                 items.append(item)
+
+        # apply new fields from subitems to items 
         for item in items:
-            url = item.get('_site_url','') + item.get('_path','')
-            subs = tomerge(url)
-            if not self.fields:
-                dir = self.makefolder(item)
-                yield dir
-                for sub in subs:
-                    self.move(sub,item)
-                    yield sub
-            else:
-                for sub in subs:
-                    self.move(sub,item,self.fields(item))
+            fullurl = item.get('_site_url','') + item.get('_path','')
+            if subitems.get(fullurl, None):
+                for i, subitem in enumerate(subitems[fullurl]):
+                    item.update(self.fields(item, subitem=subitem, num=i))
             yield item
-                
-                     
- 
+
+
+
+

@@ -28,10 +28,10 @@
              name="pretaweb.blueprints.isindex" />
     <utility component=".pathmover.PathMover"
              name="pretaweb.blueprints.pathmover" />
-<utility
-    component=".safeatschemaupdater.SafeATSchemaUpdaterSection"
-    name="pretaweb.blueprints.safeatschemaupdater"
-    />
+    <utility component=".safeatschemaupdater.SafeATSchemaUpdaterSection"
+		     name="pretaweb.blueprints.safeatschemaupdater" />
+    <utility component=".makeattachments.MakeAttachments"
+		     name="pretaweb.blueprints.makeattachments" />
 
     <include package=".example"/>
 
