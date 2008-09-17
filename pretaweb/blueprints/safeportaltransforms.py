@@ -82,6 +82,7 @@ class SafePortalTransforms(PortalTransformsSection):
                                    '_origin':         name,
                                    '_path':           '/'.join([base,doc_id+'-'+name]),
                                    '_site_url':       item.get('_site_url'),
+                                   '_backlinks':      {item['_site_url']+item['_path']: ''},
                                    'image':           data,
                                    'image.filename':  name}
                                                 

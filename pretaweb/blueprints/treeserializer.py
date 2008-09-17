@@ -14,71 +14,50 @@ class TreeSerializer(object):
     
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
-        self.open_url = MyURLopener().open
+        self.default_pages = options.get('default_pages', 'index.html').split()
+        self.default_containers = options.get('default_containers', 'Folder').split()
 
     def __iter__(self):
-        item_list = {}
+        items = {}
         for item in self.previous:
             if '_site_url' not in item or \
                '_path' not in item:
                 yield item
             else:
-                item_list[item['_path']] = item
-                site_url = item['_site_url']
+                if item['_path'][0] == '/':
+                    items[item['_site_url']+item['_path'][1:]] = item
+                else:
+                    items[item['_site_url']+item['_path']] = item
         
         # build tree
-        tree = {}
-        top_object = None
-        item_list_paths = item_list.keys()
-        item_list_paths.sort()
-        #import pdb; pdb.set_trace()
-        for item in item_list_paths:
-            # path should be defined as absolute
-            if item_list[item]['_path'][0:1] == '/' and \
-                 item_list[item]['_path'] != '/':
-                object_list = item_list[item]['_path'].split('/')[1:]
-                # remove last character if its ''
-                # this happens when url end with /
-                if object_list[-1] == '':
-                    del object_list[-1]
-                
-                def set_object(tree, object, sub_objects):
-                    tree.setdefault(object, {})
-                    if len(sub_objects) != 0:
-                        tree[object] = set_object(tree[object], 
-                                                  sub_objects[0], 
-                                                  sub_objects[1:])
-                    return tree
-                tree.update(set_object(tree, object_list[0], object_list[1:]))
-                #print object_list
-        
-        # serialize tree
-        def tree_serializer(tree, path):
-            for object in tree:
-                # create full url and check for page
-                if path+object not in item_list:
-                    # this is a folder
-                    item_list[path+object] = dict(_path     = path+object,
-                                                  _type     = 'Folder',
-                                                  _site_url = site_url)
-                if len(tree[object]) != 0:
-                    tree_serializer(tree[object], path+object+'/')
-        tree_serializer(tree, '/')
+        items_keys = items.keys()
+        items_keys.sort()
+        for item in items_keys:
+            item_fullurl = item
+            item = items[item]
+            
+            parts = item['_path'].split('/')
+            if parts[0] == '':
+                parts = parts[1:]
 
-        # first page
-        if '/' in item_list:
-            for front_page in ['/front-page', '/index_html', '/first-page']:
-                if front_page not in item_list:
-                    item_list[front_page] = item_list['/']
-                    item_list[front_page]['_type'] = 'Page'
-                    item_list['/'] = dict(_path        = '/',
-                                          _type        = None,
-                                          _defaultpage = front_page)
+            basepath = ''
+            parentpath = ''
+            for part in parts:
+                basepath += part
+                if item['_site_url']+basepath not in items:
+                    items[item['_site_url']+basepath] = dict(
+                        _path     = basepath,
+                        _type     = 'Folder',
+                        _site_url = item['_site_url'])
+                elif parts[-1] == part and \
+                     part in self.default_pages and \
+                     item['_site_url']+parentpath in items and \
+                     items[item['_site_url']+parentpath]['_type'] in self.default_containers:
+                    items[item['_site_url']+parentpath]['_defaultpage'] = part
+                parentpath += basepath
+                basepath += '/'
 
-        item_list_paths = item_list.keys()
-        item_list_paths.sort()
-        #print path_list
-        for item in item_list_paths:
-            yield item_list[item]
+        for item in items:
+            yield items[item]
 
 
