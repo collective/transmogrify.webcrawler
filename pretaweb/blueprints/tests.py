@@ -17,6 +17,7 @@ from pretaweb.blueprints.webcrawler import WebCrawler
 from pretaweb.blueprints.treeserializer import TreeSerializer
 from pretaweb.blueprints.typerecognitor import TypeRecognitor
 from pretaweb.blueprints.safeportaltransforms import  SafePortalTransforms
+from pretaweb.blueprints.makeattachments import MakeAttachments
 from templatefinder import TemplateFinder
 from pretaweb.blueprints.relinker import Relinker
 from pretaweb.blueprints.simplexpath import SimpleXPath
@@ -144,7 +145,35 @@ def SafeATSchemaUpdaterSetUp(test):
     provideUtility(SafeATSchemaUpdaterSectionSource,
         name=u'pretaweb.blueprints.tests.safeatschemaupdatersource')
 
+def MakeAttachmentsSetUp(test):
+    setUp(test)
 
+    class MakeAttachmentsSource(SampleSource):
+        classProvides(ISectionBlueprint)
+        implements(ISection)
+
+        def __init__(self, *args, **kw):
+            super(MakeAttachmentsSource, self).__init__(*args, **kw)
+            self.sample = (
+                {'_site_url': 'http://www.test.com',
+                 '_path': '/item1',},
+                {'_site_url': 'http://www.test.com',
+                 '_path': '/subitem1',
+                 '_backlinks': {'http://www.test.com/item1': ''},
+                 'title': 'subitem1 title',
+                 'decription': 'test if condition is working',
+                 '_type': 'Document'},
+                {'_site_url': 'http://www.test.com',
+                 '_path': '/subitem2',
+                 '_backlinks': {'http://www.test.com/item1': ''},
+                 'title': 'subitem2 title',
+                 'image': 'subitem2 image content',
+                 '_type': 'Image'},
+            )
+    provideUtility(MakeAttachmentsSource,
+        name=u'pretaweb.blueprints.tests.makeattachments')
+    provideUtility(MakeAttachments,
+        name=u'pretaweb.blueprints.makeattachments')
 
 
 def test_suite():
@@ -156,8 +185,11 @@ def test_suite():
         doctest.DocFileSuite('relinker.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('pathmover.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('simplexpath.txt', setUp=setUp, tearDown=tearDown),
-        doctest.DocFileSuite('safeatschemaupdater.txt', 
-                setUp=SafeATSchemaUpdaterSetUp, 
+        doctest.DocFileSuite('safeatschemaupdater.txt',
+                setUp=SafeATSchemaUpdaterSetUp,
+                tearDown=tearDown),
+        doctest.DocFileSuite('makeattachments.txt',
+                setUp=MakeAttachmentsSetUp,
                 tearDown=tearDown),
     ))
 

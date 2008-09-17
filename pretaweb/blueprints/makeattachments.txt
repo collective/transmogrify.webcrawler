@@ -1,0 +1,37 @@
+MakeAttachments
+===============
+
+>>> from collective.transmogrifier.tests import registerConfig
+>>> from collective.transmogrifier.transmogrifier import Transmogrifier
+>>> config = """
+... [transmogrifier]
+... pipeline =
+...     source
+...     makeattachments 
+...     printer
+...     
+... [source]
+... blueprint = pretaweb.blueprints.tests.makeattachments
+...
+... [makeattachments]
+... blueprint = pretaweb.blueprints.makeattachments
+... fields = python:{'attachment'+str(num)+'Title': subitem['title'], 'attachment'+str(num)+'Image': subitem['image']}
+... condition = python: item.get('_type') in ['Image']
+...
+... [printer]
+... blueprint = collective.transmogrifier.sections.tests.pprinter
+... """ 
+
+>>> registerConfig(u'test', config)
+>>> transmogrifier = Transmogrifier(plone)
+>>> transmogrifier(u'test')
+{'_path': '/item1',
+ '_site_url': 'http://www.test.com',
+ 'attachment0Image': 'subitem2 image content',
+ 'attachment0Title': 'subitem2 title'}
+{'_backlinks': {'http://www.test.com/item1': ''},
+ '_path': '/subitem1',
+ '_site_url': 'http://www.test.com',
+ '_type': 'Document',
+ 'decription': 'test if condition is working',
+ 'title': 'subitem1 title'}
