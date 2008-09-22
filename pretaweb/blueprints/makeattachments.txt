@@ -29,7 +29,7 @@ MakeAttachments
  '_site_url': 'http://www.test.com',
  'attachment0Image': 'subitem2 image content',
  'attachment0Title': 'subitem2 title'}
-{'_backlinks': {'http://www.test.com/item1': ''},
+{'_backlinks': [('http://www.test.com/item1': '')],
  '_path': '/subitem1',
  '_site_url': 'http://www.test.com',
  '_type': 'Document',

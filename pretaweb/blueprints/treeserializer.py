@@ -6,7 +6,8 @@ from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 
 from pretaweb.blueprints.external.webchecker import MyURLopener
-
+import logging
+logger = logging.getLogger('Plone')
 
 class TreeSerializer(object):
     classProvides(ISectionBlueprint)
@@ -24,7 +25,7 @@ class TreeSerializer(object):
                '_path' not in item:
                 yield item
             else:
-                if item['_path'][0] == '/':
+                if item['_path'] and item['_path'][0] == '/':
                     items[item['_site_url']+item['_path'][1:]] = item
                 else:
                     items[item['_site_url']+item['_path']] = item
@@ -49,6 +50,10 @@ class TreeSerializer(object):
                         _path     = basepath,
                         _type     = 'Folder',
                         _site_url = item['_site_url'])
+                    msg = "treeserialize: adding folder %s" %(basepath)
+                    logger.log(logging.DEBUG, msg)
+                    #import pdb; pdb.set_trace()
+
                 elif parts[-1] == part and \
                      part in self.default_pages and \
                      item['_site_url']+parentpath in items and \
@@ -57,7 +62,10 @@ class TreeSerializer(object):
                 parentpath += basepath
                 basepath += '/'
 
-        for item in items:
+        # has to be in order so they get created
+        items_keys = items.keys()
+        items_keys.sort()
+        for item in items_keys:
             yield items[item]
 
 

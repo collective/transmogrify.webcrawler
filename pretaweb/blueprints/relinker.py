@@ -14,6 +14,7 @@ from external.relative_url import relative_url
 from sys import stderr
 from collective.transmogrifier.utils import Expression
 import logging
+from external.normalize import urlnormalizer
 logger = logging.getLogger('Plone')
 
 
@@ -29,12 +30,12 @@ class Relinker(object):
             self.link_expr = Expression(
                     options['link_expr'],
                     transmogrifier, name, options)
-        util = queryUtility(IURLNormalizer)
-        if util:
-            self.normalize = util.normalize
-        else:
-            from external.normalize import baseNormalize
-            self.normalize = baseNormalize
+        #util = queryUtility(IURLNormalizer)
+        #if util:
+        #    self.normalize = util.normalize
+        #else:
+        self.normalize = urlnormalizer.normalize
+        
     
     
     def __iter__(self):
@@ -57,6 +58,7 @@ class Relinker(object):
             if not origin:
                 origin = item['_origin'] = path
             item['_path'] = newpath
+            
             changes[item.get('_site_url','')+origin] = item
 
         for item in changes.values():

@@ -14,6 +14,8 @@ import lxml.html.soupparser
 
 from StringIO import StringIO
 from sys import stderr
+import logging
+logger = logging.getLogger('Plone')
 
 
 """
@@ -64,10 +66,9 @@ class IsIndex(object):
             if not path:
                 yield item
                 continue
-            import pdb; pdb.set_trace()
             
             tree = lxml.html.soupparser.fromstring(html)
-            base = item.get('_site_url','/')
+            base = item.get('_site_url','')
             tree.make_links_absolute(base+path)
             if '_origin' in item:
                 self.moved[item['_origin']] = path
@@ -78,6 +79,7 @@ class IsIndex(object):
                     ulinks[link] = True
                     if link.startswith(base):
                         link = link[len(base):]
+                    link = '/'.join([p for p in link.split('/') if p])
                     links.append(link)
         done = []
         while items:
@@ -95,6 +97,7 @@ class IsIndex(object):
                 break
             mostdeep.sort()
             depth,winner = mostdeep[-1]
+            #import pdb; pdb.set_trace()
             #import pdb; pdb.set_trace()
             self.move(winner)
             for count,item,path,links,dir in winner:
@@ -115,8 +118,14 @@ class IsIndex(object):
                 file = 'index_html'
             else:
                 file = path.split('/')[-1]
-            item['_path'] = dir+'/'+file
+            if dir:
+                item['_path'] = dir+'/'+file
+            else:
+                item['_path'] = file
+                
             self.moved[path] = item['_path']
+            msg = "isindex: moved %s to %s" %(path,dir+'/'+file)
+            logger.log(logging.DEBUG, msg)
 
     def isindex(self, count, links):
         return count >= self.min_links and count>=len(links)-self.max_uplinks
@@ -132,7 +141,7 @@ class IsIndex(object):
             if newlink:
                 link = newlink
                 
-            dir = '/'.join(link.split('/')[:-1])
+            dir = '/'.join([p for p in link.split('/') if p][:-1])
             dirs[dir] = dirs.get(dir,0) + 1
         if not dirs:
             return 0,None

@@ -4,6 +4,8 @@ from zope.interface import implements
 from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 from collective.transmogrifier.utils import Condition, Expression
+import logging
+logger = logging.getLogger('Plone')
 
 
 """
@@ -47,7 +49,7 @@ class MakeAttachments(object):
             backlinks = item.get('_backlinks',[])
             #if self.condition(item):
             #    import pdb; pdb.set_trace()
-            if len(backlinks) == 1 and self.condition(item):
+            if len(backlinks) == 1:
                 link,name = backlinks[0]
                 subitems.setdefault(link, [])
                 subitems[link].append(item)
@@ -56,11 +58,30 @@ class MakeAttachments(object):
 
         # apply new fields from subitems to items 
         for item in items:
-            fullurl = item.get('_site_url','') + item.get('_path','')
+            base = item.get('_site_url',None)
+            path = item.get('_origin',None)
+            if not path:
+                path = item.get('_path',None)
             #import pdb; pdb.set_trace()
-            if subitems.get(fullurl, None):
-                for i, subitem in enumerate(subitems[fullurl]):
-                    item.update(self.fields(item, subitem=subitem, num=i))
+            if base and path and subitems.get(base+path, None):
+                for i, subitem in enumerate(subitems[base+path]):
+                    if self.condition(item,i=i+1,subitem=subitem):
+                        change = self.fields(item, subitem=subitem, num=i+1)
+                        if change:
+                            item.update(dict(change))
+                            msg = "imakeattachments: %s to %s{%s}" %(subitem['_path'],path,dict(change).keys())
+                            logger.log(logging.DEBUG, msg)
+                            # now pass a move request to relinker
+                            file,text=change[0]
+                            #import pdb; pdb.set_trace()
+                            path = '/'.join(item['_path'].split('/')+[file])
+                            yield dict(_origin=subitem.get('_origin',subitem['_path']),
+                                       _path=path,
+                                       _site_url=item['_site_url'])
+                        else:
+                            yield subitem
+                    else:
+                        yield subitem
             yield item
 
 

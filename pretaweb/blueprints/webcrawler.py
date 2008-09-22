@@ -90,13 +90,15 @@ class WebCrawler(object):
                          verbose    = self.verbose,
                          maxpage    = self.maxpage, 
                          nonames    = self.nonames)
-        checker.addroot(self.site_url)
+        #must take off the '/' for the crawler to work
+        checker.addroot(self.site_url[:-1])
 
         #import pdb; pdb.set_trace()
         while checker.todo:
             urls = checker.todo.keys()
             urls.sort()
             del urls[1:]
+            #import pdb; pdb.set_trace()
             for url,part in urls:
                 if self.ignore(url):
                     checker.markdone((url,part))
@@ -125,7 +127,7 @@ class WebCrawler(object):
                             yield dict(_bad_url = self.site_url+path)
 
     def ignore(self, url):
-        if not url.startswith(self.site_url):
+        if not url.startswith(self.site_url[:-1]):
             return True
         for pat in self.ignore_re:
             if pat and pat.search(url):
@@ -190,6 +192,8 @@ class LXMLPage:
         # contains. Stored the parser in an instance variable. Passed
         # the URL to MyHTMLParser().
         size = len(self.text)
+        #import pdb; pdb.set_trace()
+
         if self.maxpage and size > self.maxpage:
             self.note(0, "Skip huge file %s (%.0f Kbytes)", self.url, (size*0.001))
             self.parser = None
