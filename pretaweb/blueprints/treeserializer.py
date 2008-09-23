@@ -25,6 +25,7 @@ class TreeSerializer(object):
                '_path' not in item:
                 yield item
             else:
+
                 if item['_path'] and item['_path'][0] == '/':
                     items[item['_site_url']+item['_path'][1:]] = item
                 else:

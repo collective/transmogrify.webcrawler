@@ -53,36 +53,52 @@ class MakeAttachments(object):
                 link,name = backlinks[0]
                 subitems.setdefault(link, [])
                 subitems[link].append(item)
-            else:
-                items.append(item)
+            items.append(item)
+ 
+        #TODO: take care of case where our parent is a subitem
 
         # apply new fields from subitems to items 
         for item in items:
             base = item.get('_site_url',None)
-            path = item.get('_origin',None)
-            if not path:
-                path = item.get('_path',None)
-            #import pdb; pdb.set_trace()
-            if base and path and subitems.get(base+path, None):
-                for i, subitem in enumerate(subitems[base+path]):
-                    if self.condition(item,i=i+1,subitem=subitem):
-                        change = self.fields(item, subitem=subitem, num=i+1)
-                        if change:
-                            item.update(dict(change))
-                            msg = "imakeattachments: %s to %s{%s}" %(subitem['_path'],path,dict(change).keys())
-                            logger.log(logging.DEBUG, msg)
-                            # now pass a move request to relinker
-                            file,text=change[0]
-                            #import pdb; pdb.set_trace()
-                            path = '/'.join(item['_path'].split('/')+[file])
-                            yield dict(_origin=subitem.get('_origin',subitem['_path']),
-                                       _path=path,
-                                       _site_url=item['_site_url'])
-                        else:
-                            yield subitem
-                    else:
-                        yield subitem
+            path = item.get('_origin',item.get('_path',None))
+            if not base or not path:
+                yield item
+                continue
+            #if path.count('safetyproc'):
+            #    import pdb; pdb.set_trace()
+            #if '_path' in item and item.get('_path','').count('026D.doc'):
+            #    import pdb; pdb.set_trace()
+            for i, subitem in enumerate(subitems.get(base+path,[])):
+                subbase = subitem.get('_site_url',None)
+                subpath = subitem.get('_origin',item.get('_path',None))
+                if subitems.get(subbase+subpath,[]):
+                    # we won't make recursive attachments
+                    continue
+                if not self.condition(item,i=i+1,subitem=subitem):
+                    yield subitem
+                    continue
+                change = self.fields(item, subitem=subitem, num=i+1)
+                if not change:
+                    yield subitem
+                item.update(dict(change))
+                msg = "imakeattachments: %s to %s{%s}" %(subpath,path,dict(change).keys())
+                logger.log(logging.DEBUG, msg)
+                # now pass a move request to relinker
+                file,text=change[0]
+                #import pdb; pdb.set_trace()
+                newpath = '/'.join(item['_path'].split('/')+[file])
+                yield dict(_origin=subpath,
+                           _path=newpath,
+                           _site_url=subbase)
+            if base+path in subitems:
+                del subitems[base+path]
             yield item
+        #remainder
+        for url,items in subitems.items():
+#            import pdb; pdb.set_trace()
+            
+            for item in items:
+                yield item
 
 
 
