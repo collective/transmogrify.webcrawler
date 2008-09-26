@@ -11,12 +11,14 @@ MakeAttachments
 ...     printer
 ...     
 ... [source]
-... blueprint = pretaweb.blueprints.tests.makeattachments
+... blueprint = pretaweb.blueprints.test.htmlbacklinksource
+... level3/index=<a href="../level2/index">Level 2</a>
+... level2/index=<a href="../level3/index">Level 3</a><img src="+&image%20blah">
+... level2/+&image%20blah=<h1>content</h1>
 ...
 ... [makeattachments]
 ... blueprint = pretaweb.blueprints.makeattachments
-... fields = python:{'attachment'+str(num)+'Title': subitem['title'], 'attachment'+str(num)+'Image': subitem['image']}
-... condition = python: item.get('_type') in ['Image']
+... fields = python:{'attachment'+str(num)+'Title': 'blah', 'attachment'+str(num)+'Image': subitem['image']}
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
@@ -25,13 +27,16 @@ MakeAttachments
 >>> registerConfig(u'test', config)
 >>> transmogrifier = Transmogrifier(plone)
 >>> transmogrifier(u'test')
-{'_path': '/item1',
- '_site_url': 'http://www.test.com',
- 'attachment0Image': 'subitem2 image content',
- 'attachment0Title': 'subitem2 title'}
-{'_backlinks': [('http://www.test.com/item1': '')],
- '_path': '/subitem1',
- '_site_url': 'http://www.test.com',
- '_type': 'Document',
- 'decription': 'test if condition is working',
- 'title': 'subitem1 title'}
+{'_backlinks': [('http://test.com/level2/index', 'Level 3')],
+ '_mimetype': 'text/html',
+ '_path': 'level3/index',
+ '_site_url': 'http://test.com/',
+ 'text': '<a href="../level2/index">Level 2</a>'}
+{'_backlinks': [('http://test.com/level3/index', 'Level 2')],
+ '_mimetype': 'text/html',
+ '_path': 'level2/index',
+ '_site_url': 'http://test.com/',
+ 'text': '<a href="../level3/index">Level 3</a><img src="+&image%20blah">',
+ 'attachment1Image': ''<h1>content</h1>'',
+ 'attachment1Title': 'blah'}
+ }

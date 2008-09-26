@@ -22,6 +22,11 @@ from templatefinder import TemplateFinder
 from pretaweb.blueprints.relinker import Relinker
 from pretaweb.blueprints.simplexpath import SimpleXPath
 from plone.i18n.normalizer import urlnormalizer
+from lxml import etree
+import lxml.html
+import lxml.html.soupparser
+from lxml.html.clean import Cleaner
+import urlparse
 
 class HTMLSource(object):
     classProvides(ISectionBlueprint)
@@ -42,6 +47,27 @@ class HTMLSource(object):
         for item in self.items:
             yield item
 
+class HTMLBacklinkSource(HTMLSource):
+    classProvides(ISectionBlueprint)
+    implements(ISection)
+    
+    def __init__(self, transmogrifier, name, options, previous):
+        HTMLSource.__init__(self, transmogrifier, name, options, previous)
+        pathtoitem = {}
+        for item in self.items:
+            pathtoitem[item['_site_url']+item['_path']] = item
+        for item in self.items:
+            parser = lxml.html.soupparser.fromstring(item['text'])
+            for element, attribute, rawlink, pos in parser.iterlinks():
+                t = urlparse.urlparse(rawlink)
+                fragment = t[-1]
+                t = t[:-1] + ('',)
+                rawlink = urlparse.urlunparse(t)
+                base = item['_site_url']+item['_path']
+                link = urlparse.urljoin(base, rawlink)
+                linked = pathtoitem.get(link)
+                if linked:
+                    linked.setdefault('_backlinks',[]).append((base,element.text_content()))
 
 
 def setUp(test):
@@ -93,6 +119,8 @@ def setUp(test):
 
     provideUtility(HTMLSource,
         name=u'pretaweb.blueprints.test.htmlsource')
+    provideUtility(HTMLBacklinkSource,
+        name=u'pretaweb.blueprints.test.htmlbacklinksource')
 
 
 def SafeATSchemaUpdaterSetUp(test):
