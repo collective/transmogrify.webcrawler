@@ -1,8 +1,19 @@
 MakeAttachments
 ===============
 
+Will look for items that are linked from just one place and also have no 
+other links out. These 'deadends' will then be moved 'into' the linking item.
+If the fields option is set to a list of tuples then these indicate changes
+to make to item to merge in the subitem. The head of the list will be used as
+the filename to relink any html links to.
+If no fields are set then a folder will be created, the item set as its default
+view and any subitems moved into that folder.
+
+
+
 >>> from collective.transmogrifier.tests import registerConfig
 >>> from collective.transmogrifier.transmogrifier import Transmogrifier
+>>> transmogrifier = Transmogrifier(plone)
 >>> config = """
 ... [transmogrifier]
 ... pipeline =
@@ -18,25 +29,172 @@ MakeAttachments
 ...
 ... [makeattachments]
 ... blueprint = pretaweb.blueprints.makeattachments
-... fields = python:{'attachment'+str(num)+'Title': 'blah', 'attachment'+str(num)+'Image': subitem['image']}
+... fields = python:(('attachment'+str(num+1)+'Image', subitem['text']),('attachment'+str(num+1)+'Title', 'blah'), )
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
 ... """ 
 
 >>> registerConfig(u'test', config)
->>> transmogrifier = Transmogrifier(plone)
 >>> transmogrifier(u'test')
 {'_backlinks': [('http://test.com/level2/index', 'Level 3')],
  '_mimetype': 'text/html',
  '_path': 'level3/index',
  '_site_url': 'http://test.com/',
  'text': '<a href="../level2/index">Level 2</a>'}
+{'_origin': 'level2/+&image%20blah',
+ '_path': 'level2/index/attachment1Image',
+ '_site_url': 'http://test.com/'}
 {'_backlinks': [('http://test.com/level3/index', 'Level 2')],
  '_mimetype': 'text/html',
  '_path': 'level2/index',
  '_site_url': 'http://test.com/',
- 'text': '<a href="../level3/index">Level 3</a><img src="+&image%20blah">',
- 'attachment1Image': ''<h1>content</h1>'',
- 'attachment1Title': 'blah'}
- }
+ 'attachment1Image': '<h1>content</h1>',
+ 'attachment1Title': 'blah',
+ 'text': '<a href="../level3/index">Level 3</a><img src="+&image%20blah">'}
+
+>>> config = """
+... [transmogrifier]
+... include = test
+...     
+... [source]
+... level3/index=<a href="../level2/index">Level 2</a>
+... level2/index=<a href="../level3/index">Level 3</a><img src="+&image%20blah"><img src="pdf">
+... level2/+&image%20blah=<h1>content</h1>
+... level2/pdf=<img src="pdf2">
+... level2/pdf2=pdf2
+...
+... """ 
+>>> registerConfig(u'test2', config)
+>>> transmogrifier(u'test2')
+{'_origin': 'level2/+&image%20blah',
+ '_path': 'level2/index/attachment1Image',
+ '_site_url': 'http://test.com/'}
+{'_backlinks': [('http://test.com/level3/index', 'Level 2')],
+ '_mimetype': 'text/html',
+ '_path': 'level2/index',
+ '_site_url': 'http://test.com/',
+ 'attachment1Image': '<h1>content</h1>',
+ 'attachment1Title': 'blah',
+ 'text': '<a href="../level3/index">Level 3</a><img src="+&image%20blah"><img src="pdf">'}
+{'_origin': 'level2/pdf2',
+ '_path': 'level2/pdf/attachment1Image',
+ '_site_url': 'http://test.com/'}
+{'_backlinks': [('http://test.com/level2/index', '')],
+ '_mimetype': 'text/html',
+ '_path': 'level2/pdf',
+ '_site_url': 'http://test.com/',
+ 'attachment1Image': 'pdf2',
+ 'attachment1Title': 'blah',
+ 'text': '<img src="pdf2">'}
+{'_backlinks': [('http://test.com/level2/index', 'Level 3')],
+ '_mimetype': 'text/html',
+ '_path': 'level3/index',
+ '_site_url': 'http://test.com/',
+ 'text': '<a href="../level2/index">Level 2</a>'}
+
+>>> config = """
+... [transmogrifier]
+... include = test2
+...     
+... [makeattachments]
+... blueprint = pretaweb.blueprints.makeattachments
+... condition = python:subitem['_path'].count('pdf')
+...
+... """ 
+>>> registerConfig(u'test3', config)
+>>> transmogrifier(u'test3')
+{'_backlinks': [('http://test.com/level3/index', 'Level 2')],
+ '_mimetype': 'text/html',
+ '_path': 'level2/index',
+ '_site_url': 'http://test.com/',
+ 'text': '<a href="../level3/index">Level 3</a><img src="+&image%20blah"><img src="pdf">'}
+{'_backlinks': [('http://test.com/level3/index', 'Level 2')],
+ '_mimetype': 'text/html',
+ '_path': 'level2/index',
+ '_site_url': 'http://test.com/',
+ 'text': '<a href="../level3/index">Level 3</a><img src="+&image%20blah"><img src="pdf">'}
+{'_origin': 'level2/pdf2',
+ '_path': 'level2/pdf/attachment1Image',
+ '_site_url': 'http://test.com/'}
+{'_backlinks': [('http://test.com/level2/index', '')],
+ '_mimetype': 'text/html',
+ '_path': 'level2/pdf',
+ '_site_url': 'http://test.com/',
+ 'attachment1Image': 'pdf2',
+ 'attachment1Title': 'blah',
+ 'text': '<img src="pdf2">'}
+{'_backlinks': [('http://test.com/level2/index', 'Level 3')],
+ '_mimetype': 'text/html',
+ '_path': 'level3/index',
+ '_site_url': 'http://test.com/',
+ 'text': '<a href="../level2/index">Level 2</a>'}
+
+
+It is possible to not use fields for attachments but rather use a folder with a 
+default view. Just set fields to False (default).
+>>> config = """
+... [transmogrifier]
+... include = test
+...     
+... [source]
+... blueprint = pretaweb.blueprints.test.htmlbacklinksource
+... level3/index=<a href="level3"
+... level2/index=<a href="../level3/index">Level 3</a><img src="+&image%20blah">
+... level2/+&image%20blah=<h1>content</h1>
+...
+... """ 
+>>> registerConfig(u'test4', config)
+>>> transmogrifier(u'test4')
+{'_origin': 'level3/index',
+ '_path': 'level2/index/attachment1Image',
+ '_site_url': 'http://test.com/'}
+{'_origin': 'level2/+&image%20blah',
+ '_path': 'level2/index/attachment2Image',
+ '_site_url': 'http://test.com/'}
+{'_mimetype': 'text/html',
+ '_path': 'level2/index',
+ '_site_url': 'http://test.com/',
+ 'attachment1Image': '<a href="level3"',
+ 'attachment1Title': 'blah',
+ 'attachment2Image': '<h1>content</h1>',
+ 'attachment2Title': 'blah',
+ 'text': '<a href="../level3/index">Level 3</a><img src="+&image%20blah">'}
+
+>>> config = """
+... [transmogrifier]
+... include = test
+...     
+... [source]
+... blueprint = pretaweb.blueprints.test.htmlbacklinksource
+... level3/index=<a href="level3"
+... level2/index=<a href="../level3/index">Level 3</a><img src="+&image%20blah">
+... level2/+&image%20blah=<h1>content</h1>
+...
+... [makeattachments]
+... fields = python:False
+...
+... """ 
+>>> registerConfig(u'test5', config)
+>>> transmogrifier(u'test5')
+{'_backlinks': [('http://test.com/level2/index', 'Level 3')],
+ '_mimetype': 'text/html',
+ '_origin': 'level3/index',
+ '_path': 'level2/index/index',
+ '_site_url': 'http://test.com/',
+ 'text': '<a href="level3"'}
+{'_backlinks': [('http://test.com/level2/index', '')],
+ '_mimetype': 'text/html',
+ '_origin': 'level2/+&image%20blah',
+ '_path': 'level2/index/+&image%20blah',
+ '_site_url': 'http://test.com/',
+ 'text': '<h1>content</h1>'}
+{'_defaultpage': 'index_html',
+ '_path': 'level2/index',
+ '_site_url': 'http://test.com/',
+ '_type': 'Folder'}
+{'_mimetype': 'text/html',
+ '_origin': 'level2/index',
+ '_path': 'level2/index/index_html',
+ '_site_url': 'http://test.com/',
+ 'text': '<a href="../level3/index">Level 3</a><img src="+&image%20blah">'}
