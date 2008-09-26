@@ -15,7 +15,7 @@ class MakeAttachments(object):
 
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
-        self.fields=Expression(options.get('fields',''), transmogrifier, name, options)
+        self.fields=Expression(options.get('fields','python:False'), transmogrifier, name, options)
         self.condition=Condition(options.get('condition','python:True'), transmogrifier, name, options)
 
     def __iter__(self):

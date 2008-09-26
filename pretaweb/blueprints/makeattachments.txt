@@ -29,7 +29,7 @@ view and any subitems moved into that folder.
 ...
 ... [makeattachments]
 ... blueprint = pretaweb.blueprints.makeattachments
-... fields = python:(('attachment'+str(num+1)+'Image', subitem['text']),('attachment'+str(num+1)+'Title', 'blah'), )
+... fields = python:i>=0 and (('attachment'+str(i+1)+'Image', subitem['text']),('attachment'+str(i+1)+'Title', 'blah'), )
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
@@ -99,7 +99,7 @@ view and any subitems moved into that folder.
 ...     
 ... [makeattachments]
 ... blueprint = pretaweb.blueprints.makeattachments
-... condition = python:subitem['_path'].count('pdf')
+... condition = python:subitem['_path'].count('pdf') and i>=0
 ...
 ... """ 
 >>> registerConfig(u'test3', config)
