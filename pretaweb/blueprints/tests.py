@@ -116,6 +116,9 @@ def setUp(test):
     from makeattachments import MakeAttachments
     provideUtility(MakeAttachments,
         name=u'pretaweb.blueprints.makeattachments')
+    from debugsection import DebugSection
+    provideUtility(DebugSection,
+        name=u'pretaweb.blueprints.debugsection')
 
     provideUtility(HTMLSource,
         name=u'pretaweb.blueprints.test.htmlsource')

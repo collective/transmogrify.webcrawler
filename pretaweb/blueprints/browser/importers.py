@@ -17,8 +17,10 @@ class Import(BrowserView):
         BrowserView.__init__(self, context, request)
         self.ids = configuration_registry.listConfigurationIds
 
-    def test(self, id=None):
+    def test(self, id=None, url=None):
         # run transmogrifier
+        if url:
+            registerConfig(u'pretaweb.blueprints.treeserializer.sitesucker', config)
         if id:
             transmogrifier = Transmogrifier(self.context)
             transmogrifier(id)

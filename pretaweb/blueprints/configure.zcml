@@ -36,6 +36,8 @@
 		     name="pretaweb.blueprints.makeattachments" />
     <utility component=".safeworkflowupdater.WorkflowUpdaterSection"
 		     name="pretaweb.blueprints.workflowupdater" />
+    <utility component=".debugsection.DebugSection"
+		     name="pretaweb.blueprints.debugsection" />
 
     <include package=".example"/>
 
