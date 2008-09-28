@@ -25,11 +25,13 @@ class TreeSerializer(object):
                '_path' not in item:
                 yield item
             else:
-
-                if item['_path'] and item['_path'][0] == '/':
-                    items[item['_site_url']+item['_path'][1:]] = item
-                else:
-                    items[item['_site_url']+item['_path']] = item
+                path = item['_path']
+                base = item['_site_url']
+                if path and path[0] == '/':
+                    path = path[1:]
+                #if base+path in items:
+                #    import pdb; pdb.set_trace()
+                items[base+path] = item
         
         # build tree
         items_keys = items.keys()
@@ -66,6 +68,7 @@ class TreeSerializer(object):
         # has to be in order so they get created
         items_keys = items.keys()
         items_keys.sort()
+        #import pdb; pdb.set_trace()
         for item in items_keys:
             yield items[item]
 
