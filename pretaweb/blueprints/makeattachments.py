@@ -43,7 +43,7 @@ class MakeAttachments(object):
                 continue
             #if path.count('safetyproc'):
             #    import pdb; pdb.set_trace()
-            #if '_path' in item and item.get('_path','').count('026D.doc'):
+            #if '_path' in item and item.get('_path','').count('.pdf'):
             #    import pdb; pdb.set_trace()
             if not subitems.get(base+origin,[]) and len(item.get('_backlinks',[]))==1:
                 continue #item is a deadend and will be delt with elsewhere
@@ -54,11 +54,13 @@ class MakeAttachments(object):
                 subbase = subitem.get('_site_url',None)
                 suborigin = subitem.get('_origin',subitem.get('_path',None))
                     
+                #if '_path' in subitem and subitem.get('_path','').count('.pdf'):
+                #    import pdb; pdb.set_trace()
                 if subitems.get(subbase+suborigin,[]):
                     # subitem isn;t a deadend and will be dealt with elsewhere. 
                     continue
                 if not self.condition(item,i=i,subitem=subitem):
-                    yield item
+                    yield subitem
                     continue
                 change = self.fields(item, subitem=subitem, i=i)
                 #import pdb; pdb.set_trace()
