@@ -34,6 +34,8 @@ class SafeConstructorSection(object):
             
             fti = self.ttool.getTypeInfo(type_)
             if fti is None:                           # not an existing type
+                msg = "constructor: no type found %s:%s" % (type_,path)
+                logger.log(logging.ERROR, msg)
                 yield item; continue
             
             elems = path.strip('/').rsplit('/', 1)
