@@ -19,6 +19,7 @@ view and any subitems moved into that folder.
 ... pipeline =
 ...     source
 ...     makeattachments 
+...     treeserializer
 ...     printer
 ...     
 ... [source]
@@ -31,20 +32,16 @@ view and any subitems moved into that folder.
 ... blueprint = pretaweb.blueprints.makeattachments
 ... fields = python:i>=0 and (('attachment'+str(i+1)+'Image', subitem['text']),('attachment'+str(i+1)+'Title', 'blah'), )
 ...
+... [treeserializer]
+... blueprint = pretaweb.blueprints.treeserializer
+...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
 ... """ 
 
 >>> registerConfig(u'test', config)
 >>> transmogrifier(u'test')
-{'_backlinks': [('http://test.com/level2/index', 'Level 3')],
- '_mimetype': 'text/html',
- '_path': 'level3/index',
- '_site_url': 'http://test.com/',
- 'text': '<a href="../level2/index">Level 2</a>'}
-{'_origin': 'level2/+&image%20blah',
- '_path': 'level2/index/attachment1Image',
- '_site_url': 'http://test.com/'}
+{'_type': 'Folder', '_site_url': 'http://test.com/', '_path': 'level2'}
 {'_backlinks': [('http://test.com/level3/index', 'Level 2')],
  '_mimetype': 'text/html',
  '_path': 'level2/index',
@@ -52,6 +49,15 @@ view and any subitems moved into that folder.
  'attachment1Image': '<h1>content</h1>',
  'attachment1Title': 'blah',
  'text': '<a href="../level3/index">Level 3</a><img src="+&image%20blah">'}
+{'_origin': 'level2/+&image%20blah',
+ '_path': 'level2/index/attachment1Image',
+ '_site_url': 'http://test.com/'}
+{'_type': 'Folder', '_site_url': 'http://test.com/', '_path': 'level3'}
+{'_backlinks': [('http://test.com/level2/index', 'Level 3')],
+ '_mimetype': 'text/html',
+ '_path': 'level3/index',
+ '_site_url': 'http://test.com/',
+ 'text': '<a href="../level2/index">Level 2</a>'}
 
 >>> config = """
 ... [transmogrifier]
@@ -200,12 +206,48 @@ default view. Just set fields to False (default).
  'text': '<a href="../level3/index">Level 3</a><img src="+&image%20blah">'}
 
 
+Test content that isn't linked up to makes sure its still passed through 
+
+>>> config = """
+... [transmogrifier]
+... pipeline =
+...     source
+...     makeattachments
+...     treeserializer 
+...     printer
+...     
+... [source]
+... blueprint = pretaweb.blueprints.test.htmlbacklinksource
+... blah1=blah1
+... blah2=blah2
+...
+... [makeattachments]
+... blueprint = pretaweb.blueprints.makeattachments
+...
+... [treeserializer]
+... blueprint = pretaweb.blueprints.treeserializer
+...
+... [printer]
+... blueprint = collective.transmogrifier.sections.tests.pprinter
+... """ 
+>>> registerConfig(u'test5.5', config)
+>>> transmogrifier(u'test5.5')
+{'_mimetype': 'text/html',
+ '_path': 'blah1',
+ '_site_url': 'http://test.com/',
+ 'text': 'blah1'}
+{'_mimetype': 'text/html',
+ '_path': 'blah2',
+ '_site_url': 'http://test.com/',
+ 'text': 'blah2'}
+
 You can use a combination of folder and field attachments
 >>> config = """
 ... [transmogrifier]
 ... pipeline =
 ...     source
 ...     makeattachments 
+...     treeserializer
 ...     printer
 ...     
 ... [source]
@@ -218,21 +260,24 @@ You can use a combination of folder and field attachments
 ... blueprint = pretaweb.blueprints.makeattachments
 ... fields = python:i<1 and [('attach%i'%i,subitem['text'])]
 ...
+... [treeserializer]
+... blueprint = pretaweb.blueprints.treeserializer
+...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
 ... """ 
 >>> registerConfig(u'test6', config)
 >>> transmogrifier(u'test6')
+{'_defaultpage': 'index-html',
+ '_path': 'content',
+ '_site_url': 'http://test.com/',
+ '_type': 'Folder'}
 {'_backlinks': [('http://test.com/content', '')],
  '_mimetype': 'text/html',
  '_origin': 'blah2',
  '_path': 'content/blah2',
  '_site_url': 'http://test.com/',
  'text': 'blah2'}
-{'_defaultpage': 'index-html',
- '_path': 'content',
- '_site_url': 'http://test.com/',
- '_type': 'Folder'}
 {'_mimetype': 'text/html',
  '_origin': 'content',
  '_path': 'content/index-html',

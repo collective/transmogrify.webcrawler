@@ -45,7 +45,7 @@ class MakeAttachments(object):
             #    import pdb; pdb.set_trace()
             #if '_path' in item and item.get('_path','').count('026D.doc'):
             #    import pdb; pdb.set_trace()
-            if not subitems.get(base+origin,[]):
+            if not subitems.get(base+origin,[]) and len(item.get('_backlinks',[]))==1:
                 continue #item is a deadend and will be delt with elsewhere
             folder=None
             i = 0
