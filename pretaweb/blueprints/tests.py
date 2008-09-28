@@ -225,5 +225,8 @@ def test_suite():
         doctest.DocFileSuite('makeattachments.txt',
                 setUp=MakeAttachmentsSetUp,
                 tearDown=tearDown),
+        doctest.DocFileSuite('isindex.txt',
+                setUp=MakeAttachmentsSetUp,
+                tearDown=tearDown),
     ))
 

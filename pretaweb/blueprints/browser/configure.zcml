@@ -17,11 +17,4 @@
 	  <include package="plone.app.transmogrifier"/>
 	    
 
-
-    <transmogrifier:registerConfig
-        name="sitesucker"
-        title="SiteSucker"
-        description="Static site import import tool for plone"
-        configuration="sitesucker.cfg" />
-
 </configure>

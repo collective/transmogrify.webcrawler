@@ -18,28 +18,6 @@ import logging
 logger = logging.getLogger('Plone')
 
 
-"""
-IsIndex
-=======
-
-IsIndex attempts to guess if a html file is really an index that should
-be the default page on a folder. It does this by looking at the links in
-the content. If it contains many links all pointing to objects in a 
-certain folder then it will make this as teh index. 
-If multiple are indexes then only one will win.
-If the file is not in the folder for which its an index, this will 
-adjust the path to put it inside the folder.
-
-The strategy used is as follows:
-- get all the potential indexes and determine what they are most likely to be
-  index of.
-- rank them on the depth of that dir
-- pick most deep dir. move all indexes that point to it into there.
-- choose one of those to be the index
-- loop (this move indexes that point to indexes)
-
-
-"""
 
 class IsIndex(object):
     classProvides(ISectionBlueprint)
