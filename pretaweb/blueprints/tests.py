@@ -119,6 +119,9 @@ def setUp(test):
     from debugsection import DebugSection
     provideUtility(DebugSection,
         name=u'pretaweb.blueprints.debugsection')
+    from staticcreator import StaticCreator
+    provideUtility(StaticCreator,
+        name=u'pretaweb.blueprints.staticcreator')
 
     provideUtility(HTMLSource,
         name=u'pretaweb.blueprints.test.htmlsource')
