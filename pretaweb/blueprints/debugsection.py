@@ -53,8 +53,10 @@ class DebugSection(object):
         
         for item in self.previous:
             items.setdefault(item.get('_path'),[]).append(item)
-            msg = "debugsection: got %s" %(item.get('_path'))
-            logger.log(logging.DEBUG, msg)
+            if item.get('_path'):
+                msg = "debugsection: got %s" %(item.get('_path'))
+                #logger.log(logging.DEBUG, msg)
+                #print >> stderr, msg
             yield item
             i = i + 1
 

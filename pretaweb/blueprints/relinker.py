@@ -16,6 +16,7 @@ from collective.transmogrifier.utils import Expression
 import logging
 from external.normalize import urlnormalizer
 logger = logging.getLogger('Plone')
+from sys import stderr
 
 
 class Relinker(object):
@@ -52,14 +53,18 @@ class Relinker(object):
             if not path:
                 yield item
                 continue
+            base = item.get('_site_url','')
             norm = lambda part: self.normalize(urllib.unquote_plus(part))
             newpath = '/'.join([norm(part) for part in path.split('/')])
             origin = item.get('_origin')
             if not origin:
                 origin = item['_origin'] = path
             item['_path'] = newpath
-            
-            changes[item.get('_site_url','')+origin] = item
+            #normalize link
+            link = urllib.unquote_plus(base+origin)
+            #assert not changes.get(link,None), str((item,changes.get(base+origin,None)))
+                
+            changes[link] = item
 
         for item in changes.values():
             if 'text' in item and item.get('_mimetype') in ['text/xhtml', 'text/html']:
@@ -68,7 +73,10 @@ class Relinker(object):
                 newbase = item['_site_url']+path
                 def replace(link):
                     linked = changes.get(link)
-                    #import pdb; pdb.set_trace()
+                    if not linked:
+                        link = urllib.unquote_plus(link)
+                        linked = changes.get(link)
+                        
                     if linked:
                         if self.link_expr:
                             linkedurl = item['_site_url']+self.link_expr(linked)
@@ -76,6 +84,10 @@ class Relinker(object):
                             linkedurl = item['_site_url']+linked['_path']
                         return relative_url(newbase, linkedurl)
                     else:
+                        #import pdb; pdb.set_trace()
+                        msg = "relinker: no match for %s in %s" % (link,path)
+                        logger.log(logging.DEBUG, msg)
+                        print >> stderr, msg
                         return relative_url(newbase, link)
                 
                 try:

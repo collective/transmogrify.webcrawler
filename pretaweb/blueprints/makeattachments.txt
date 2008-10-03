@@ -10,6 +10,7 @@ If no fields are set then a folder will be created, the item set as its default
 view and any subitems moved into that folder.
 
 
+Our condition ensures in this doesn't produce a move there are only one subitem.
 
 >>> from collective.transmogrifier.tests import registerConfig
 >>> from collective.transmogrifier.transmogrifier import Transmogrifier
@@ -39,9 +40,11 @@ view and any subitems moved into that folder.
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
 ... """ 
 
+Add two more subitems and then we get attachments
+
 >>> registerConfig(u'test', config)
 >>> transmogrifier(u'test')
-{'_type': 'Folder', '_site_url': 'http://test.com/', '_path': 'level2'}
+{'_type': 'Folder', '_site_url': 'http://test.com/', t'_path': 'level2'}
 {'_backlinks': [('http://test.com/level3/index', 'Level 2')],
  '_mimetype': 'text/html',
  '_path': 'level2/index',
@@ -73,9 +76,7 @@ view and any subitems moved into that folder.
 ... """ 
 >>> registerConfig(u'test2', config)
 >>> transmogrifier(u'test2')
-{'_origin': 'level2/+&image%20blah',
- '_path': 'level2/index/attachment1Image',
- '_site_url': 'http://test.com/'}
+{'_type': 'Folder', '_site_url': 'http://test.com/', '_path': 'level2'}
 {'_backlinks': [('http://test.com/level3/index', 'Level 2')],
  '_mimetype': 'text/html',
  '_path': 'level2/index',
@@ -83,8 +84,8 @@ view and any subitems moved into that folder.
  'attachment1Image': '<h1>content</h1>',
  'attachment1Title': 'blah',
  'text': '<a href="../level3/index">Level 3</a><img src="+&image%20blah"><img src="pdf">'}
-{'_origin': 'level2/pdf2',
- '_path': 'level2/pdf/attachment1Image',
+{'_origin': 'level2/+&image%20blah',
+ '_path': 'level2/index/attachment1Image',
  '_site_url': 'http://test.com/'}
 {'_backlinks': [('http://test.com/level2/index', '')],
  '_mimetype': 'text/html',
@@ -93,12 +94,16 @@ view and any subitems moved into that folder.
  'attachment1Image': 'pdf2',
  'attachment1Title': 'blah',
  'text': '<img src="pdf2">'}
+{'_origin': 'level2/pdf2',
+ '_path': 'level2/pdf/attachment1Image',
+ '_site_url': 'http://test.com/'}
+{'_type': 'Folder', '_site_url': 'http://test.com/', '_path': 'level3'}
 {'_backlinks': [('http://test.com/level2/index', 'Level 3')],
  '_mimetype': 'text/html',
  '_path': 'level3/index',
  '_site_url': 'http://test.com/',
  'text': '<a href="../level2/index">Level 2</a>'}
-
+ 
 >>> config = """
 ... [transmogrifier]
 ... include = test2

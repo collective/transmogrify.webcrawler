@@ -17,6 +17,8 @@ import lxml.html
 import lxml.html.soupparser
 from lxml.html.clean import Cleaner
 import urlparse
+import logging
+logger = logging.getLogger('Plone')
 
 VERBOSE = 0                             # Verbosity level (0-3)
 MAXPAGE = 0                        # Ignore files bigger than this
@@ -103,9 +105,13 @@ class WebCrawler(object):
                 if self.ignore(url):
                     checker.markdone((url,part))
                     print >> stderr, "Ignoring: "+ str(url)
+                    msg = "webcrawler: Ignoring: %s" %str(url)
+                    logger.log(logging.DEBUG, msg)
                     yield dict(_bad_url = url)
                 else:
                     print >> stderr, "Crawling: "+ str(url)
+                    msg = "webcrawler: Crawling: %s" %str(url)
+                    logger.log(logging.DEBUG, msg)
                     checker.dopage((url,part))
                     page = checker.name_table.get(url) #have to usse unredirected
                     url = redirected.get(url,url)
@@ -124,7 +130,12 @@ class WebCrawler(object):
                                        _content      = text,
                                        _content_info = info,)
                     else:
-                            yield dict(_bad_url = self.site_url+path)
+                        if path.count('abrv'):
+                            import pdb; pdb.set_trace()
+                        msg = "webcrawler: bad_url: %s" %str(url)
+                        print >> stderr, msg
+                        logger.log(logging.DEBUG, msg)
+                        yield dict(_bad_url = self.site_url+path)
 
     def ignore(self, url):
         if not url.startswith(self.site_url[:-1]):
