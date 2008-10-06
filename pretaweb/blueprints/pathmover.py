@@ -45,7 +45,7 @@ class PathMover(object):
                 continue
             origin = unquote(origin)
             if path==origin[:-1] or path.startswith(origin):
-                newpath = target+path[len(origin):]
+                newpath = unquote(target)+path[len(origin):]
                 if not item.get('_origin'):
                     item['_origin'] = item.get('_path')
                 #import pdb; pdb.set_trace()
