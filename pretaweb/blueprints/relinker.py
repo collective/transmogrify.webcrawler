@@ -115,7 +115,6 @@ class Relinker(object):
                     newbacklinks.append((origin,name))
             if backlinks:
                 item['_backlinks'] = newbacklinks
-                
-                
+    
             yield item
         

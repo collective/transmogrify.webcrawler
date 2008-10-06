@@ -77,13 +77,14 @@ class SafePortalTransforms(PortalTransformsSection):
                         tmp = item['_path'].split('/')
                         base = tmp[:-1]
                         doc_id = tmp[-1]
+                        origin = item.get('_origin',item.get('_path'))
                         for name,data in data.getSubObjects().items():
                             #TODO: maybe shouldn't hard code this
                             yield {'_type':           'Image',
-                                   '_origin':         name,
+                                   '_origin':         '/'.join([origin,name]),
                                    '_path':           '/'.join(base+[doc_id+'-'+name]),
                                    '_site_url':       item.get('_site_url'),
-                                   '_backlinks':      [(item['_site_url']+item['_path'],'')],
+                                   '_backlinks':      [(item['_site_url']+origin,'')],
                                    'image':           data,
                                    'image.filename':  name}
                                                 

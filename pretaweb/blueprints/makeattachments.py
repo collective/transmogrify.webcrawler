@@ -35,6 +35,7 @@ class MakeAttachments(object):
         # apply new fields from subitems to items 
         total = 0
         merged = 0
+        #import pdb; pdb.set_trace()
         for item in items:
             base = item.get('_site_url',None)
             origin = item.get('_origin',item.get('_path',None))
@@ -45,12 +46,14 @@ class MakeAttachments(object):
             #    import pdb; pdb.set_trace()
             #if '_path' in item and item.get('_path','').count('.pdf'):
             #    import pdb; pdb.set_trace()
-            if not subitems.get(base+origin,[]) and len(item.get('_backlinks',[]))==1:
+            links = subitems.get(base+origin,[])
+            backlinks =  item.get('_backlinks',[])
+            if not links and len(backlinks)==1 and subitems.get(backlinks[0][0]) is not None:
                 continue #item is a deadend and will be delt with elsewhere
             folder=None
             i = 0
             attach = []
-            for subitem in subitems.get(base+origin,[]):
+            for subitem in links:
                 subbase = subitem.get('_site_url',None)
                 suborigin = subitem.get('_origin',subitem.get('_path',None))
                     

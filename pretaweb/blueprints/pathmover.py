@@ -17,8 +17,9 @@ class PathMover(object):
         self.previous = previous
         moves = options.get('moves')
         self.moves = []
+        #import pdb; pdb.set_trace()
         for line in moves.strip().split('\n'):
-            line = [t for t in line.strip().split('\t') if t]
+            line = [t for t in line.strip().split() if t]
             if len(line)>1:
                 self.moves.append(('%s/'%line[0],'%s/'%('/'.join(line[1:]))))
             elif len(line) == 1:
