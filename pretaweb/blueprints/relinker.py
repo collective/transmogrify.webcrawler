@@ -48,9 +48,13 @@ class Relinker(object):
         
 
         changes = {}
+        bad = {}
         for item in self.previous:
             path = item.get('_path',None)
             if not path:
+                url = item.get('_bad_url')
+                if url:
+                    bad[url] = item
                 yield item
                 continue
             base = item.get('_site_url','')
@@ -85,9 +89,10 @@ class Relinker(object):
                         return relative_url(newbase, linkedurl)
                     else:
                         #import pdb; pdb.set_trace()
-                        msg = "relinker: no match for %s in %s" % (link,path)
-                        logger.log(logging.DEBUG, msg)
-                        print >> stderr, msg
+                        if link not in bad:
+                            msg = "relinker: no match for %s in %s" % (link,path)
+                            logger.log(logging.DEBUG, msg)
+                            print >> stderr, msg
                         return relative_url(newbase, link)
                 
                 try:

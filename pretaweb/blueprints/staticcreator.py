@@ -9,6 +9,7 @@ logger = logging.getLogger('Plone')
 import os
 import sys
 import urllib
+from sys import stderr
 
 from Products.Archetypes.interfaces import IBaseObject
 #from Products.Archetypes.event import ObjectInitializedEvent
@@ -69,6 +70,12 @@ class StaticCreator(object):
 
     def savefile(self, text, path):
         dir, base = os.path.split(path)
+        if text is None:
+            msg = "static creator: None in contents %s" %str(path)
+            logger.log(logging.DEBUG, msg)
+            print >> stderr, msg
+            return
+            
         makedirs(dir)
         try:
             f = open(path, "wb")

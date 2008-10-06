@@ -13,6 +13,7 @@ WebCrawler
 ... [webcrawler]
 ... blueprint = pretaweb.blueprints.webcrawler
 ... site_url  = file:///%s/test_staticsite
+... alias_bases = http://somerandomsite file:///
 ... patterns =
 ...		(?s)<SCRIPT.*Abbreviation"\) 
 ...		(?s)MakeLink\('(?P<u>[^']*)','(?P<a>[^']*)'\)

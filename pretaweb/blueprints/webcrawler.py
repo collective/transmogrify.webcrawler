@@ -22,7 +22,7 @@ logger = logging.getLogger('Plone')
 
 VERBOSE = 0                             # Verbosity level (0-3)
 MAXPAGE = 0                        # Ignore files bigger than this
-CHECKEXT = False    # Check external references (1 deep)
+CHECKEXT = True    # Check external references (1 deep)
 VERBOSE = 0         # Verbosity level (0-3)
 MAXPAGE = 150000    # Ignore files bigger than this
 NONAMES = 0         # Force name anchor checking
@@ -44,6 +44,7 @@ class WebCrawler(object):
         self.maxpage   = options.get('maxpage', MAXPAGE)
         self.nonames   = options.get('nonames', NONAMES)
         self.site_url  = options.get('site_url', None)
+        self.alias_bases  = [a for a in options.get('alias_bases', '').split() if a]
         # make sure we end with a / 
         if self.site_url[-1] != '/':
             self.site_url=self.site_url+'/'
@@ -59,6 +60,8 @@ class WebCrawler(object):
         infos = {}
         files = {}
         redirected = {}
+        alias_bases = self.alias_bases
+        site_url = self.site_url
 
         class MyChecker(Checker):
             link_names = {} #store link->[name]
@@ -68,10 +71,12 @@ class WebCrawler(object):
             
             def openhtml(self, url_pair):
                 oldurl, fragment = url_pair
+                                
                 f = self.openpage(url_pair)
                 if f:
                     url = f.geturl()
-                    redirected[oldurl] = url
+                    if url != oldurl:
+                        redirected[oldurl] = url
                     infos[url] = info = f.info()
                     if not self.checkforhtml(info, url):
                         files[url] = f.read()
@@ -80,7 +85,35 @@ class WebCrawler(object):
                 else:
                     url = oldurl
                 return f, url
+                    
+            def openpage(self, url_pair):
+                url, fragment = url_pair
+                old_pair = url_pair
+                # actually open alias instead
+                realbase = site_url
+                if site_url.endswith('/'):
+                    realbase=site_url[:-1]
+                if url.count('random'):
+                            import pdb; pdb.set_trace()
+
+                for a in [realbase]: #+alias_bases:
+                    if a.endswith('/'):
+                        a=a[:-1]
+                    if a and url.startswith(a):
+                        base = url[:len(a)]
+                        path = url[len(a):]
+                        url = realbase+path
+                        break
                 
+                try:
+                    return self.urlopener.open(url)
+                except (OSError, IOError), msg:
+                    msg = self.sanitize(msg)
+                    self.note(0, "Error %s", msg)
+                    if self.verbose > 0:
+                        self.show(" HREF ", url, "  from", self.todo[url_pair])
+                    self.setbad(old_pair, msg)
+                    return None
 
         def pagefactory(text, url, verbose=VERBOSE, maxpage=MAXPAGE, checker=None):
             return LXMLPage(text,url,verbose,maxpage,checker,options)
@@ -92,8 +125,12 @@ class WebCrawler(object):
                          verbose    = self.verbose,
                          maxpage    = self.maxpage, 
                          nonames    = self.nonames)
+
         #must take off the '/' for the crawler to work
         checker.addroot(self.site_url[:-1])
+        for root in self.alias_bases:
+            checker.addroot(root, add_to_do = 0)
+
 
         #import pdb; pdb.set_trace()
         while checker.todo:
@@ -112,8 +149,10 @@ class WebCrawler(object):
                     print >> stderr, "Crawling: "+ str(url)
                     msg = "webcrawler: Crawling: %s" %str(url)
                     logger.log(logging.DEBUG, msg)
+                    base = self.site_url
                     checker.dopage((url,part))
                     page = checker.name_table.get(url) #have to usse unredirected
+                    origin = url
                     url = redirected.get(url,url)
                     names = checker.link_names.get(url,[])
                     path = url[len(self.site_url):]
@@ -122,24 +161,27 @@ class WebCrawler(object):
                     #    import pdb; pdb.set_trace()
                     info = infos.get(url)
                     file = files.get(url)
-                    if info and (page or file):
+                    if info:
                         text = page and page.html() or file
-                        yield dict(_path         = path,
-                                       _site_url     = self.site_url,
+                        item = dict(_path         = path,
+                                       _site_url     = base,
                                        _backlinks    = names,
                                        _content      = text,
                                        _content_info = info,)
+                        if origin != url:
+                            item['_origin'] = origin
+                        yield item
                     else:
-                        if path.count('abrv'):
-                            import pdb; pdb.set_trace()
+                        #if path.count('abrv'):
+                        #    import pdb; pdb.set_trace()
                         msg = "webcrawler: bad_url: %s" %str(url)
                         print >> stderr, msg
                         logger.log(logging.DEBUG, msg)
-                        yield dict(_bad_url = self.site_url+path)
+                        yield dict(_bad_url = origin)
 
     def ignore(self, url):
-        if not url.startswith(self.site_url[:-1]):
-            return True
+#        if not url.startswith(self.site_url[:-1]):
+#            return True
         for pat in self.ignore_re:
             if pat and pat.search(url):
                 return True
