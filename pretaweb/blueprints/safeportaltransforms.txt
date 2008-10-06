@@ -1,0 +1,48 @@
+Relinker
+==========
+
+>>> from collective.transmogrifier.tests import registerConfig
+>>> from collective.transmogrifier.transmogrifier import Transmogrifier
+>>> transmogrifier = Transmogrifier(plone)
+>>> config = """
+... [transmogrifier]
+... pipeline =
+...     webcrawler
+...     convert
+...     printer
+...     
+...     
+... [webcrawler]
+... blueprint = pretaweb.blueprints.test.htmlsource
+... one=<a href="two">2</a>
+... 
+... [convert]
+... blueprint = pretaweb.blueprints.safeportaltransforms
+... mimetype_field = _mimetype
+... target = text/blah
+... keys = text
+...
+... [printer]
+... blueprint = collective.transmogrifier.sections.tests.pprinter
+...
+... """ 
+>>> registerConfig(u'test1', config)
+>>> transmogrifier(u'test1')
+{'_backlinks': [('http://test.com/one', '')],
+ '_origin': 'image02.jog',
+ '_path': 'one-image02.jog',
+ '_site_url': 'http://test.com/',
+ '_type': 'Image',
+ 'image': 'imagedata',
+ 'image.filename': 'image02.jog'}
+{'_backlinks': [('http://test.com/one', '')],
+ '_origin': 'image01.jpg',
+ '_path': 'one-image01.jpg',
+ '_site_url': 'http://test.com/',
+ '_type': 'Image',
+ 'image': 'imagedata',
+ 'image.filename': 'image01.jpg'}
+{'_mimetype': 'text/blah',
+ '_path': 'one',
+ '_site_url': 'http://test.com/',
+ 'text': 'Transformed 19 from text/html to text/blah'}

@@ -73,14 +73,15 @@ class SafePortalTransforms(PortalTransformsSection):
                     if self.from_field:
                         item[self.from_field] = self.target
                     if hasattr(data,'getSubObjects'):
+                        #import pdb; pdb.set_trace()
                         tmp = item['_path'].split('/')
-                        base = '/'.join(tmp[:-1])
+                        base = tmp[:-1]
                         doc_id = tmp[-1]
                         for name,data in data.getSubObjects().items():
                             #TODO: maybe shouldn't hard code this
                             yield {'_type':           'Image',
                                    '_origin':         name,
-                                   '_path':           '/'.join([base,doc_id+'-'+name]),
+                                   '_path':           '/'.join(base+[doc_id+'-'+name]),
                                    '_site_url':       item.get('_site_url'),
                                    '_backlinks':      [(item['_site_url']+item['_path'],'')],
                                    'image':           data,

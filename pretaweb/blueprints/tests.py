@@ -70,6 +70,27 @@ class HTMLBacklinkSource(HTMLSource):
                     linked.setdefault('_backlinks',[]).append((base,element.text_content()))
 
 
+class MockPortalTransforms(object):
+    def __call__(self, transform, data):
+        return 'Transformed %i using the %s transform' % (len(data), transform)
+    def convertToData(self, target, data, mimetype=None):
+        class dummyfile:
+            def __init__(self, text):
+                self.text = text
+            def __str__(self):
+                return self.text
+            def getSubObjects(self):
+                return {'image01.jpg':'imagedata','image02.jog':'imagedata'}
+        if mimetype is not None:
+            return dummyfile( 'Transformed %i from %s to %s' % (
+                len(data), mimetype, target) )
+        else:
+            return dummyfile('Transformed %r to %s' % (data, target) )
+    def convertTo(self, target, data, mimetype=None):
+        return self.convertToData(target,data,mimetype)
+
+
+
 def setUp(test):
     baseSetUp(test)
         
@@ -80,6 +101,8 @@ def setUp(test):
     import collective.transmogrifier.sections
     zcml.load_config('meta.zcml', zope.app.component)
     zcml.load_config('configure.zcml', collective.transmogrifier.sections)
+    
+    test.globs['plone'].portal_transforms = MockPortalTransforms()
     
     provideUtility(PrettyPrinter,
         name=u'collective.transmogrifier.sections.tests.pprinter')
@@ -229,6 +252,9 @@ def test_suite():
                 setUp=MakeAttachmentsSetUp,
                 tearDown=tearDown),
         doctest.DocFileSuite('isindex.txt',
+                setUp=MakeAttachmentsSetUp,
+                tearDown=tearDown),
+        doctest.DocFileSuite('safeportaltransforms.txt',
                 setUp=MakeAttachmentsSetUp,
                 tearDown=tearDown),
     ))
