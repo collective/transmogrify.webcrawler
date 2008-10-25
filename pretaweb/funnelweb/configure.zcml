@@ -1,6 +1,6 @@
 <configure
     xmlns="http://namespaces.zope.org/zope"
-    i18n_domain="pretaweb.blueprints">
+    i18n_domain="pretaweb.funnelweb">
 
     <include package=".browser"/>
 
@@ -9,35 +9,35 @@
 	  <include package="plone.app.transmogrifier"/>
 	    
     <utility component=".webcrawler.WebCrawler"
-             name="pretaweb.blueprints.webcrawler" />
+             name="pretaweb.funnelweb.webcrawler" />
     <utility component=".treeserializer.TreeSerializer"
-             name="pretaweb.blueprints.treeserializer" />
+             name="pretaweb.funnelweb.treeserializer" />
     <utility component=".typerecognitor.TypeRecognitor"
-             name="pretaweb.blueprints.typerecognitor" />
+             name="pretaweb.funnelweb.typerecognitor" />
     <utility component=".templatefinder.TemplateFinder"
-             name="pretaweb.blueprints.templatefinder" />
+             name="pretaweb.funnelweb.templatefinder" />
     <utility component=".relinker.Relinker"
-             name="pretaweb.blueprints.relinker" />
+             name="pretaweb.funnelweb.relinker" />
     <utility component=".safeportaltransforms.SafePortalTransforms"
-             name="pretaweb.blueprints.safeportaltransforms" />
+             name="pretaweb.funnelweb.safeportaltransforms" />
     <utility component=".simplexpath.SimpleXPath"
-             name="pretaweb.blueprints.simplexpath" />
+             name="pretaweb.funnelweb.simplexpath" />
     <utility component=".backlinkstitle.BacklinksTitle"
-             name="pretaweb.blueprints.backlinkstitle" />
+             name="pretaweb.funnelweb.backlinkstitle" />
     <utility component=".isindex.IsIndex"
-             name="pretaweb.blueprints.isindex" />
+             name="pretaweb.funnelweb.isindex" />
     <utility component=".pathmover.PathMover"
-             name="pretaweb.blueprints.pathmover" />
+             name="pretaweb.funnelweb.pathmover" />
 	<utility component=".constructor.SafeConstructorSection"
-     		 name="pretaweb.blueprints.constructor" />
+     		 name="pretaweb.funnelweb.constructor" />
     <utility component=".safeatschemaupdater.SafeATSchemaUpdaterSection"
-		     name="pretaweb.blueprints.safeatschemaupdater" />
+		     name="pretaweb.funnelweb.safeatschemaupdater" />
     <utility component=".makeattachments.MakeAttachments"
-		     name="pretaweb.blueprints.makeattachments" />
+		     name="pretaweb.funnelweb.makeattachments" />
     <utility component=".safeworkflowupdater.WorkflowUpdaterSection"
-		     name="pretaweb.blueprints.workflowupdater" />
+		     name="pretaweb.funnelweb.workflowupdater" />
     <utility component=".debugsection.DebugSection"
-		     name="pretaweb.blueprints.debugsection" />
+		     name="pretaweb.funnelweb.debugsection" />
 
     <include package=".example"/>
 

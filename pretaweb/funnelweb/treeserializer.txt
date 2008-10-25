@@ -11,24 +11,24 @@ TreeSerializer
 ...     printer
 ...     
 ... [webcrawler]
-... blueprint = pretaweb.blueprints.test.htmlsource
+... blueprint = pretaweb.funnelweb.test.htmlsource
 ... /level & 2/index=<a href="../level2/index/index">Level 2</a>
 ... /level & 2/index/index=<a href="..">Level 3</a><img src="+&image%20blah">
 ... level & 2/index/+&image%20blah=<h1>content</h1>
 ... level1/index.html=<h1>defaultpage</h1>
 ...
 ... [treeserializer]
-... blueprint = pretaweb.blueprints.treeserializer
+... blueprint = pretaweb.funnelweb.treeserializer
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
 ...
 ... """
 
->>> registerConfig(u'pretaweb.blueprints.treeserializer.test', config)
+>>> registerConfig(u'pretaweb.funnelweb.treeserializer.test', config)
 
 >>> transmogrifier = Transmogrifier(plone)
->>> transmogrifier(u'pretaweb.blueprints.treeserializer.test')
+>>> transmogrifier(u'pretaweb.funnelweb.treeserializer.test')
 {'_mimetype': 'text/html',
  '_path': '/level2/index',
  '_site_url': 'http://test.com/',

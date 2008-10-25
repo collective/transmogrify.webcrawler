@@ -6,3 +6,9 @@ Changelog
 
 * Initial release
 
+pretaweb.funnelweb 0.1 - October 25, 2008
+
+    - renamed package from pretaweb.blueprints to pretaweb.funnelweb.
+      [djay]
+      
+    - enhanced import view (djay)

@@ -13,11 +13,11 @@ Relinker
 ...     
 ...     
 ... [webcrawler]
-... blueprint = pretaweb.blueprints.test.htmlsource
+... blueprint = pretaweb.funnelweb.test.htmlsource
 ... one=<a href="two">2</a>
 ... 
 ... [convert]
-... blueprint = pretaweb.blueprints.safeportaltransforms
+... blueprint = pretaweb.funnelweb.safeportaltransforms
 ... mimetype_field = _mimetype
 ... target = text/blah
 ... keys = text
@@ -62,30 +62,30 @@ it.
 ...     printer
 ...     
 ... [source]
-... blueprint = pretaweb.blueprints.test.htmlbacklinksource
+... blueprint = pretaweb.funnelweb.test.htmlbacklinksource
 ... f oo/content=blah
 ... f oo/content2=blah2
 ...
 ... [convert]
-... blueprint = pretaweb.blueprints.safeportaltransforms
+... blueprint = pretaweb.funnelweb.safeportaltransforms
 ... mimetype_field = _mimetype
 ... target = text/xhtml
 ... keys = text
 ...
 ... [makeattachments]
-... blueprint = pretaweb.blueprints.makeattachments
+... blueprint = pretaweb.funnelweb.makeattachments
 ... fields = python:[('attach%i'%i,'blah')]
 ...
 ... [relinker]
-... blueprint = pretaweb.blueprints.relinker
+... blueprint = pretaweb.funnelweb.relinker
 ...
 ... [moves]
-... blueprint = pretaweb.blueprints.pathmover
+... blueprint = pretaweb.funnelweb.pathmover
 ... moves = 
 ...    f%20oo a
 ...
 ... [treeserializer]
-... blueprint = pretaweb.blueprints.treeserializer
+... blueprint = pretaweb.funnelweb.treeserializer
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter

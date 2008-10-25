@@ -2,7 +2,7 @@
     xmlns="http://namespaces.zope.org/zope"
     xmlns:browser="http://namespaces.zope.org/browser"
     xmlns:transmogrifier="http://namespaces.plone.org/transmogrifier"
-    i18n_domain="pretaweb.blueprints">
+    i18n_domain="pretaweb.funnelweb">
 
     <transmogrifier:registerConfig
         name="exampleimport"

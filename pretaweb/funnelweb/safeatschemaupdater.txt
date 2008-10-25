@@ -10,10 +10,10 @@ SafeATSchemaUpdater
 ...     safeatschemaupdater
 ...     
 ... [source]
-... blueprint = pretaweb.blueprints.tests.safeatschemaupdatersource
+... blueprint = pretaweb.funnelweb.tests.safeatschemaupdatersource
 ... 
 ... [safeatschemaupdater]
-... blueprint = pretaweb.blueprints.safeatschemaupdater
+... blueprint = pretaweb.funnelweb.safeatschemaupdater
 ... """
 >>> registerConfig(u'test', config)
 >>> transmogrifier = Transmogrifier(plone)

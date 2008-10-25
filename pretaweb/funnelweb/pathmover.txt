@@ -15,14 +15,14 @@ doesn;t exist. _origin is used by relinker.
 ...     printer
 ...     
 ... [webcrawler]
-... blueprint = pretaweb.blueprints.test.htmlsource
+... blueprint = pretaweb.funnelweb.test.htmlsource
 ... index=content1
 ... level2/index=content2
 ... leftover=leftover
 ... space in name/stuff=stuff
 ...
 ... [moves]
-... blueprint = pretaweb.blueprints.pathmover
+... blueprint = pretaweb.funnelweb.pathmover
 ... moves =
 ... 	level2	level3
 ...     index	changed/newindex

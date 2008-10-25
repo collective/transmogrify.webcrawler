@@ -13,14 +13,14 @@ TypeRecognitor
 ...     printer
 ...     
 ... [webcrawler]
-... blueprint = pretaweb.blueprints.webcrawler
+... blueprint = pretaweb.funnelweb.webcrawler
 ... site_url  = file:///%s/test_staticsite
 ...
 ... [treeserializer]
-... blueprint = pretaweb.blueprints.treeserializer
+... blueprint = pretaweb.funnelweb.treeserializer
 ...
 ... [typerecognitor]
-... blueprint = pretaweb.blueprints.typerecognitor
+... blueprint = pretaweb.funnelweb.typerecognitor
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
@@ -28,59 +28,59 @@ TypeRecognitor
 ... """ % abspath(dirname(__file__)).replace('\\','/')
 
 >>> from collective.transmogrifier.tests import registerConfig
->>> registerConfig(u'pretaweb.blueprints.typerecognitor.test', config)
+>>> registerConfig(u'pretaweb.funnelweb.typerecognitor.test', config)
 
 >>> from collective.transmogrifier.transmogrifier import Transmogrifier
 >>> transmogrifier = Transmogrifier(plone)
->>> transmogrifier(u'pretaweb.blueprints.typerecognitor.test')
+>>> transmogrifier(u'pretaweb.funnelweb.typerecognitor.test')
 {'_mimetype': 'image/jpeg',
  '_path': '/cia-plone-view-source.jpg',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite',
  '_transform': None,
  '_type': 'Image'}
 {'_mimetype': 'image/gif',
  '_path': '/egenius-plone.gif',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite',
  '_transform': None,
  '_type': 'Image'}
 {'_mimetype': 'application/msword',
  '_path': '/file.doc',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite',
  '_transform': 'doc_to_html',
  '_type': 'Document'}
 {'_mimetype': 'text/html',
  '_path': '/file1.htm',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite',
  '_transform': None,
  '_type': 'Document'}
 {'_mimetype': 'text/html',
  '_path': '/file2.htm',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite',
  '_transform': None,
  '_type': 'Document'}
 {'_mimetype': 'text/html',
  '_path': '/file3.html',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite',
  '_transform': None,
  '_type': 'Document'}
 {'_mimetype': 'text/html',
  '_path': '/file4.HTML',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite',
  '_transform': None,
  '_type': 'Document'}
 {'_mimetype': 'image/png',
  '_path': '/plone_schema.png',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite',
  '_transform': None,
  '_type': 'Image'}
 {'_mimetype': 'text/html',
  '_path': '/subfolder',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite',
  '_transform': None,
  '_type': 'Document'}
 {'_mimetype': 'text/html',
  '_path': '/subfolder/subfile1.htm',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite',
  '_transform': None,
  '_type': 'Document'}
 

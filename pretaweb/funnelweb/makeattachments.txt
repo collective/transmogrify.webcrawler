@@ -24,17 +24,17 @@ Our condition ensures in this doesn't produce a move there are only one subitem.
 ...     printer
 ...     
 ... [source]
-... blueprint = pretaweb.blueprints.test.htmlbacklinksource
+... blueprint = pretaweb.funnelweb.test.htmlbacklinksource
 ... level3/index=<a href="../level2/index">Level 2</a>
 ... level2/index=<a href="../level3/index">Level 3</a><img src="+&image%20blah">
 ... level2/+&image%20blah=<h1>content</h1>
 ...
 ... [makeattachments]
-... blueprint = pretaweb.blueprints.makeattachments
+... blueprint = pretaweb.funnelweb.makeattachments
 ... fields = python:i>=0 and (('attachment'+str(i+1)+'Image', subitem['text']),('attachment'+str(i+1)+'Title', 'blah'), )
 ...
 ... [treeserializer]
-... blueprint = pretaweb.blueprints.treeserializer
+... blueprint = pretaweb.funnelweb.treeserializer
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
@@ -109,7 +109,7 @@ Add two more subitems and then we get attachments
 ... include = test2
 ...     
 ... [makeattachments]
-... blueprint = pretaweb.blueprints.makeattachments
+... blueprint = pretaweb.funnelweb.makeattachments
 ... condition = python:subitem['_path'].count('pdf') and i>=0
 ...
 ... """ 
@@ -149,7 +149,7 @@ default view. Just set fields to False (default).
 ... include = test
 ...     
 ... [source]
-... blueprint = pretaweb.blueprints.test.htmlbacklinksource
+... blueprint = pretaweb.funnelweb.test.htmlbacklinksource
 ... level3/index=<a href="level3"
 ... level2/index=<a href="../level3/index">Level 3</a><img src="+&image%20blah">
 ... level2/+&image%20blah=<h1>content</h1>
@@ -177,7 +177,7 @@ default view. Just set fields to False (default).
 ... include = test
 ...     
 ... [source]
-... blueprint = pretaweb.blueprints.test.htmlbacklinksource
+... blueprint = pretaweb.funnelweb.test.htmlbacklinksource
 ... level3/index=<a href="level3"
 ... level2/index=<a href="../level3/index">Level 3</a><img src="+&image%20blah">
 ... level2/+&image%20blah=<h1>content</h1>
@@ -222,15 +222,15 @@ Test content that isn't linked up to makes sure its still passed through
 ...     printer
 ...     
 ... [source]
-... blueprint = pretaweb.blueprints.test.htmlbacklinksource
+... blueprint = pretaweb.funnelweb.test.htmlbacklinksource
 ... blah1=blah1
 ... blah2=blah2
 ...
 ... [makeattachments]
-... blueprint = pretaweb.blueprints.makeattachments
+... blueprint = pretaweb.funnelweb.makeattachments
 ...
 ... [treeserializer]
-... blueprint = pretaweb.blueprints.treeserializer
+... blueprint = pretaweb.funnelweb.treeserializer
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
@@ -256,17 +256,17 @@ You can use a combination of folder and field attachments
 ...     printer
 ...     
 ... [source]
-... blueprint = pretaweb.blueprints.test.htmlbacklinksource
+... blueprint = pretaweb.funnelweb.test.htmlbacklinksource
 ... content=<img src="blah1"><img src="blah2">
 ... blah1=blah1
 ... blah2=blah2
 ...
 ... [makeattachments]
-... blueprint = pretaweb.blueprints.makeattachments
+... blueprint = pretaweb.funnelweb.makeattachments
 ... fields = python:i<1 and [('attach%i'%i,subitem['text'])]
 ...
 ... [treeserializer]
-... blueprint = pretaweb.blueprints.treeserializer
+... blueprint = pretaweb.funnelweb.treeserializer
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter

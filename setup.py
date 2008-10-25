@@ -3,7 +3,7 @@ import os
 
 version = '1.0'
 
-setup(name='pretaweb.blueprints',
+setup(name='pretaweb.funnelweb',
       version=version,
       description="",
       long_description=open("README.txt").read() + "\n" +
@@ -13,11 +13,11 @@ setup(name='pretaweb.blueprints',
         "Programming Language :: Python",
         "Topic :: Software Development :: Libraries :: Python Modules",
         ],
-      keywords='transmogrifier blueprint source plone import conversion microsoft office',
-      author='Rok Garbas',
-      author_email='rok.garbas@gmail.com',
-      url='git://git.plone.si/~rok/pretaweb.blueprints.git',
-      license='Private',
+      keywords='transmogrifier blueprint funnelweb source plone import conversion microsoft office',
+      author='Dylan Jay',
+      author_email='software@pretaweb.com',
+      url='http://www.pretaweb.com',
+      license='GPL',
       packages=find_packages(exclude=['ez_setup']),
       namespace_packages=['pretaweb'],
       include_package_data=True,

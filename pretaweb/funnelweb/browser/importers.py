@@ -29,7 +29,7 @@ class Import(BrowserView):
             import pdb; pdb.set_trace()
             config = open(here+'/sitesucker.cfg').read()
             config = config % url
-            registerConfig(u'pretaweb.blueprints.treeserializer.sitesucker', config)
+            registerConfig(u'pretaweb.funnelweb.treeserializer.sitesucker', config)
             return "ok"
         if id:
             transmogrifier = Transmogrifier(self.context)

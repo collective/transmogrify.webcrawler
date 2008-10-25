@@ -5,9 +5,9 @@ from zope.interface import classProvides
 from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 
-from pretaweb.blueprints.external import webchecker
-from pretaweb.blueprints.external.webchecker import Checker,Page
-from pretaweb.blueprints.external.webchecker import MyHTMLParser,MyStringIO
+from pretaweb.funnelweb.external import webchecker
+from pretaweb.funnelweb.external.webchecker import Checker,Page
+from pretaweb.funnelweb.external.webchecker import MyHTMLParser,MyStringIO
 import re
 from htmlentitydefs import entitydefs
 import urllib,os
@@ -93,8 +93,8 @@ class WebCrawler(object):
                 realbase = site_url
                 if site_url.endswith('/'):
                     realbase=site_url[:-1]
-                if url.count('random'):
-                            import pdb; pdb.set_trace()
+                #if url.count('random'):
+                #            import pdb; pdb.set_trace()
 
                 for a in [realbase]: #+alias_bases:
                     if a.endswith('/'):

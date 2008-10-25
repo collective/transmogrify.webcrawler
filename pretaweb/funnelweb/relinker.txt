@@ -12,17 +12,17 @@ Relinker
 ...     printer
 ...     
 ... [webcrawler]
-... blueprint = pretaweb.blueprints.test.htmlsource
+... blueprint = pretaweb.funnelweb.test.htmlsource
 ... level3/index=<a href="../level2/index">Level 2</a>
 ... level2/index=<a href="../level3/index">Level 3</a><img src="+&image%20blah">
 ... level2/+&image%20blah=<h1>content</h1>
 ...
 ... [relinker]
-... blueprint = pretaweb.blueprints.relinker
+... blueprint = pretaweb.funnelweb.relinker
 ... link_expr = python:item['_path']+'/image_web'
 ...
 ... [moves]
-... blueprint = pretaweb.blueprints.pathmover
+... blueprint = pretaweb.funnelweb.pathmover
 ... moves =
 ... 	level2	level3
 ... 	level3	level2
@@ -57,12 +57,12 @@ It is designed to cope with any combination of quoting of urls
 ...     printer
 ...     
 ... [webcrawler]
-... blueprint = pretaweb.blueprints.test.htmlsource
+... blueprint = pretaweb.funnelweb.test.htmlsource
 ... one%20two's+strange1=<a href="one two+is+strange2">Level 2</a>
 ... one%20two%20is+strange2=<a href="one two's%20strange1">Level 2</a>
 ...
 ... [relinker]
-... blueprint = pretaweb.blueprints.relinker
+... blueprint = pretaweb.funnelweb.relinker
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter

@@ -5,7 +5,7 @@ from zope.interface import classProvides
 from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 
-from pretaweb.blueprints.external.webchecker import MyURLopener
+from pretaweb.funnelweb.external.webchecker import MyURLopener
 import logging
 logger = logging.getLogger('Plone')
 

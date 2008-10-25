@@ -11,7 +11,7 @@ WebCrawler
 ...     printer
 ...     
 ... [webcrawler]
-... blueprint = pretaweb.blueprints.webcrawler
+... blueprint = pretaweb.funnelweb.webcrawler
 ... site_url  = file:///%s/test_staticsite
 ... alias_bases = http://somerandomsite file:///
 ... patterns =
@@ -38,28 +38,28 @@ WebCrawler
 ... """ % abspath(dirname(__file__)).replace('\\','/')
 
 >>> from collective.transmogrifier.tests import registerConfig
->>> registerConfig(u'pretaweb.blueprints.webcrawler.test', config)
+>>> registerConfig(u'pretaweb.funnelweb.webcrawler.test', config)
 
 >>> from collective.transmogrifier.transmogrifier import Transmogrifier
 >>> transmogrifier = Transmogrifier(plone)
->>> transmogrifier(u'pretaweb.blueprints.webcrawler.test')
+>>> transmogrifier(u'pretaweb.funnelweb.webcrawler.test')
 {'_path': '/plone_schema.png',
- '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
 {'_path': '/egenius-plone.gif',
- '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
 {'_path': '/cia-plone-view-source.jpg',
- '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
 {'_path': '/file4.HTML',
- '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
 {'_path': '/file.doc',
- '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
 {'_path': '/subfolder',
- '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
 {'_path': '/file2.htm',
- '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
 {'_path': '/subfolder/subfile1.htm',
- '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
 {'_path': '/file3.html',
- '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
 {'_path': '/file1.htm',
- '_site_url': 'file:///.../src/pretaweb.blueprints/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}

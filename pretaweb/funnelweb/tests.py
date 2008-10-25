@@ -13,14 +13,14 @@ from collective.transmogrifier.tests import tearDown
 from collective.transmogrifier.sections.tests import PrettyPrinter
 from collective.transmogrifier.sections.tests import SampleSource
 
-from pretaweb.blueprints.webcrawler import WebCrawler
-from pretaweb.blueprints.treeserializer import TreeSerializer
-from pretaweb.blueprints.typerecognitor import TypeRecognitor
-from pretaweb.blueprints.safeportaltransforms import  SafePortalTransforms
-from pretaweb.blueprints.makeattachments import MakeAttachments
+from pretaweb.funnelweb.webcrawler import WebCrawler
+from pretaweb.funnelweb.treeserializer import TreeSerializer
+from pretaweb.funnelweb.typerecognitor import TypeRecognitor
+from pretaweb.funnelweb.safeportaltransforms import  SafePortalTransforms
+from pretaweb.funnelweb.makeattachments import MakeAttachments
 from templatefinder import TemplateFinder
-from pretaweb.blueprints.relinker import Relinker
-from pretaweb.blueprints.simplexpath import SimpleXPath
+from pretaweb.funnelweb.relinker import Relinker
+from pretaweb.funnelweb.simplexpath import SimpleXPath
 from plone.i18n.normalizer import urlnormalizer
 from lxml import etree
 import lxml.html
@@ -108,49 +108,49 @@ def setUp(test):
     provideUtility(PrettyPrinter,
         name=u'collective.transmogrifier.sections.tests.pprinter')
     provideUtility(WebCrawler,
-        name=u'pretaweb.blueprints.webcrawler')
+        name=u'pretaweb.funnelweb.webcrawler')
     provideUtility(TreeSerializer,
-        name=u'pretaweb.blueprints.treeserializer')
+        name=u'pretaweb.funnelweb.treeserializer')
     provideUtility(TypeRecognitor,
-        name=u'pretaweb.blueprints.typerecognitor')
+        name=u'pretaweb.funnelweb.typerecognitor')
     provideUtility(TemplateFinder,
-        name=u'pretaweb.blueprints.templatefinder')
+        name=u'pretaweb.funnelweb.templatefinder')
     provideUtility(urlnormalizer)
     provideUtility(Relinker,
-        name=u'pretaweb.blueprints.relinker')
+        name=u'pretaweb.funnelweb.relinker')
     provideUtility(SimpleXPath,
-        name=u'pretaweb.blueprints.simplexpath')
+        name=u'pretaweb.funnelweb.simplexpath')
     provideUtility(SafePortalTransforms,
-        name=u'pretaweb.blueprints.safeportaltransforms')
+        name=u'pretaweb.funnelweb.safeportaltransforms')
     from backlinkstitle import BacklinksTitle
     provideUtility(BacklinksTitle,
-        name=u'pretaweb.blueprints.backlinkstitle')
+        name=u'pretaweb.funnelweb.backlinkstitle')
     from isindex import IsIndex
     provideUtility(IsIndex,
-        name=u'pretaweb.blueprints.isindex')
+        name=u'pretaweb.funnelweb.isindex')
     from pathmover import PathMover
     provideUtility(PathMover,
-        name=u'pretaweb.blueprints.pathmover')
+        name=u'pretaweb.funnelweb.pathmover')
     from safeatschemaupdater import SafeATSchemaUpdaterSection
     provideUtility(SafeATSchemaUpdaterSection,
-        name=u'pretaweb.blueprints.safeatschemaupdater')
+        name=u'pretaweb.funnelweb.safeatschemaupdater')
     from constructor import SafeConstructorSection
     provideUtility(SafeConstructorSection,
-        name=u'pretaweb.blueprints.constructor')
+        name=u'pretaweb.funnelweb.constructor')
     from makeattachments import MakeAttachments
     provideUtility(MakeAttachments,
-        name=u'pretaweb.blueprints.makeattachments')
+        name=u'pretaweb.funnelweb.makeattachments')
     from debugsection import DebugSection
     provideUtility(DebugSection,
-        name=u'pretaweb.blueprints.debugsection')
+        name=u'pretaweb.funnelweb.debugsection')
     from staticcreator import StaticCreator
     provideUtility(StaticCreator,
-        name=u'pretaweb.blueprints.staticcreator')
+        name=u'pretaweb.funnelweb.staticcreator')
 
     provideUtility(HTMLSource,
-        name=u'pretaweb.blueprints.test.htmlsource')
+        name=u'pretaweb.funnelweb.test.htmlsource')
     provideUtility(HTMLBacklinkSource,
-        name=u'pretaweb.blueprints.test.htmlbacklinksource')
+        name=u'pretaweb.funnelweb.test.htmlbacklinksource')
 
 
 def SafeATSchemaUpdaterSetUp(test):
@@ -204,7 +204,7 @@ def SafeATSchemaUpdaterSetUp(test):
                  'file.mimetype': 'image/jpeg',},
             )
     provideUtility(SafeATSchemaUpdaterSectionSource,
-        name=u'pretaweb.blueprints.tests.safeatschemaupdatersource')
+        name=u'pretaweb.funnelweb.tests.safeatschemaupdatersource')
 
 def MakeAttachmentsSetUp(test):
     setUp(test)
@@ -232,9 +232,9 @@ def MakeAttachmentsSetUp(test):
                  '_type': 'Image'},
             )
     provideUtility(MakeAttachmentsSource,
-        name=u'pretaweb.blueprints.tests.makeattachments')
+        name=u'pretaweb.funnelweb.tests.makeattachments')
     provideUtility(MakeAttachments,
-        name=u'pretaweb.blueprints.makeattachments')
+        name=u'pretaweb.funnelweb.makeattachments')
 
 
 def test_suite():
