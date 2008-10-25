@@ -9,18 +9,28 @@ from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 
 from collective.transmogrifier.transmogrifier import Transmogrifier
 from collective.transmogrifier.transmogrifier import configuration_registry
+from os.path import dirname, abspath
+import urllib
+from collective.transmogrifier.tests import registerConfig
+from collective.transmogrifier.transmogrifier import Transmogrifier
 
 
 class Import(BrowserView):
 
     def __init__(self, context, request):
         BrowserView.__init__(self, context, request)
-        self.ids = configuration_registry.listConfigurationIds
+        self.ids = configuration_registry.listConfigurationIds()
+        self.ids = ['Automatic SiteSucker'] + list(self.ids)
 
     def test(self, id=None, url=None):
         # run transmogrifier
         if url:
+            here = abspath(dirname(__file__))
+            import pdb; pdb.set_trace()
+            config = open(here+'/sitesucker.cfg').read()
+            config = config % url
             registerConfig(u'pretaweb.blueprints.treeserializer.sitesucker', config)
+            return "ok"
         if id:
             transmogrifier = Transmogrifier(self.context)
             transmogrifier(id)

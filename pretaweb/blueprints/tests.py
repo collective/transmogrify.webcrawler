@@ -74,13 +74,14 @@ class MockPortalTransforms(object):
     def __call__(self, transform, data):
         return 'Transformed %i using the %s transform' % (len(data), transform)
     def convertToData(self, target, data, mimetype=None):
+        html='<img src="image01.jpg"><img src="image02.jpg">'
         class dummyfile:
             def __init__(self, text):
                 self.text = text
             def __str__(self):
-                return self.text
+                return self.text+html
             def getSubObjects(self):
-                return {'image01.jpg':'imagedata','image02.jog':'imagedata'}
+                return {'image01.jpg':data,'image02.jog':data}
         if mimetype is not None:
             return dummyfile( 'Transformed %i from %s to %s' % (
                 len(data), mimetype, target) )

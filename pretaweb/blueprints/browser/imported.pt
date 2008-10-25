@@ -1,8 +1,76 @@
+
+<html metal:use-macro="context/@@standard_macros/page"
+      i18n:domain="z3c.widget.flashupload">
+
+  <metal:block fill-slot="style_slot">
+  </metal:block>
+
+  <metal:block fill-slot="body">
+
+
+    <h1 i18n:translate="heading_addremove_products">Plone Site Sucker</h1>
+
+
+    <div class="documentDescription"
+         i18n:translate="description_addremove_products">
+    This allows you to import content from other sites. 
+    </div>
+
+    <p class="discreet" i18n:translate="description_product_location">
+      Content will be placed in the current location and overwrite any 
+      existing content of the same name.
+    </p>
+
+
 <div >
-<form tal:attributes="action request/URL">
+<form tal:attributes="action request/URL" id="funnelweb.form">
+
+<fieldset >
+  <legend >Select a transmogrifier profile</legend>
 <select name="id">
 <option tal:repeat="id view/ids|nothing" tal:attributes="value id" tal:content="id">importer</option>
 </select>
-<input type="submit">
+</fieldset>
+
+<fieldset id="funnelweb.sucker">
+  <legend >Automatic Site Sucker</legend>
+
+<fieldset >
+  <legend >Webcrawler</legend>
+
+Type the URL of the site you would like to suck in<br>
+<input name="url">
+<br>
+Links to ignore (regular expression)<br>
+<input name="webcrawler.ignore">
+</fieldset>
+
+<fieldset >
+  <legend >Template Removal</legend>
+
+<TABLE>
+<tr><td>Fully automatic <br>
+<input type=radio name=auto value=y>Yes<br> 
+<input type=radio name=auto value=n>No
+</td>
+<td>
+Content selection XPath<br>
+<table>
+<tr><td>Title</td><td><input name="templateremover.title"></td></tr>
+<tr><td>Description</td><td><input name="templateremover.description"></td></tr>
+<tr><td>Body</td><td><input name="templateremover.body"></td></tr>
+</table>
+</td>
+</tr>
+</TABLE>
+</fieldset>
+
+<input type=submit value="Start Import">
+
+</fieldset>
 </form>
 </div>
+
+
+  </metal:block>
+</html>

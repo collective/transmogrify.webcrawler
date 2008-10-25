@@ -73,18 +73,29 @@ class SafePortalTransforms(PortalTransformsSection):
                     if self.from_field:
                         item[self.from_field] = self.target
                     if hasattr(data,'getSubObjects'):
+                        
+                        
                         #import pdb; pdb.set_trace()
                         tmp = item['_path'].split('/')
                         base = tmp[:-1]
                         doc_id = tmp[-1]
-                        origin = item.get('_origin',item.get('_path'))
+                        origin = item.get('_origin',item.get('_path')).split('/')
+
+                        #because the names of subobjects aren't unique we have to 
+                        #move it to a folder
+                        yield dict(_type='Folder',_path=item['_path'],
+                                   _default_page=doc_id)
+                        
+                        item['_origin'] = item.get('_origin',item['_path'])
+                        item['_path'] = item['_path']+'/'+doc_id
+
                         for name,data in data.getSubObjects().items():
                             #TODO: maybe shouldn't hard code this
                             yield {'_type':           'Image',
-                                   '_origin':         '/'.join([origin,name]),
-                                   '_path':           '/'.join(base+[doc_id+'-'+name]),
+                                   '_origin':         '/'.join(origin+[name]),
+                                   '_path':           '/'.join(tmp+[doc_id+'-'+name]),
                                    '_site_url':       item.get('_site_url'),
-                                   '_backlinks':      [(item['_site_url']+origin,'')],
+                                   '_backlinks':      [(item['_site_url']+item['_path'],'')],
                                    'image':           data,
                                    'image.filename':  name}
                                                 

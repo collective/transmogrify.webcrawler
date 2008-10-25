@@ -70,6 +70,7 @@ class Relinker(object):
                 
             changes[link] = item
 
+        #-import pdb; pdb.set_trace()
         for item in changes.values():
             if 'text' in item and item.get('_mimetype') in ['text/xhtml', 'text/html']:
                 path = item['_path']
@@ -88,7 +89,8 @@ class Relinker(object):
                             linkedurl = item['_site_url']+linked['_path']
                         return relative_url(newbase, linkedurl)
                     else:
-                        #import pdb; pdb.set_trace()
+                        #if path.count('commercial-part-codes.doc'):
+                        import pdb; pdb.set_trace()
                         if link not in bad:
                             msg = "relinker: no match for %s in %s" % (link,path)
                             logger.log(logging.DEBUG, msg)
