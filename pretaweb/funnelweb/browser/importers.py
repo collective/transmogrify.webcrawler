@@ -27,9 +27,12 @@ class Import(BrowserView):
         if url:
             here = abspath(dirname(__file__))
             import pdb; pdb.set_trace()
-            config = open(here+'/sitesucker.cfg').read()
+            config = open(here+'/funnelweb.cfg').read()
             config = config % url
-            registerConfig(u'pretaweb.funnelweb.treeserializer.sitesucker', config)
+            id = u'pretaweb.funnelweb.transmogrifier'
+            registerConfig(id, config)
+            transmogrifier = Transmogrifier(self.context)
+            transmogrifier(id)
             return "ok"
         if id:
             transmogrifier = Transmogrifier(self.context)

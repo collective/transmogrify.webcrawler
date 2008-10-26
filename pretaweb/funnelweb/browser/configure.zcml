@@ -15,6 +15,13 @@
 	  <include package="collective.transmogrifier" file="meta.zcml"/>
 	  <include package="collective.transmogrifier"/>
 	  <include package="plone.app.transmogrifier"/>
-	    
+
+<!-- 
+    <transmogrifier:registerConfig
+        name="pretaweb.funnelweb.transmogrifier"
+        title="Website Importer"
+        description=""
+        configuration="funnelweb.cfg" />
+ -->	    
 
 </configure>
