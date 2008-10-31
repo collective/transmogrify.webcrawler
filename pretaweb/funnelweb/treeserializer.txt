@@ -1,0 +1,53 @@
+TreeSerializer
+==========
+
+>>> from collective.transmogrifier.tests import registerConfig
+>>> from collective.transmogrifier.transmogrifier import Transmogrifier
+>>> config = """
+... [transmogrifier]
+... pipeline =
+...     webcrawler
+...     treeserializer
+...     printer
+...     
+... [webcrawler]
+... blueprint = pretaweb.funnelweb.test.htmlsource
+... /level & 2/index=<a href="../level2/index/index">Level 2</a>
+... /level & 2/index/index=<a href="..">Level 3</a><img src="+&image%20blah">
+... level & 2/index/+&image%20blah=<h1>content</h1>
+... level1/index.html=<h1>defaultpage</h1>
+...
+... [treeserializer]
+... blueprint = pretaweb.funnelweb.treeserializer
+...
+... [printer]
+... blueprint = collective.transmogrifier.sections.tests.pprinter
+...
+... """
+
+>>> registerConfig(u'pretaweb.funnelweb.treeserializer.test', config)
+
+>>> transmogrifier = Transmogrifier(plone)
+>>> transmogrifier(u'pretaweb.funnelweb.treeserializer.test')
+{'_mimetype': 'text/html',
+ '_path': '/level2/index',
+ '_site_url': 'http://test.com/',
+ 'text': '<a href="../level2/index/index">Level 2</a>'}
+{'_mimetype': 'text/html',
+ '_path': '/level2/index/index',
+ '_site_url': 'http://test.com/',
+ 'text': '<a href="..">Level 3</a><img src="+&image%20blah">'}
+{'_mimetype': 'text/html',
+ '_path': 'level2/index/+&image%20blah',
+ '_site_url': 'http://test.com/',
+ 'text': '<h1>content</h1>'}
+{'_mimetype': 'text/html',
+ '_path': 'level1/index.html',
+ '_site_url': 'http://test.com/',
+ 'text': '<h1>defaultpage</h1>'}
+{'_defaultpage': 'index.html',
+ '_path': 'level1',
+ '_site_url': 'http://test.com/',
+ '_type': 'Folder'}
+{'_type': 'Folder', '_site_url': 'http://test.com/', '_path': 'level2'}
+

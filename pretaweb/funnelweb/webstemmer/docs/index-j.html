@@ -1,0 +1,759 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=euc-jp">
+<title>Webstemmer</title>
+<style>
+body { line-height: 130%; }
+</style>
+</head><body>
+
+<h2>Webstemmer</h2>
+<p>
+<a href="../index.html">back</a>
+<a href="index.html">[English]</a>
+
+<ul>
+<li> <a href="#usage">使いかた</a>
+<li> <a href="#crawler">web クローラ</a>
+<li> <a href="#analyze">レイアウト分析プログラム</a>
+<li> <a href="#extract">テキスト抽出プログラム</a>
+<li> <a href="#urldb">URLDB操作プログラム</a>
+<li> <a href="#html2txt">HTML2TXT ユーティリティ</a>
+<li> <a href="#bug">バグ</a>
+<li> <a href="#license">ライセンス</a>
+</ul>
+
+<a name="download">
+<p><strong>ダウンロード:</strong>
+<a href="http://www.unixuser.org/~euske/python/webstemmer/webstemmer-0.6.1.tar.gz"><code><strong>webstemmer-0.6.1.tar.gz</strong></code></a> (要Python 2.4以上)
+
+<a name="intro">
+<hr noshade>
+<h3>これなに?</h3>
+<p>
+Webstemmer はニュースサイトから記事本文と記事のタイトルをプレインテキスト形式で
+自動的に抽出するソフトウェアです。
+サイトのトップページの URL さえ与えれば全自動で解析するため、
+人手の介入はほとんど必要ありません。
+<a href="howitworks-j.html">動作原理はこちら</a>。
+
+<p>
+<strong>注意:</strong>
+ニュースサイトのコンテンツは各国の著作権法により保護されています。
+著作権のあるコンテンツを許可なく再配布することは禁じられています。
+このソフトウェアはニュースサイトのテキストを研究用に分析する目的で
+作られたもので、違法なコンテンツ配布を助長するためのものではありません。
+
+<p>
+ニュースサイトからテキストを取得すると、ふつう本文のほかに、
+大量の広告やナビゲーション用のリンクなども混ざってしまいます。
+またタイトルについても、すべてのサイトで 
+<code>&lt;title&gt;</code> タグで囲まれたものが
+記事のタイトルになっているとは限りません。このような HTML を人手で解析して、
+正規表現などを使ってここから正しい部分を取ってくるのは面倒です。
+また、ニュースサイトによっては何種類もの異なるレイアウトを使っているところがあります。
+Webstemmer はこのようなニュースサイトのレイアウトを自動で分析し、
+記事本文とタイトルだけをとってこれるようにします (<a href="#sample">出力例はこちら</a>)。
+現在のところ、この方法はメジャーなニュースサイトに対してうまくいっています。
+また、これは特定の言語に特化した知識を使っていません。
+唯一の知識は意味のある文字とそうでない文字 (句読点など、いわゆる“約物”) の区別です。
+そのため、このソフトウェアは日本語、英語どちらのサイトでも動作します。
+
+<p>
+現在のところ、英語サイトでは、およそ 90% のページから
+正しくテキストを抽出できています:
+<table>
+<tr><th>サイト名</th><th>抽出ページ数/取得ページ数 (一日の平均)</th></tr>
+<tr><td><a href="http://www.nytimes.com/">New York Times</a></td><td align=right>488.8/552.2 (88%)</td></tr>
+<tr><td><a href="http://www.newsday.com/">Newsday</a></td><td align=right>373.7/454.7 (82%)</td></tr>
+<tr><td><a href="http://www.washingtonpost.com/">Washington Post</a></td><td align=right>342.6/367.3 (93%)</td></tr>
+<tr><td><a href="http://www.boston.com/news/">Boston Globe</a></td><td align=right>332.9/354.9 (93%)</td></tr>
+<tr><td><a href="http://abcnews.go.com/">ABC News</a></td><td align=right>299.7/344.4 (87%)</td></tr>
+<tr><td><a href="http://www.bbc.co.uk/">BBC</a></td><td align=right>283.3/337.4 (84%)</td></tr>
+<tr><td><a href="http://www.latimes.com/">Los Angels Times</td><td align=right>263.2/345.5 (76%)</td></tr>
+<tr><td><a href="http://www.reuters.com/">Reuters</td><td align=right>188.2/206.9 (91%)</td><tr>
+<tr><td><a href="http://www.cbsnews.com/">CBS News</td><td align=right>171.8/190.1 (90%)</td><tr>
+<tr><td><a href="http://seattletimes.nwsource.com/">Seattle Times</td><td align=right>164.4/185.4 (89%)</td><tr>
+<tr><td><a href="http://www.nydailynews.com/">NY Daily News</td><td align=right>144.3/147.4 (98%)</td><tr>
+<tr><td><a href="http://www.iht.com/">International Herald Tribune</td><td align=right>125.5/126.5 (99%)</td><tr>
+<tr><td><a href="http://www.channelnewsasia.com/">Channel News Asia</td><td align=right>119.5/126.2 (94%)</td><tr>
+<tr><td><a href="http://www.cnn.com/">CNN</td><td align=right>65.3/73.9 (89%)</td><tr>
+<tr><td><a href="http://www.voanews.com/english/">Voice of America</td><td align=right>58.3/62.6 (94%)</td><tr>
+<tr><td><a href="http://news.independent.co.uk/">Independent</td><td align=right>58.1/58.5 (99%)</td><tr>
+<tr><td><a href="http://www.ft.com/">Financial Times</td><td align=right>55.7/56.6 (98%)</td><tr>
+<tr><td><a href="http://www.usatoday.com/">USA Today</td><td align=right>44.5/46.7 (96%)</td><tr>
+<tr><td><a href="http://www.ny1.com/">NY1</td><td align=right>35.7/37.1 (95%)</td><tr>
+<tr><td><a href="http://www.1010wins.com/">1010 Wins</td><td align=right>14.3/16.1 (88%)</td><tr>
+<tr><td>計</td><td align=right>3829.1/4349.2 (88%)</td></tr>
+</table>
+
+<p>
+日本語サイトでは、具体的な性能は測定していませんが、
+以下のようなサイトで正しく動くことがわかっています:
+<ul>
+<li> <a href="http://www.asahi.com/">アサヒ・コム</a>
+<li> <a href="http://www.nikkei.co.jp/">Nikkei NET</a>
+<li> <A href="http://www.mainichi-msn.co.jp/">Mainichi INTERACTIVE</a>
+<li> <A href="http://www.yomiuri.co.jp/">Yomiuri On-line</a>
+<li> <A href="http://www.itmedia.co.jp/">IT media</a>
+<li> <A href="http://www.tokyo-np.co.jp/news.shtml">東京新聞</a>
+<li> <A href="http://www.nikkansports.com/ns/flash/top-fl.html">日刊スポーツ</a>
+<li> <a href="http://www.shinmai.co.jp/">信濃毎日新聞</a>
+<li> <a href="http://news.livedoor.com/">livedoor ニュース</a>
+</ul>
+
+<a name="usage">
+<hr noshade>
+<h3>使いかた</h3>
+<p>
+Webstemmer をつかったテキスト抽出は以下のようなステップになります:
+<ol>
+<li> まず、特定のニュースサイトから種となる HTML ページを多数取得する。
+<li> 取得したページのレイアウトを学習する。
+<li> 別の日に、同一のニュースサイトから新しい HTML ページを取得する。
+<li> 2. で学習した結果をつかって、新しい HTML ページから本文を抽出する。
+</ol>
+<p>
+1. および 2. のステップが必要なのは最初の 1回だけです。
+ひとたびサイトのレイアウトを学習してしまえば、
+あとはレイアウトが大きく変更されるまで同じ学習結果
+(「パターンファイル」と呼ばれます) が使えます。
+<p>
+Webstemmer には 4つのプログラムが含まれています:
+<ul>
+<li> <a href="#crawler"><code>textcrawler.py</code></a> (web クローラ)
+<li> <a href="#analyze"><code>analyze.py</code></a> (レイアウト分析プログラム)
+<li> <a href="#extract"><code>extract.py</code></a> (テキスト抽出プログラム)
+<li> <a href="#urldb"><code>urldbutils.py</code></a> (URLDB操作プログラム)
+<li> <a href="#html2txt"><code>html2txt.py</code></a> (簡単なテキスト抽出)
+</ul>
+<p>
+以前のバージョンの webstemmer は webクローラと
+レイアウト分析/テキスト抽出プログラムが一体化していましたが、
+webstemmer-0.5 からはこれらが分離されました。
+
+<h4>ステップ 1. 学習するための HTML ページを取得する</h4>
+<p>
+あるサイトのレイアウトを学習するときは、
+まず最初に「種」となるページをいくつか収集する必要があります。
+<code>textcrawler.py</code> はそのための簡易クローラです。
+このクローラは再帰的にリンクをたどり、ある一定の深さ 
+(デフォルトでは 1 -- つまり、開始したページにある各リンクを 1回だけたどった位置) に
+到達するまでのページをすべてダウンロードします。
+<p>
+<small><blockquote style="line-height:100%">
+<em>(対象となるサイトのページを取得する)</em>
+<pre>
+$ <strong>./textcrawler.py -o nikkei http://www.nikkei.co.jp/</strong>
+Writing: 'nikkei.200509182149.zip'
+Making connection: 'www.nikkei.co.jp'...
+...
+</pre></blockquote></small>
+<p>
+ダウンロードされたページにはタイムスタンプがつけられ、
+ひとつの zipファイルにまとめて保存されます。
+このアーカイブ中の各ファイル名にはクロールが行われた日時がタイムスタンプとして
+自動的に追加されます。この .zip ファイルは、ステップ 2. における
+レイアウトパターンの学習用としても、ステップ 4. における
+実際のテキスト抽出元ページとしても使用することができます。
+<p>
+<small><blockquote style="line-height:100%">
+<em>(保存された zipファイルの中に含まれている取得ページ一覧を見る)</em>
+<pre>
+$ <strong>zipinfo nikkei.200509182149.zip</strong>
+Archive:  nikkei.200509182149.zip   497470 bytes   105 files
+-rw----     2.0 fat    55212 b- defN 18-Sep-05 21:57 200509182149/www.nikkei.co.jp/
+-rw----     2.0 fat     2475 b- defN 18-Sep-05 21:57 200509182149/www.nikkei.co.jp/nikkeiinfo/
+-rw----     2.0 fat    10194 b- defN 18-Sep-05 21:57 200509182149/www.nikkei.co.jp/privacy/
+...
+</pre></blockquote></small>
+
+<h4>ステップ 2. 取得したページのレイアウトパターンを学習する</h4>
+<p>
+つぎに、ステップ 1. で得られた
+.zip ファイルを <code>analyze.py</code> (レイアウト分析プログラム) に渡します。
+このプログラムは、.zip ファイルに含まれている HTML ファイルをすべて解析し、
+学習されたパターンを標準出力に表示します。この標準出力をファイルに
+リダイレクトすれば、学習したレイアウトのパターンを保存できます:
+<small><blockquote style="line-height:100%">
+<em>(取得したページのレイアウトパターンを学習する)</em>
+<pre>
+$ <strong>./analyze.py nikkei.200509182149.zip &gt; nikkei.pat</strong>
+Opening: 'nikkei.200509182149.zip'...
+Added: 1: 200509182149/www.nikkei.co.jp/
+Added: 2: 200509182149/www.nikkei.co.jp/nikkeiinfo/
+Added: 3: 200509182149/www.nikkei.co.jp/privacy/
+Added: 4: 200509182149/www.nikkei.co.jp/ad/mm/
+...
+</pre></blockquote></small>
+<p>
+マシンの性能にもよりますが、通常 100ページほどのデータを学習する場合、およそ 2〜3分かかります。
+これが 1000ページになると、所要時間は 2〜3時間になります。
+(所要時間はページ数の2乗に比例しているため、学習するページ数が 2倍になれば学習時間は 約4倍になります。)
+新山が使っている Xeon 2GHz のマシンでは
+300以上のページを学習するのに 30分ぐらいかかりました。
+<p>
+なお、このパターンはテキスト形式で保存されており、
+あとで人手で編集することも可能です
+(<a href="howitworks-j.html#pattern">パターンファイルの構造</a>)。
+
+<h4>ステップ 3. テキスト抽出をおこなうページを取得する</h4>
+<p>
+この後、得られたパターンを使ってテキスト抽出を行うために、
+もう一度クローラを走らせます。
+(もとの学習に使った .zip ファイルそのものからもテキスト抽出はできますが、
+ここでは数日後にまったく内容の異なる新たなページから取得すると仮定します。)
+<blockquote style="line-height:100%"><small>
+<em>(抽出したい HTML ファイルを取得する)</em>
+<pre>
+$ <strong>./textcrawler.py -o nikkei http://www.nikkei.co.jp/</strong>
+Writing: 'nikkei.200510291951.zip'
+Making connection: 'www.nikkei.co.jp'...
+...
+</pre>
+<p>
+<em>(保存された zipファイルの中に含まれている取得ページ一覧を見る)</em>
+<pre>
+$ <strong>zipinfo nikkei.200510291951.zip</strong>
+Archive:  nikkei.200510291951.zip   518951 bytes   103 files
+-rw----     2.0 fat    56325 b- defN 29-Oct-05 19:51 200510291951/www.nikkei.co.jp/
+-rw----     2.0 fat     2475 b- defN 29-Oct-05 19:51 200510291951/www.nikkei.co.jp/nikkeiinfo/
+-rw----     2.0 fat    10194 b- defN 29-Oct-05 19:51 200510291951/www.nikkei.co.jp/privacy/
+...
+</pre></small></blockquote>
+
+<h4>ステップ 4. 学習したパターンを使って本文を抽出する</h4>
+<p>
+さて、ここまでくれば先に学習したパターンを使って、
+新たに取得したページから本文を抽出できます:
+<blockquote style="line-height:100%"><small>
+<em>(パターンファイル nikkei.pat を使って本文とタイトルを抽出し、euc-jp で保存する)</em>
+<pre>
+$ <strong>./extract.py -Ceuc-jp nikkei.pat nikkei.200510271344.zip &gt; nikkei.txt</strong>
+Opening: 'nikkei.200510291951.zip'...
+</pre></small></blockquote>
+<p>
+本文とタイトルの情報はプレインテキスト形式で <code>nikkei.txt</code> に保存されています。
+<a name="sample">
+<small><blockquote style="line-height:100%"><pre>
+$ <strong>cat nikkei.txt</strong>
+!UNMATCHED: 200510291951/www.nikkei.co.jp/            <em>(どのパターンにもマッチしないページ)</em>
+
+!UNMATCHED: 200510291951/www.nikkei.co.jp/nikkeiinfo/ <em>(どのパターンにもマッチしないページ)</em>
+
+!UNMATCHED: 200510291951/www.nikkei.co.jp/privacy/    <em>(どのパターンにもマッチしないページ)</em>
+...
+
+!MATCHED: 200510291951/www.nikkei.co.jp/news/retto/20051028c6b2802a28.html  <em>(マッチしたページ)</em>
+PATTERN: 200509182149/www.nikkei.co.jp/news/retto/20050916c3b1604m16.html   <em>(マッチしたレイアウトパターン名)</em>
+TITLE: 四国４県の失業率3.8％に改善、有効求人倍率も改善傾向                  <em>(記事の題名)</em>
+MAIN-7: 総務省が28日に発表した2005年7―9月の四国４県の完全失業率（原数値）は  <em>(本文テキスト)</em>
+        3.8％と前年同期比1.0ポイント低下した。４県労働局が同日発表した9月の
+        有効求人倍率も高知県を除いて前月の水準を上回った。景気の緩やかな
+        回復を背景に、四国でも雇用の改善が進んでいる。
+...
+MAIN-7: ９月の求職者１人当たりの求人割合を示す有効求人倍率（季節調整値）は    <em>(本文テキスト)</em>
+        ４県が前月比0.02ポイント上昇の0.87倍だった。
+SUB-9: (10/29)四国４県の失業率3.8％に改善、有効求人倍率も改善傾向           <em>(それ以外のテキスト)</em>
+SUB-9: (10/29)高知大学、市民向け公開講座の音声をネット配信                  <em>(それ以外のテキスト)</em>
+SUB-9: (10/29)スペースタグ、応用ソフト２社と提携し顧客拡大へ                <em>(それ以外のテキスト)</em>
+...
+SUB-9: (10/21)手芸用品店の小野、京都に初出店・関西で攻勢へ                  <em>(それ以外のテキスト)</em>
+SUB-9: (10/21)ナイトライド、光取り出し効率２倍の紫外線ＬＥＤ開発            <em>(それ以外のテキスト)</em>
+SUB-9: (10/21)愛媛県知事、財政構造改革に意欲・月内にも方針                  <em>(それ以外のテキスト)</em>
+
+!MATCHED: 200510291951/www.nikkei.co.jp/news/retto/20051028c6b2802p28.html  <em>(マッチしたページ)</em>
+PATTERN: 200509182149/www.nikkei.co.jp/news/retto/20050916c3b1604m16.html   <em>(マッチしたレイアウトパターン名)</em>
+...
+</pre></blockquote></small>
+<p>
+それぞれのページは空行で区切られ、各ページの先頭には必ず
+"<code>!MATCHED</code>" または "<code>!UNMATCHED</code>" で始まるヘッダと、そのページを示す識別子
+(これは .zip アーカイブ中のファイル名です) がついています。
+そのページが指定されたパターンのどれにもマッチしない場合はこれで終わりですが、マッチした場合は
+"<code>!MATCHED</code>" のあとに、パターン名を表す "<code>PATTERN:</code>" が続き、
+そのあとに題名 ("<code>TITLE</code>") と
+本文テキスト ("<code>MAIN</code>") が出力されます。
+<p>
+出力テキストの各行は HTML の改行 (<code>&lt;p&gt;</code> または <code>&lt;br&gt;</code>) にしたがって
+区切られており、 たとえば上の例で "<code>MAIN</code>" が複数あるのは本文が 
+いくつかの段落に分かれていることを示しています。
+ページ内の各行はかならず 
+"<code>TITLE:</code>"、"<code>MAIN-<i>n</i>:</code>" あるいは "<code>SUB-<i>n</i>:</code>"
+のように
+大文字アルファベットのフィールドで始まっています (上の例では読みやすさのために意図的に改行が入れられています)。
+そのため perl や grep などのコマンドで簡単に必要な部分をとりだすことができます。
+"<code>SUB-<em>n</em>:</code>" と示されている行は、
+記事の題名でも本文でもないが、補助的なテキストと判断された部分です
+(<em>n</em> の値はその部分につけられたスタイルの ID で、これはパターンごとに変わります)。
+
+<h4>インストール</h4>
+<p>
+<a href="#download">ダウンロード</a>の項にあるリンクから tar.gz ファイルをダウンロードし、
+展開してください。このプログラムを動かすには
+<a href="http://www.python.org/">Python 2.4 以上</a> が必要です。
+プログラム自体はただのスクリプトファイルなので特別なインストールは必要なく、
+ただシェルから単に <code>./analyze.py</code> や <code>./extract.py</code> と
+タイプすれば ok です。あとはシェルスクリプトを書いて cron に仕掛けるなり何なりしてください。
+
+
+<a name="crawler">
+<hr noshade>
+<h3><code>textcrawler.py</code> (webクローラ)</h3>
+<p>
+<code>textcrawler.py</code> は特定のサイトを再帰的にクロールし、
+テキストファイル (HTMLファイル) のみを集める簡単な webクローラです。
+web 全体を対象としたクロールには向いていませんが、中規模程度のサイトから
+100〜10000 程度のページを取得するのに向いています。
+これは収集した複数のページをひとつの zip ファイルにまとめて保存します。
+Mozilla 形式のクッキーファイルや、persistent HTTP接続、gzip圧縮をサポートしています。
+対象サイトへの負荷をなるべく減らすために、再帰の深度やクロールする URL のパターンを
+ユーザが厳密にコントロールできるようになっており、また、URL を
+データベース (Berkeley DBM) に保存しておくことにより、一度取得した URL を
+次回のクロールでは取得しないように設定することもできます。
+可能なかぎり persistent 接続や gzip を使用し、<code>robots.txt</code> には必ず従います。
+なお、HTTP接続は最初に指定したホストにしか行わず、他のサイトに向かうリンクは
+(そのサーバが同一のIPアドレスをもつ仮想サーバでないかぎり) すべて無視されます。
+<p>
+ほとんどのニュースサイトでは、個々の記事を示す URL は一意です。
+したがって、通常、一度取得した URL は二度と取得する必要がありません。
+<code>textcrawler.py</code> にはこのための機能として <code>-U</code>オプション
+(URLDB の指定) があります。URLDB ファイル名を指定すると、<code>textcrawler.py</code> は
+一度取得した URL の md5ハッシュ値と、その URL へのリンクを最後に見た時刻を
+Berkeley DBM 形式のデータベースに記録します (指定されたファイルがない場合は
+自動的に作成されます)。ある URL を取得しようとする際、それがすでに URLDB に記録されていれば
+そのページは保存しないため、これを使うと 2回目以降のクロールの際に必要な実行時間と
+ネットワーク帯域を大幅に削減することができます。
+cron などを使って、クローラを一定時間おきに走らせる場合は、これはとくに有用です。
+(ただし URLDB は取得した URL をすべて記録していくため、時間がたつにつれてこのファイルは
+大きくなっていきます。大きくなりすぎた URLDB を整理するには
+<a href="#urldb"><code>urldbutils.py</code></a>コマンドを使ってください。)
+<P>
+取得すべき URL をコントロールする方法として、
+<code>-a</code> (Accept) と <code>-j</code> (reJect) の 2つのオプションが用意されています。
+これらには受理すべき (あるいは拒否すべき) URL にマッチする正規表現を指定します。
+これらのオプションは<u>コマンドラインで指定された順に判定され</u>、
+URL は最初にマッチしたパターンにしたがって受理あるいは拒否されます
+(どのパターンにもマッチしない場合は、自動的に拒否とみなされます)。
+なお、どちらのオプションも指定しない場合は、デフォルトで自動的にトップページの URL を
+プレフィックスとしてもつ URL をすべて受理し、jpg、gif などの明らかにテキストでない
+URL を拒否するような設定になっています。(<code>-a</code> あるいは <code>-j</code> を
+ひとつでも指定した場合、これらのデフォルトは使われませんので注意してください)
+
+
+<h4>構文</h4>
+<blockquote><pre>
+$ textcrawler.py -o <u>出力ファイル名</u> [<u>オプション</u>] <u>開始URL</u> ...
+</pre></blockquote>
+<p>
+必ず出力ファイル名の指定が必要です。このファイル名にはタイムスタンプ
+(<code>YYYYMMDDHHMM</code> の形式) と拡張子 <code>.zip</code> が自動的につけられます。
+タイムスタンプはこのコマンドが実行された時点の値が入ります。
+この値はコマンドラインから <code>-b</code> オプションで変更できます。
+<p>
+<h5>使用例:</h5>
+<blockquote><pre>
+(http://www.asahi.com/ を開始ページとして再帰深度 2 でクロールし、結果を asahi.*.zip に保存する。
+    デフォルトの文字コードとして euc-jp を使用する)
+$ <strong>textcrawler.py -o asahi -m2 -c euc-jp http://www.asahi.com/</strong>
+
+(http://www.boston.com/news/globe/ を開始ページとしてクロールするが、
+    "http://www.boston.com/news/" 以下のページもクロールする。
+    URLDB ファイルとして boston.urldb を使用する)
+$ <strong>textcrawler.py -o boston -U boston.urldb -a'^http://www\.boston\.com/news/' http://www.boston.com/news/globe/</strong>
+</pre></blockquote>
+
+
+<h4>オプション</h4>
+<dl>
+<dt> <code>-o <u>出力ファイル名</u></code>
+<dd> このオプションは必須です。
+ページの内容を出力する zip のファイル名 (のプレフィックス) を指定します。
+実際にはこの名前は出力ファイル名としてそのまま使われるわけではなく、
+タイムスタンプ (あるいは <code>-b</code> で指定した文字列) と
+拡張子 <code>.zip</code> が自動的に追加されます。
+<P>
+<dt> <code>-m <u>再帰的クロールの最大深度</u></code>
+<dd> サイト内を再帰的にクロールするさいの最大深度 (デフォルトは 1) を指定します。
+この値を 2 にするとリンクを 2段階でたどることになり、クロールするページ数が
+大幅に増えます (たいていのニュースサイトでは、深度 1 だとページ数は 100程度、
+2 にするとページ数は 1000〜2000 になります)。
+<p>
+<dt> <code>-k <u>cookieファイル名</u></code>
+<dd> クローラが cookie を読み込むファイル (Mozilla の cookie.txt ファイル形式) を指定します。
+サイトによっては、クローラがページを取得するのにクッキーを要求してくるところがあります。
+このような場合、Mozilla であらかじめ取得した cookie.txt を指定しておけば
+クロールのさいにそれを使用できます。クローラが途中で取得したセッション用 cookie を
+このファイルに保存することはありません。
+<p>
+<dt> <code>-c <u>デフォルトの文字コード</u></code>
+<dd> サイト内のページに HTML charset の指定がない場合、
+デフォルトで使用する文字コードの名前 ("<code>euc-jp</code>", "<code>utf-8</code>" など)
+を指定します。文字コードの自動認識機能はありません。
+<p>
+<dt> <code>-a <u>許可する正規表現パターン</u></code> 
+<dd> クロールを許可する URL のパターンを正規表現で指定します。
+このオプションは <code>-j</code> オプションとともに複数個指定でき、
+指定された順に判定されます。
+したがって、オプションを指定する順番を変えると動作が変わります。
+<p>
+<dt> <code>-j <u>禁止する正規表現パターン</u></code> 
+<dd> クロールを禁止する URL のパターンを正規表現で指定します。
+このオプションは <code>-a</code> オプションとともに複数個指定でき、
+指定された順に判定されます。
+したがって、オプションを指定する順番を変えると動作が変わります。
+デフォルトでは、<code>jpg, jpeg, gif, png, tiff, swf, mov, wmv, wma, ram, rm, rpm, gz, zip, class</code> の
+拡張子をもつ URL はすべて禁止されています。
+<p>
+<dt> <code>-U <u>URLDBファイル名</u></code>
+<dd> URLDB はクロールした URL (正確には、そのmd5ハッシュ値) と日時を記録しておく
+Berkeley DB のファイルです。指定されたファイル名が存在しない場合は新たに空の 
+URLDB ファイルが作成されます。このオプションを指定するとクローラは
+一度訪れた URLのmd5ハッシュ値を URLDB に記録しておき、2度目には
+そのページを出力ファイルに保存しなくなります (が、そのページが
+再帰的クロールの途中にある場合は、さらなるリンク先 URL を得るために
+ページの読み込み自体はおこないます)。サイトを一定時間おきに巡回する場合、
+これを使うとクロール時間を大幅に短縮できます。
+<p>
+<dt> <code>-b <u>タイムスタンプ文字列</u></code>
+<dd> 保存する zip ファイル名につけるタイムスタンプとなる文字列を指定します。
+ここで指定された文字列は zip ファイル内の各ページ URL の先頭にも
+"<code>200510291951/www.example.com/...</code>" のような形でつけられます。
+このオプションを指定しないと、タイムスタンプは現在の時刻にもとづいて
+<code>YYYYMMDDHHMM</code> のような形式で自動的に決められます。
+<P>
+<dt> <code>-i <u>index.htmlの名前</u></code>
+<dd> ある URL が "<code>/</code>" で終わっている場合、ここで指定した文字列を
+URL の末尾に自動的に追加します。デフォルトでは空文字列 (追加しない) になっています。
+サイトによっては、"<code>http://host/dir/</code>" と "<code>http://host/dir/index.html</code>" は
+別々のページとみなされることがありますので、注意が必要です (Apache の mod_dir など)。
+<p>
+<dt> <code>-D <u>遅延時間</u></code>
+<dd> このオプションを指定すると、各ページをクロールするとき、
+1ページごとに指定された秒数だけ待つようになります。
+連続したアクセスが迷惑な場合に指定します。
+デフォルトでは遅延を行いません。
+<p>
+<dt> <code>-T <u>タイムアウト時間</u></code>
+<dd> クロールの際のタイムアウト時間を秒数で指定します。
+デフォルトでは 300秒です。
+<p>
+<dt> <code>-L <u>linkinfoファイル名</u></code>
+<dd> textcrawler は各ページのリンクを取得する際に、
+そのリンク (<code>&lt;a&gt;</code> タグ) に含まれる
+アンカーテキストも同時に記録しておきます。クロールが終わったあと、
+この情報は "<code>linkinfo</code>" という名前で .zip ファイル中に
+保存されます。この情報はページの題名を分析するために <code>analyze.py</code>
+によって使用されます。このオプションはそのファイル名を
+"<code>linkinfo</code>" に変更するためのもので、
+この値を空文字列にするとアンカーテキストは保存されません。
+<p>
+<dt> <code>-d</code> 
+<dd> デバッグレベルを上げます。
+<p>
+</dl>
+
+<a name="analyze">
+<hr noshade>
+<h3><code>analyze.py</code> (レイアウト分析プログラム)</h3>
+<p>
+<code>analyze.py</code> は <code>textcrawler.py</code> が取得した
+HTMLページの束をもとにレイアウトを分析し、学習したパターンファイルを標準出力に表示します。
+使用するページの数によって、所要時間は数時間にも及ぶことがあります。
+(なお、このプログラムに Psyco を使ってもメモリを大量消費するだけで、
+今のところまったく効果がでません。)
+
+<p>
+<code>analyze.py</code> が出力するパターンファイル中の各パターンには、
+ページ中の文字数などを考慮して、そのパターンの有用度を表す「スコア」がついています。
+ふつう、このプログラムはすべてのページから本文を発見しようとしますが、
+実際には「どのページが記事か」までは判定できません。
+占いのコーナーや読者の声、新聞社の概要などはふつう別のレイアウトで書かれており、
+これらを排除したい場合は一部のパターンを削除する必要があります。
+幸いにも、こういった記事以外のページは数が少なく、したがってそれ用の
+パターンのスコアも低くなる場合が多いので、このようなページは
+<code>analyze.py</code> の <code>-S</code> オプションをつかって、
+ある一定以下のスコアをもつパターンを出力しないようにすることで
+排除することができます (もちろん新聞によって差はありますが)。
+さらに細かいチューニングを行ないたい場合は、パターンファイルを
+テキストエディタでじかに編集することもできます
+(<a href="howitworks-j.html#pattern">パターンファイルの構造</a>を参照してください)。
+
+<h4>構文</h4>
+<blockquote><pre>
+$ analyze.py [<u>オプション</u>] <u>入力ファイル名</u> ... &gt; パターンファイル名
+</pre></blockquote>
+<p>
+通常、入力ファイルには <code>textcrawler.py</code> で取得した
+zipファイル名を指定します。入力ファイルは複数指定することができます。
+複数回にわたるクロールの結果 (同一サイトから日を変えて取得した結果など) を
+使って学習したいときに便利です。
+<h5>使用例:</h5>
+<blockquote><pre>
+(asahi.200510120801.zip と asahi.200510220801.zip の 2つのファイルに
+    格納されているページを使ってレイアウトを学習し、結果を asahi.pat に保存する)
+$ <strong>analyze.py asahi.200510120801.zip asahi.200510220801.zip &gt; asahi.pat</strong>
+</pre></blockquote>
+<p>
+なお、<code>wget</code> などで再帰的に取得したページを使いたいときは、
+以下のようにして取得したファイル名の一覧を標準入力から与えてやります:
+<blockquote><pre>
+$ <strong>find 200510120801/ -type f | ./analyze.py - linkinfo &gt; asahi.pat</strong>
+</pre></blockquote>
+この場合はこのディレクトリ構造が、あたかも
+<code>textcrawler.py</code> が出力する .zip ファイルと同じように、
+<code><i>タイムスタンプ</i>/<i>URL</i></code> の構造をしている必要があります。
+
+<h4>オプション</h4>
+<p>
+いくつかのオプションは非常に技術的なもので、これらを変更するには
+<a href="howitworks-j.html">動作原理</a>を理解している必要があります。
+<dl>
+<dt> <code>-c <u>デフォルトの文字コード</u></code>
+<dd> HTML ファイル内に charset の指定がない場合、
+デフォルトで使用する文字コードの名前 ("<code>euc-jp</code>", "<code>utf-8</code>" など)
+を指定します。文字コードの自動認識機能はありません。
+<p>
+<dt> <code>-a <u>許可する正規表現パターン</u></code> 
+<dd> 分析に使うこと許可する URL のパターンを正規表現で指定します。
+このオプションは <code>-j</code> オプションとともに複数個指定でき、
+指定された順に判定されます。
+したがって、オプションを指定する順番を変えると動作が変わります。
+<p>
+<dt> <code>-j <u>禁止する正規表現パターン</u></code> 
+<dd> 分析に使うことを禁止する URL のパターンを正規表現で指定します。
+このオプションは <code>-a</code> オプションとともに複数個指定でき、
+指定された順に判定されます。したがって、オプションを指定する順番を変えると動作が変わります。
+デフォルトでは、与えられた zip ファイルに含まれているすべてのファイルをつかって
+レイアウトを分析します。
+<p>
+<dt> <code>-t <u>クラスタリングのしきい値</u></code> 
+<dd> ページのレイアウトをクラスタリングする際のしきい値を 0.0 〜 1.0 の範囲で指定します。
+2つの異なるページの類似度がこの値を超えるとその 2つのページは同一のクラスタ
+(つまり、同一のレイアウト) に属するとみなされます。
+この値を上げるほど厳密にレイアウトを区別するようになり、したがって
+正確に本文が取れるようになりますが、この値を上げすぎるとクラスタが大きくならず、
+少数のページしか取得できなくなってしまいます。この値のデフォルトは 0.97 ですが、
+サイトによっては 0.99 や 0.95 に変更すると性能が上がる場合があります。
+<p>
+<dt> <code>-T <u>題名判定のしきい値</u></code> 
+<dd> 記事の題名を判定するときに、リンクのアンカーテキスト (あるいは記事本文) との類似度を使いますが、
+そのための最低値を指定します。
+<p>
+<dt> <code>-S <u>スコアのしきい値</u></code> 
+<dd> 生成されたパターンファイルには、各パターンにその有用度をあらわす「スコア」がついています。
+このオプションは指定されたスコア以下のパターンをパターンファイルに出力しないようにします。
+デフォルトは 100 です。一般的にいって、スコアが 100 以下のページは、まず記事のページではありません。
+ほとんどのニュースサイトでは、この値を 1000以上にしてもほとんどの記事が取得できるようです。
+この値を -1 にするとパターンの切り捨ては行われません。
+<p>
+<dt> <code>-L <u>linkinfoファイル名</u></code> 
+<dd> <code>textcrawler.py</code> はふつう zip アーカイブ内に
+各ページへのリンクのアンカーテキストを記録した "<code>linkinfo</code>" というファイルを
+保存しますが、もしこのファイル名がデフォルトと違っている場合に指定します。
+なお、アーカイブ内に "<code>linkinfo</code>" ファイルが存在しない場合は
+このオプションに空文字列を指定すると、<code>analyze.py</code> は自前で
+アンカーテキストを解析しようとしますが、これによりレイアウトの分析速度はさらに遅くなるので、
+なるべく "<code>linkinfo</code>" を使ったほうがいいでしょう。
+<p>
+<dt> <code>-d</code> 
+<dd> デバッグレベルを上げます。
+<p>
+</dl>
+
+<a name="extract">
+<hr noshade>
+<h3><code>extract.py</code> (テキスト抽出プログラム)</h3>
+<p>
+パターンファイルを渡すと
+URL および本文とタイトル、マッチしたパターンをそれぞれ標準出力に表示します。
+
+<h4>構文</h4>
+<blockquote><pre>
+$ extract.py [<u>オプション</u>] <u>パターンファイル名</u> <u>入力ファイル名</u> ... &gt; 出力テキスト
+</pre></blockquote>
+<h5>使用例:</h5>
+<blockquote><pre>
+(パターンファイル asahi.pat を使って、asahi.200510220801.zip に格納されているページから
+    テキストを抽出し、shift_jis 形式で asahi.200510220801.txt に保存する)
+$ <strong>extract.py -C shift_jis asahi.pat asahi.200510220801.zip &gt; asahi.200510220801.txt</strong>
+</pre></blockquote>
+
+<h4>オプション</h4>
+<dl>
+<dt> <code>-C <u>出力テキストの文字コード</u></code>
+<dd> 記事の題名と本文を出力する文字コードの名前 ("<code>euc-jp</code>" など) を指定します。
+デフォルトは <code>utf-8</code> です。
+<p>
+<dt> <code>-c <u>デフォルトの文字コード</u></code>
+<dd> HTML ファイル内に charset の指定がない場合、
+デフォルトで使用する文字コードの名前 ("<code>euc-jp</code>", "<code>utf-8</code>" など)
+を指定します。文字コードの自動認識機能はありません。
+<p>
+<dt> <code>-a <u>許可する正規表現パターン</u></code> 
+<dd> 抽出に使うこと許可する URL のパターンを正規表現で指定します。
+このオプションは <code>-j</code> オプションとともに複数個指定でき、
+指定された順に判定されます。
+したがって、オプションを指定する順番を変えると動作が変わります。
+<p>
+<dt> <code>-j <u>禁止する正規表現パターン</u></code> 
+<dd> 抽出に使うことを禁止する URL のパターンを正規表現で指定します。
+このオプションは <code>-a</code> オプションとともに複数個指定でき、
+指定された順に判定されます。したがって、オプションを指定する順番を変えると動作が変わります。
+デフォルトでは、与えられた zip ファイルに含まれているすべてのファイルから
+抽出をこころみます。
+<p>
+<dt> <code>-t <u>パターン類似度のしきい値</u></code> 
+<dd> レイアウトをパターンと比較する際の、最低の類似度 (デフォルトは 0.8) を指定します。
+各ページは与えられたパターンファイルに入っているすべてのパターンと比較され、
+その類似度が最大のものが使われますが、それでも類似度がこの値よりも低いと
+そのページはどのパターンにもマッチしない判断され、"<code>!UNMATCHED</code>" が出力されます。
+この値はあまり変更する必要はありません。
+<p>
+<dt> <code>-S</code> 
+<dd> 厳格なモード。具体的には、各ページとパターンとのマッチングを行うさい、
+パターン中で指定されている LayoutBlock がひとつでも欠けているページはすぐに「一致しない」と判定します。
+このオプションを使うことにより、より厳密にパターンとマッチするページのみが取り出せますが、
+サイトによってはレイアウトがつねに微妙に変化しているため、このオプションを使うと
+ほとんどのページがどのパターンにも合致せず "<code>!UNMATCHED</code>" になってしまいます。
+<p>
+<dt> <code>-T <u>DiffScoreのしきい値</u></code> 
+<dd> ページから本文または補助的なセクションを抽出するときに、
+そのセクションの DiffScore が一定以上のもののみを「変化している部分」と認識して使用します。
+デフォルトの値は 0.5 です。
+<p>
+<dt> <code>-d</code> 
+<dd> デバッグレベルを上げます。
+<p>
+</dl>
+
+
+<a name="urldb">
+<hr noshade>
+<h3><code>urldbutils.py</code> (URLDB操作プログラム)</h3>
+<p>
+URLDB を使うにつれてそのファイルサイズは単調増加しますが、
+そのサイト上のある URL がどこにも見えなくなって一定の時間が経過した場合、
+その URL はもう二度と現れない (したがって記憶しておく必要もない) と仮定してもよいでしょう。
+URLDB に保存されている各 URL には、「その URL を最後に見た時刻」が記録されています。
+<code>urldbutils.py</code> はこの情報を利用して URLDB ファイルから
+アクセスされなくなった URL 整理し、DBM を再構築するためのツールです。
+
+<h4>構文</h4>
+<blockquote><pre>
+$ urldbutils.py {-D | -R} [<u>オプション</u>] <u>ファイル名</u> [<u>旧ファイル名</u>]
+</pre></blockquote>
+<p>
+2つのモードのうち、表示(Display、<code>-D</code>) か再構築(Reorganize、<code>-R</code>) かの
+どちらかを選ぶ必要があります (表示機能はほとんどデバッグ用です)。
+DBM を再構築する場合は、新、旧2つのファイル名を指定します。
+(なお、安全のため、新しいファイルがすでに存在している場合このコマンドは動作しません。)
+<h5>使用例:</h5>
+<blockquote><pre>
+(myurldb ファイルの中で 10日間以上、目撃されていない URL を削除し、
+    新しいURLDB ファイル myurldb.new をつくる。
+    その後、旧ファイルを上書きする)
+$ <strong>urldbutils.py -R -t 10 myurldb.new myurldb</strong>
+$ <strong>mv -i myurldb.new myurldb</strong>
+mv: overwrite `urldb'? <strong>y</strong>
+</pre></blockquote>
+
+<h4>オプション</h4>
+<dl>
+<dt> <code>-D</code>
+<dd> URLDB の内容 (ハッシュ値 + 最終アクセス時間の組) を一覧表示します。
+<p>
+<dt> <code>-R</code>
+<dd> URLDB のエントリーのうち、一定時間以上アクセスされていないものを削除した新しい DBM ファイルを作成します。
+新、旧2つのファイル名および <code>-t</code> オプションの指定が必要です。
+<p>
+<dt> <code>-t <u>日数</u></code>
+<dd> 日数のしきい値。これ以上長い時間アクセスされていない URL が消去されます。
+<p>
+<dt> <code>-v</code> 
+<dd> 冗長 (verbose) モード。<code>-R</code>モードで削除した項目をすべて表示します。
+<p>
+</dl>
+
+
+<a name="html2txt">
+<hr noshade>
+<h3><code>html2txt.py</code> (簡単なテキスト抽出)</h3>
+<p>
+<code>html2txt.py</code> はパターン定義を使わないシンプルな
+html からのテキスト抽出ツール (というよりはタグ削除ツール) です。
+これはただすべての HTML タグを入力ファイル中からとり除きます。
+また、 <code>&lt;script&gt;</code>...<code>&lt;/script&gt;</code> または
+<code>&lt;style&gt;</code>...<code>&lt;/style&gt;</code> タグで囲まれている
+javascript やスタイルシートも取り除きます。
+
+<h4>構文</h4>
+<blockquote><pre>
+$ html2txt.py [<u>オプション</u>] <u>入力ファイル名</u> ... &gt; 出力ファイル名
+</pre></blockquote>
+<h5>使用例:</h5>
+<blockquote><pre>
+$ <strong>html2txt.py index.html &gt; index.txt</strong>
+</pre></blockquote>
+
+<h4>オプション</h4>
+<dl>
+<dt> <code>-C <u>出力テキストの文字コード</u></code>
+<dd> 記事の題名と本文を出力する文字コードの名前 ("<code>euc-jp</code>" など) を指定します。
+デフォルトは <code>utf-8</code> です。
+<p>
+<dt> <code>-c <u>デフォルトの文字コード</u></code>
+<dd> HTML ファイル内に charset の指定がない場合、
+デフォルトで使用する文字コードの名前 ("<code>euc-jp</code>", "<code>utf-8</code>" など)
+を指定します。文字コードの自動認識機能はありません。
+</dl>
+
+
+<a name="bug">
+<hr noshade>
+<h3>バグ</h3>
+<ul>
+<li> <strong>おそい。</strong> (<code>analyze.py</code> も <code>extract.py</code> も)
+<li> まだ題名部分をミスすることがある。
+<li> 腐った HTML でパーザが落ちる可能性。(タグが 1000 階層も入れ子になったりすると、あやしい)
+</ul>
+
+
+<a name="license">
+<hr noshade>
+<small>
+<h2>ライセンス</h2>
+<p>
+(いわゆる MIT/X ライセンスです)
+<p>
+Copyright (c) 2005-2007  Yusuke Shinyama &lt;yusuke at cs dot nyu dot edu&gt;
+<p>
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+<p>
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+<p>
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+</small>
+
+<hr noshade>
+<p>
+<!-- hhmts start -->
+Last Modified: Thu Sep  6 17:17:16 JST 2007
+<!-- hhmts end -->
+<address>Yusuke Shinyama</address>
+</body></html>

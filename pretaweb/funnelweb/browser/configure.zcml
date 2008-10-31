@@ -1,0 +1,27 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    i18n_domain="pretaweb.obrienimport">
+
+
+    <browser:page
+        for="*"
+        name="import"
+        class=".importers.Import"
+        permission="zope2.View"
+        />
+
+	  <include package="collective.transmogrifier" file="meta.zcml"/>
+	  <include package="collective.transmogrifier"/>
+	  <include package="plone.app.transmogrifier"/>
+
+<!-- 
+    <transmogrifier:registerConfig
+        name="pretaweb.funnelweb.transmogrifier"
+        title="Website Importer"
+        description=""
+        configuration="funnelweb.cfg" />
+ -->	    
+
+</configure>

@@ -1,0 +1,103 @@
+Relinker
+==========
+
+>>> from collective.transmogrifier.tests import registerConfig
+>>> from collective.transmogrifier.transmogrifier import Transmogrifier
+>>> transmogrifier = Transmogrifier(plone)
+>>> config = """
+... [transmogrifier]
+... pipeline =
+...     webcrawler
+...     convert
+...     printer
+...     
+...     
+... [webcrawler]
+... blueprint = pretaweb.funnelweb.test.htmlsource
+... one=<a href="two">2</a>
+... 
+... [convert]
+... blueprint = pretaweb.funnelweb.safeportaltransforms
+... mimetype_field = _mimetype
+... target = text/blah
+... keys = text
+...
+... [printer]
+... blueprint = collective.transmogrifier.sections.tests.pprinter
+...
+... """ 
+>>> registerConfig(u'test1', config)
+>>> transmogrifier(u'test1')
+{'_backlinks': [('http://test.com/one', '')],
+ '_origin': 'image02.jog',
+ '_path': 'one-image02.jog',
+ '_site_url': 'http://test.com/',
+ '_type': 'Image',
+ 'image': 'imagedata',
+ 'image.filename': 'image02.jog'}
+{'_backlinks': [('http://test.com/one', '')],
+ '_origin': 'image01.jpg',
+ '_path': 'one-image01.jpg',
+ '_site_url': 'http://test.com/',
+ '_type': 'Image',
+ 'image': 'imagedata',
+ 'image.filename': 'image01.jpg'}
+{'_mimetype': 'text/blah',
+ '_path': 'one',
+ '_site_url': 'http://test.com/',
+ 'text': 'Transformed 19 from text/html to text/blah<img src="image01.jpg"><img src="image02.jpg">'}
+ 
+ 
+Test it works when we move content, convert it and then turn into attachments and relink
+it. 
+>>> config = """
+... [transmogrifier]
+... pipeline =
+...     source
+...     moves
+...     convert
+...     makeattachments
+...     relinker
+...     treeserializer
+...     printer
+...     
+... [source]
+... blueprint = pretaweb.funnelweb.test.htmlbacklinksource
+... f oo/content=blah
+... f oo/content2=blah2
+...
+... [convert]
+... blueprint = pretaweb.funnelweb.safeportaltransforms
+... mimetype_field = _mimetype
+... target = text/xhtml
+... keys = text
+...
+... [makeattachments]
+... blueprint = pretaweb.funnelweb.makeattachments
+... fields = python:[('attach%i'%i,'blah')]
+...
+... [relinker]
+... blueprint = pretaweb.funnelweb.relinker
+...
+... [moves]
+... blueprint = pretaweb.funnelweb.pathmover
+... moves = 
+...    f%20oo a
+...
+... [treeserializer]
+... blueprint = pretaweb.funnelweb.treeserializer
+...
+... [printer]
+... blueprint = collective.transmogrifier.sections.tests.pprinter
+... """ 
+>>> registerConfig(u'test2', config)
+>>> transmogrifier(u'test2')
+{'_type': 'Folder', '_site_url': 'http://test.com/', '_path': 'a'}
+{'_mimetype': 'text/xhtml',
+ '_path': 'a/content',
+ '_site_url': 'http://test.com/',
+ 'attach0': 'blah',
+ 'attach1': 'blah',
+ 'text': '<html>Transformed 4 from text/html to text/xhtml<img src="attach1"/><img src="../f oo/image02.jpg"/></html>\n'}
+{'_site_url': 'http://test.com/', '_path': 'a/content/attach0'}
+{'_site_url': 'http://test.com/', '_path': 'a/content/attach1'}

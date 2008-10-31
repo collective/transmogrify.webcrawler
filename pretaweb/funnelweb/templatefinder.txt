@@ -1,0 +1,37 @@
+TemplateFinder
+==============
+
+This blueprint reads in all teh text of html pages and finds patterns. It will then strip
+the reaccuring patterns away to effectively detemplate a site leaving just the html content.
+
+
+>>> from os.path import dirname
+>>> from os.path import abspath
+>>> config = """
+... [transmogrifier]
+... pipeline =
+...     webcrawler
+...     treeserializer
+...     printer
+...     
+... [webcrawler]
+... blueprint = pretaweb.funnelweb.webcrawler
+... site_url  = file:///%s/test_staticsite/
+...
+... [treeserializer]
+... blueprint = pretaweb.funnelweb.templatefinder
+...
+... [printer]
+... blueprint = collective.transmogrifier.sections.tests.pprinter
+...
+... """ % abspath(dirname(__file__)).replace('\\','/')
+
+>>> from collective.transmogrifier.tests import registerConfig
+>>> registerConfig(u'pretaweb.funnelweb.templatefinder.test', config)
+
+>>> from collective.transmogrifier.transmogrifier import Transmogrifier
+>>> transmogrifier = Transmogrifier(plone)
+>>> transmogrifier(u'pretaweb.funnelweb.templatefinder.test')
+{'_path': '/cia-plone-view-source.jpg',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
+

@@ -1,0 +1,65 @@
+
+WebCrawler
+==========
+
+>>> from os.path import dirname, abspath
+>>> config = """
+... [transmogrifier]
+... pipeline =
+...     webcrawler
+...     clean
+...     printer
+...     
+... [webcrawler]
+... blueprint = pretaweb.funnelweb.webcrawler
+... site_url  = file:///%s/test_staticsite
+... alias_bases = http://somerandomsite file:///
+... patterns =
+...		(?s)<SCRIPT.*Abbreviation"\) 
+...		(?s)MakeLink\('(?P<u>[^']*)','(?P<a>[^']*)'\)
+...     (?s)State=.*<body[^>]*>
+... subs = 
+...     </head><body>
+...		<a href="\g<u>">\g<a></a>
+...     <br>
+... [clean]
+... blueprint = collective.transmogrifier.sections.manipulator
+... #keys = file
+... #destination = python:item.get("_mimetype") in ["text/html"] and 'text'
+... delete = 
+...		file 
+... 	image 
+... 	text 
+...		_content
+...
+... [printer]
+... blueprint = collective.transmogrifier.sections.tests.pprinter
+...
+... """ % abspath(dirname(__file__)).replace('\\','/')
+
+>>> from collective.transmogrifier.tests import registerConfig
+>>> registerConfig(u'pretaweb.funnelweb.webcrawler.test', config)
+
+>>> from collective.transmogrifier.transmogrifier import Transmogrifier
+>>> transmogrifier = Transmogrifier(plone)
+>>> transmogrifier(u'pretaweb.funnelweb.webcrawler.test')
+{'_path': '/plone_schema.png',
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
+{'_path': '/egenius-plone.gif',
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
+{'_path': '/cia-plone-view-source.jpg',
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
+{'_path': '/file4.HTML',
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
+{'_path': '/file.doc',
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
+{'_path': '/subfolder',
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
+{'_path': '/file2.htm',
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
+{'_path': '/subfolder/subfile1.htm',
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
+{'_path': '/file3.html',
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
+{'_path': '/file1.htm',
+ '_site_url': 'file:///.../src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
