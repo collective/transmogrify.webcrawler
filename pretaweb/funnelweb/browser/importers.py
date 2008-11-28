@@ -20,21 +20,30 @@ class Import(BrowserView):
     def __init__(self, context, request):
         BrowserView.__init__(self, context, request)
         self.ids = configuration_registry.listConfigurationIds()
-        self.ids = ['Automatic SiteSucker'] + list(self.ids)
 
-    def test(self, id=None, url=None):
+    def test(self, id=None, url=None, ignore=""):
         # run transmogrifier
+        transmogrifier = Transmogrifier(self.context)
         if url:
-            here = abspath(dirname(__file__))
-            config = open(here+'/funnelweb.cfg').read()
-            config = config % url
-            id = u'pretaweb.funnelweb.transmogrifier'
-            registerConfig(id, config)
-            transmogrifier = Transmogrifier(self.context)
-            transmogrifier(id)
+            #here = abspath(dirname(__file__))
+            #config = open(here+'/funnelweb.cfg').read()
+            overrides = dict(
+                webcrawler = dict(
+#                    blueprint = "pretaweb.funnelweb.webcrawler",
+                    site_url  = url,
+                    ignore = ignore
+                ),
+#                templatefinder=dict(
+#                    #blueprint = pretaweb.funnelweb.templatefinder,
+#                    auto=True
+ #               }
+            )
+            
+            #id = u'pretaweb.funnelweb.transmogrifier'
+            #registerConfig(id, config)
+            transmogrifier(id,**overrides)
             return "ok"
         if id:
-            transmogrifier = Transmogrifier(self.context)
             transmogrifier(id)
             return 'ok'
         else:
