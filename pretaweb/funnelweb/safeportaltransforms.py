@@ -7,6 +7,7 @@ from collective.transmogrifier.interfaces import ISection
 import shutil
 from plone.app.transmogrifier.portaltransforms import PortalTransformsSection
 from sys import stderr
+from relinker import relinkHTML
 import logging
 logger = logging.getLogger('Plone')
 
@@ -83,23 +84,33 @@ class SafePortalTransforms(PortalTransformsSection):
 
                         #because the names of subobjects aren't unique we have to 
                         #move it to a folder
-                        yield dict(_type='Folder',
+                        folder = dict(_type='Folder',
                                    _path=item['_path'],
                                    _site_url=item.get('_site_url'),
                                    _default_page=doc_id)
-                        
+                        #Need to move the folder as moving html screws the links
+                        if '_origin' in item:
+                            folder['_origin'] = item.get('_origin')
+                            del newitem['_origin']
+                        yield folder
+
                         #newitem['_origin'] = item.get('_origin',item['_path'])
                         newitem['_path'] = item['_path']+'/'+doc_id
+                        
+                        base = item.get('_site_url')
+                        changes = {}
 
                         for name,data in data.getSubObjects().items():
                             #TODO: maybe shouldn't hard code this
-                            yield {'_type':           'Image',
+                            subpath = '/'.join(tmp+[name])
+                            subitem = {'_type':           'Image',
                                    #'_origin':         '/'.join(origin+[name]),
-                                   '_path':           '/'.join(tmp+[name]),
-                                   '_site_url':       item.get('_site_url'),
-                                   '_backlinks':      [(item['_site_url']+newitem['_path'],'')],
+                                   '_path':           subpath,
+                                   '_site_url':       base,
+                                   '_backlinks':      [(base+newitem['_path'],'')],
                                    'image':           data,
                                    'image.filename':  name}
+                            yield subitem
 
             yield newitem
 

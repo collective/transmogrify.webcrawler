@@ -44,7 +44,7 @@ Add two more subitems and then we get attachments
 
 >>> registerConfig(u'test', config)
 >>> transmogrifier(u'test')
-{'_type': 'Folder', '_site_url': 'http://test.com/', t'_path': 'level2'}
+{'_type': 'Folder', '_site_url': 'http://test.com/', '_path': 'level2'}
 {'_backlinks': [('http://test.com/level3/index', 'Level 2')],
  '_mimetype': 'text/html',
  '_path': 'level2/index',
@@ -61,7 +61,7 @@ Add two more subitems and then we get attachments
  '_path': 'level3/index',
  '_site_url': 'http://test.com/',
  'text': '<a href="../level2/index">Level 2</a>'}
-
+    
 >>> config = """
 ... [transmogrifier]
 ... include = test
@@ -115,19 +115,17 @@ Add two more subitems and then we get attachments
 ... """ 
 >>> registerConfig(u'test3', config)
 >>> transmogrifier(u'test3')
+{'_type': 'Folder', '_site_url': 'http://test.com/', '_path': 'level2'}
+{'_backlinks': [('http://test.com/level2/index', '')],
+ '_mimetype': 'text/html',
+ '_path': 'level2/+&image%20blah',
+ '_site_url': 'http://test.com/',
+ 'text': '<h1>content</h1>'}
 {'_backlinks': [('http://test.com/level3/index', 'Level 2')],
  '_mimetype': 'text/html',
  '_path': 'level2/index',
  '_site_url': 'http://test.com/',
  'text': '<a href="../level3/index">Level 3</a><img src="+&image%20blah"><img src="pdf">'}
-{'_backlinks': [('http://test.com/level3/index', 'Level 2')],
- '_mimetype': 'text/html',
- '_path': 'level2/index',
- '_site_url': 'http://test.com/',
- 'text': '<a href="../level3/index">Level 3</a><img src="+&image%20blah"><img src="pdf">'}
-{'_origin': 'level2/pdf2',
- '_path': 'level2/pdf/attachment1Image',
- '_site_url': 'http://test.com/'}
 {'_backlinks': [('http://test.com/level2/index', '')],
  '_mimetype': 'text/html',
  '_path': 'level2/pdf',
@@ -135,12 +133,15 @@ Add two more subitems and then we get attachments
  'attachment1Image': 'pdf2',
  'attachment1Title': 'blah',
  'text': '<img src="pdf2">'}
+{'_origin': 'level2/pdf2',
+ '_path': 'level2/pdf/attachment1Image',
+ '_site_url': 'http://test.com/'}
+{'_type': 'Folder', '_site_url': 'http://test.com/', '_path': 'level3'}
 {'_backlinks': [('http://test.com/level2/index', 'Level 3')],
  '_mimetype': 'text/html',
  '_path': 'level3/index',
  '_site_url': 'http://test.com/',
  'text': '<a href="../level2/index">Level 2</a>'}
-
 
 It is possible to not use fields for attachments but rather use a folder with a 
 default view. Just set fields to False (default).
@@ -157,12 +158,7 @@ default view. Just set fields to False (default).
 ... """ 
 >>> registerConfig(u'test4', config)
 >>> transmogrifier(u'test4')
-{'_origin': 'level3/index',
- '_path': 'level2/index/attachment1Image',
- '_site_url': 'http://test.com/'}
-{'_origin': 'level2/+&image%20blah',
- '_path': 'level2/index/attachment2Image',
- '_site_url': 'http://test.com/'}
+{'_type': 'Folder', '_site_url': 'http://test.com/', '_path': 'level2'}
 {'_mimetype': 'text/html',
  '_path': 'level2/index',
  '_site_url': 'http://test.com/',
@@ -171,7 +167,13 @@ default view. Just set fields to False (default).
  'attachment2Image': '<h1>content</h1>',
  'attachment2Title': 'blah',
  'text': '<a href="../level3/index">Level 3</a><img src="+&image%20blah">'}
-
+{'_origin': 'level3/index',
+ '_path': 'level2/index/attachment1Image',
+ '_site_url': 'http://test.com/'}
+{'_origin': 'level2/+&image%20blah',
+ '_path': 'level2/index/attachment2Image',
+ '_site_url': 'http://test.com/'}
+     
 >>> config = """
 ... [transmogrifier]
 ... include = test
@@ -188,28 +190,28 @@ default view. Just set fields to False (default).
 ... """ 
 >>> registerConfig(u'test5', config)
 >>> transmogrifier(u'test5')
-{'_backlinks': [('http://test.com/level2/index', 'Level 3')],
- '_mimetype': 'text/html',
- '_origin': 'level3/index',
- '_path': 'level2/index/index',
+{'_type': 'Folder', '_site_url': 'http://test.com/', '_path': 'level2'}
+{'_defaultpage': 'index-html',
+ '_path': 'level2/index',
  '_site_url': 'http://test.com/',
- 'text': '<a href="level3"'}
+ '_type': 'Folder'}
 {'_backlinks': [('http://test.com/level2/index', '')],
  '_mimetype': 'text/html',
  '_origin': 'level2/+&image%20blah',
  '_path': 'level2/index/+&image%20blah',
  '_site_url': 'http://test.com/',
  'text': '<h1>content</h1>'}
-{'_defaultpage': 'index-html',
- '_path': 'level2/index',
+{'_backlinks': [('http://test.com/level2/index', 'Level 3')],
+ '_mimetype': 'text/html',
+ '_origin': 'level3/index',
+ '_path': 'level2/index/index',
  '_site_url': 'http://test.com/',
- '_type': 'Folder'}
+ 'text': '<a href="level3"'}
 {'_mimetype': 'text/html',
  '_origin': 'level2/index',
  '_path': 'level2/index/index-html',
  '_site_url': 'http://test.com/',
  'text': '<a href="../level3/index">Level 3</a><img src="+&image%20blah">'}
-
 
 Test content that isn't linked up to makes sure its still passed through 
 

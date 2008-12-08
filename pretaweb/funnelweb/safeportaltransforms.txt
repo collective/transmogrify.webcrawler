@@ -16,6 +16,7 @@ The following test will transform the html by adding two images.
 ... pipeline =
 ...     webcrawler
 ...     convert
+...     treeserializer
 ...     printer
 ...     
 ...     
@@ -29,6 +30,9 @@ The following test will transform the html by adding two images.
 ... target = text/blah
 ... keys = text
 ...
+... [treeserializer]
+... blueprint = pretaweb.funnelweb.treeserializer
+...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
 ...
@@ -40,17 +44,17 @@ The following test will transform the html by adding two images.
  '_site_url': 'http://test.com/',
  '_type': 'Folder'}
 {'_backlinks': [('http://test.com/one/one', '')],
- '_path': 'one/image02.jog',
- '_site_url': 'http://test.com/',
- '_type': 'Image',
- 'image': '<a href="two">2</a>',
- 'image.filename': 'image02.jog'}
-{'_backlinks': [('http://test.com/one/one', '')],
  '_path': 'one/image01.jpg',
  '_site_url': 'http://test.com/',
  '_type': 'Image',
  'image': '<a href="two">2</a>',
  'image.filename': 'image01.jpg'}
+{'_backlinks': [('http://test.com/one/one', '')],
+ '_path': 'one/image02.jpg',
+ '_site_url': 'http://test.com/',
+ '_type': 'Image',
+ 'image': '<a href="two">2</a>',
+ 'image.filename': 'image02.jpg'}
 {'_mimetype': 'text/blah',
  '_path': 'one/one',
  '_site_url': 'http://test.com/',
@@ -87,7 +91,7 @@ it.
 ...
 ... [makeattachments]
 ... blueprint = pretaweb.funnelweb.makeattachments
-... fields = python:[('attach%i'%i,'blah')]
+... fields = python:[('attach%i'%i,subitem['image'])]
 ...
 ... [relinker]
 ... blueprint = pretaweb.funnelweb.relinker
@@ -101,11 +105,15 @@ it.
 >>> registerConfig(u'test2', config)
 >>> transmogrifier(u'test2')
 {'_type': 'Folder', '_site_url': 'http://test.com/', '_path': 'a'}
+{'_default_page': 'content1',
+ '_path': 'a/content1',
+ '_site_url': 'http://test.com/',
+ '_type': 'Folder'}
 {'_mimetype': 'text/xhtml',
- '_path': 'a/content',
+ '_path': 'a/content1/content1',
  '_site_url': 'http://test.com/',
  'attach0': 'blah',
  'attach1': 'blah',
- 'text': '<html>Transformed 4 from text/html to text/xhtml<img src="attach1"/><img src="../f oo/image02.jpg"/></html>\n'}
-{'_site_url': 'http://test.com/', '_path': 'a/content/attach0'}
-{'_site_url': 'http://test.com/', '_path': 'a/content/attach1'}
+ 'text': '<html>Transformed 4 from text/html to text/xhtml<img src="attach1"/><img src="attach0"/></html>\n\n'}
+{'_site_url': 'http://test.com/', '_path': 'a/content1/content1/attach0'}
+{'_site_url': 'http://test.com/', '_path': 'a/content1/content1/attach1'}
