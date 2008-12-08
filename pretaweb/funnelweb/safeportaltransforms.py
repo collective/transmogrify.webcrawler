@@ -36,13 +36,14 @@ class SafePortalTransforms(PortalTransformsSection):
 
     def __iter__(self):
         for item in self.previous:
+            newitem = item.copy()
             for key in item:
                 match = self.keys(key)[1]
                 if not (match and self.condition(item, key=key, match=match)):
                     continue
                 if self.transform:
                     try:
-                        item[key] = self.ptransforms(self.transform, item[key])
+                        newitem[key] = self.ptransforms(self.transform, item[key])
                     except:
                         # we get Illegal html errorrs etc sometimes
                         raise
@@ -66,12 +67,12 @@ class SafePortalTransforms(PortalTransformsSection):
                     msg = "Converted: %s->%i" % (conversion,len(str(data)))
                     logger.log(logging.DEBUG, msg)
                     if self.destination:
-                        item[self.destination] = str(data)
-                        del item[key]
+                        newitem[self.destination] = str(data)
+                        del newitem[key]
                     else:
-                        item[key] = str(data)
+                        newitem[key] = str(data)
                     if self.from_field:
-                        item[self.from_field] = self.target
+                        newitem[self.from_field] = self.target
                     if hasattr(data,'getSubObjects'):
                         
                         
@@ -82,23 +83,25 @@ class SafePortalTransforms(PortalTransformsSection):
 
                         #because the names of subobjects aren't unique we have to 
                         #move it to a folder
-                        yield dict(_type='Folder',_path=item['_path'],
+                        yield dict(_type='Folder',
+                                   _path=item['_path'],
+                                   _site_url=item.get('_site_url'),
                                    _default_page=doc_id)
                         
-                        item['_origin'] = item.get('_origin',item['_path'])
-                        item['_path'] = item['_path']+'/'+doc_id
+                        #newitem['_origin'] = item.get('_origin',item['_path'])
+                        newitem['_path'] = item['_path']+'/'+doc_id
 
                         for name,data in data.getSubObjects().items():
                             #TODO: maybe shouldn't hard code this
                             yield {'_type':           'Image',
-                                   '_origin':         '/'.join(origin+[name]),
-                                   '_path':           '/'.join(tmp+[doc_id+'-'+name]),
+                                   #'_origin':         '/'.join(origin+[name]),
+                                   '_path':           '/'.join(tmp+[name]),
                                    '_site_url':       item.get('_site_url'),
-                                   '_backlinks':      [(item['_site_url']+item['_path'],'')],
+                                   '_backlinks':      [(item['_site_url']+newitem['_path'],'')],
                                    'image':           data,
                                    'image.filename':  name}
-                                                
-            yield item
+
+            yield newitem
 
 
 

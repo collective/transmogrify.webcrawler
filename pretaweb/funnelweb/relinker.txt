@@ -78,3 +78,48 @@ It is designed to cope with any combination of quoting of urls
  '_path': 'one-two-is-strange2',
  '_site_url': 'http://test.com/',
  'text': '<html>\n  <a href="one-twos-strange1">Level 2</a>\n</html>\n'}
+ 
+ It will deal with moving many parts at the same time
+ 
+>>> config = """
+... [transmogrifier]
+... pipeline =
+...     source
+...     moves
+...     relinker
+...     treeserializer
+...     printer
+...     
+... [source]
+... blueprint = pretaweb.funnelweb.test.htmlbacklinksource
+... a/img=blah
+... a/content1=<a href="img">
+...
+... [moves]
+... blueprint = pretaweb.funnelweb.pathmover
+... moves = 
+...    a	b
+...
+... [relinker]
+... blueprint = pretaweb.funnelweb.relinker
+...
+... [treeserializer]
+... blueprint = pretaweb.funnelweb.treeserializer
+...
+... [printer]
+... blueprint = collective.transmogrifier.sections.tests.pprinter
+... """ 
+>>> registerConfig(u'test3', config)
+>>> transmogrifier(u'test3')
+{'_type': 'Folder', '_site_url': 'http://test.com/', '_path': 'b'}
+{'_mimetype': 'text/html',
+ '_path': 'b/content1',
+ '_site_url': 'http://test.com/',
+ 'text': '<html>\n  <a href="img"/>\n</html>\n'}
+{'_backlinks': [('http://test.com//b/content1', '')],
+ '_mimetype': 'text/html',
+ '_path': 'b/img',
+ '_site_url': 'http://test.com/',
+ 'text': '<html>blah</html>\n'}
+ 
+ 
