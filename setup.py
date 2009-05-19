@@ -25,7 +25,7 @@ setup(name='pretaweb.funnelweb',
       install_requires=[
           'setuptools',
           # -*- Extra requirements: -*-
-          'lxml==2.1.1',
+          'lxml',
           'BeautifulSoup',
           'collective.transmogrifier',
           'plone.app.transmogrifier',
