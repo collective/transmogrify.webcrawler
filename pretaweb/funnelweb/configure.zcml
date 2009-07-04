@@ -1,21 +1,27 @@
 <configure
     xmlns="http://namespaces.zope.org/zope"
-    i18n_domain="pretaweb.funnelweb">
+    i18n_domain="pretaweb.funnelweb"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    >
 
     <include package=".browser"/>
 
 	  <include package="collective.transmogrifier" file="meta.zcml"/>
 	  <include package="collective.transmogrifier"/>
 	  <include package="plone.app.transmogrifier"/>
-	    
+
+
     <utility component=".webcrawler.WebCrawler"
              name="pretaweb.funnelweb.webcrawler" />
     <utility component=".treeserializer.TreeSerializer"
              name="pretaweb.funnelweb.treeserializer" />
     <utility component=".typerecognitor.TypeRecognitor"
              name="pretaweb.funnelweb.typerecognitor" />
+
     <utility component=".templatefinder.TemplateFinder"
              name="pretaweb.funnelweb.templatefinder" />
+
     <utility component=".relinker.Relinker"
              name="pretaweb.funnelweb.relinker" />
     <utility component=".safeportaltransforms.SafePortalTransforms"
@@ -40,5 +46,13 @@
 		     name="pretaweb.funnelweb.debugsection" />
 
     <include package=".example"/>
+
+    <genericsetup:registerProfile
+        name="default"
+        title="Website Importer"
+        directory="profiles/default"
+        description=""
+        provides="Products.GenericSetup.interfaces.EXTENSION" />
+
 
 </configure>
