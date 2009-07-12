@@ -6,10 +6,26 @@
     i18n_domain="pretaweb.obrienimport">
 
 
+    <include package="plone.app.z3cform" />
+
+      <browser:resourceDirectory
+        name="pretaweb.funnelweb"
+        directory="static"
+        />
+
+
+
     <browser:page
         for="*"
-        name="import"
-        class=".importers.Import"
+        name="funnelwebimport"
+        class=".importers.FunnelwebView"
+        permission="zope2.View"
+        />
+    <browser:page
+        for="*"
+        name="funnelwebProgress"
+        attribute="funnelwebProgress"
+        class=".importers.ImportProgress"
         permission="zope2.View"
         />
 
@@ -21,7 +37,7 @@
     <transmogrifier:registerConfig
         name="pretaweb.funnelweb.transmogrifier"
         title="FunnelWeb Importer"
-        description="Import External Site into Plone"
+        description="Import Website into Plone"
         configuration="funnelweb.cfg" />
 
 </configure>

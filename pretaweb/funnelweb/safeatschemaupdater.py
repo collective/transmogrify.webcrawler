@@ -6,6 +6,8 @@ from collective.transmogrifier.utils import Matcher
 from collective.transmogrifier.utils import defaultKeys
 import logging
 logger = logging.getLogger('Plone')
+from interfaces import ISectionFeedback
+
 
 from Products.Archetypes.interfaces import IBaseObject
 #from Products.Archetypes.event import ObjectInitializedEvent
@@ -19,36 +21,39 @@ from Products.Archetypes.interfaces import IBaseObject
 class SafeATSchemaUpdaterSection(object):
     classProvides(ISectionBlueprint)
     implements(ISection)
-    
+
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
         self.context = transmogrifier.context
-        
+
         if 'path-key' in options:
             pathkeys = options['path-key'].splitlines()
         else:
             pathkeys = defaultKeys(options['blueprint'], name, 'path')
         self.pathkey = Matcher(*pathkeys)
-    
+        self.feedback = ISectionFeedback(transmogrifier)
+        self.secname = name
+
+
     def __iter__(self):
         for item in self.previous:
-            
+
             pathkey = self.pathkey(*item.keys())[0]
-            
+
             if not pathkey:         # not enough info
                 yield item; continue
-            
+
             path = item[pathkey]
-            
+
             obj = self.context.unrestrictedTraverse(path.lstrip('/'), None)
             if obj is None:         # path doesn't exist
                 yield item; continue
-            
+
             if IBaseObject.providedBy(obj):
                 changed = False
                 is_new_object = obj.checkCreationFlag()
                 errors = []
-                
+
                 # support field arguments via 'fieldname.argument' syntax
                 # result is dict with tuple (value, fieldarguments)
                 # stored in fields variable
@@ -62,7 +67,7 @@ class SafeATSchemaUpdaterSection(object):
                         fields[parts[0]][0] = value
                     else:
                         fields[parts[0]][1][parts[1]] = value
-                
+
                 for key, parts in fields.items():
                     value, arguments = parts
 
@@ -90,12 +95,16 @@ class SafeATSchemaUpdaterSection(object):
                         logger.log(logging.ERROR, msg, exc_info=True)
                         errors.append(str(e))
                         continue
-                    
+
 
                 obj.unmarkCreationFlag()
                 if errors:
                     item['_safeatschemaupdater:error'] = errors
-                
+                    self.feedback.ignored(self.secname,msg)
+                else:
+                    self.feedback.success(self.secname,msg)
+
+
                 if is_new_object:
                     #event.notify(ObjectInitializedEvent(obj))
                     obj.at_post_create_script()
@@ -103,7 +112,7 @@ class SafeATSchemaUpdaterSection(object):
                     #event.notify(ObjectEditedEvent(obj))
                     obj.at_post_edit_script()
 
-            
+
             yield item
 
 

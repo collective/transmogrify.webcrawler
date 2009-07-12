@@ -29,9 +29,14 @@ setup(name='pretaweb.funnelweb',
           'BeautifulSoup',
           'collective.transmogrifier',
           'plone.app.transmogrifier',
-          'plone.i18n'
+          'plone.i18n',
+          'plone.app.z3cform',
+          'plone.z3cform',
+          'zc.testbrowser',
+          'lovely.remotetask',
           ],
       entry_points="""
-      # -*- Entry points: -*-
-      """,
-      )
+            [z3c.autoinclude.plugin]
+            target = plone
+            """,
+            )

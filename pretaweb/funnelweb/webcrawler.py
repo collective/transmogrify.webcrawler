@@ -20,6 +20,7 @@ import urlparse
 import logging
 from HTMLParser import HTMLParseError
 logger = logging.getLogger('Plone')
+from interfaces import ISectionFeedback
 
 VERBOSE = 0                             # Verbosity level (0-3)
 MAXPAGE = 0                        # Ignore files bigger than this
@@ -35,6 +36,7 @@ class WebCrawler(object):
 
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
+        self.feedback = ISectionFeedback(transmogrifier)
         self.open_url = MyURLopener().open
         self.options = options
         self.ignore_re = [re.compile(pat.strip()) for pat in options.get("ignore",'').split('\n') if pat]
@@ -140,6 +142,7 @@ class WebCrawler(object):
             checker.addroot(root, add_to_do = 0)
 
 
+        import pdb; pdb.set_trace()
         while checker.todo:
             urls = checker.todo.keys()
             urls.sort()
@@ -150,6 +153,7 @@ class WebCrawler(object):
                     print >> stderr, "Ignoring: "+ str(url)
                     msg = "webcrawler: Ignoring: %s" %str(url)
                     logger.log(logging.DEBUG, msg)
+                    self.feedback.ignored('webcrawler',msg)
                     yield dict(_bad_url = url)
                 else:
                     print >> stderr, "Crawling: "+ str(url)
@@ -174,11 +178,13 @@ class WebCrawler(object):
                                        _content_info = info,)
                         if origin != url:
                             item['_origin'] = origin
+                        self.feedback.success('webcrawler',msg)
                         yield item
                     else:
                         msg = "webcrawler: bad_url: %s" %str(url)
                         print >> stderr, msg
                         logger.log(logging.DEBUG, msg)
+                        self.feedback.ignored('webcrawler',msg)
                         yield dict(_bad_url = origin)
 
     def ignore(self, url):

@@ -5,11 +5,17 @@
     xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
     >
 
-    <include package=".browser"/>
 
 	  <include package="collective.transmogrifier" file="meta.zcml"/>
 	  <include package="collective.transmogrifier"/>
 	  <include package="plone.app.transmogrifier"/>
+	  <include package="lovely.remotetask"/>
+
+<adapter
+    for="collective.transmogrifier.interfaces.ITransmogrifier"
+    provides=".interfaces.ISectionFeedback"
+    factory=".sectionfeedback.SectionFeedback"
+    />
 
 
     <utility component=".webcrawler.WebCrawler"
@@ -53,6 +59,8 @@
         directory="profiles/default"
         description=""
         provides="Products.GenericSetup.interfaces.EXTENSION" />
+   <include package=".browser"/>
+    <subscriber handler=".setuphandlers.install_service" />
 
 
 </configure>
