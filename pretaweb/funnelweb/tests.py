@@ -295,9 +295,12 @@ class TestCase(ptc.FunctionalTestCase):
 
 
 def test_suite():
+    flags = optionflags = doctest.ELLIPSIS | doctest.REPORT_ONLY_FIRST_FAILURE | \
+                        doctest.NORMALIZE_WHITESPACE | doctest.REPORT_UDIFF
+
     return unittest.TestSuite((
         doctest.DocFileSuite('webcrawler.txt', setUp=setUp, tearDown=tearDown),
-        doctest.DocFileSuite('treeserializer.txt', setUp=setUp, tearDown=tearDown),
+        doctest.DocFileSuite('treeserializer.txt', setUp=setUp, tearDown=tearDown, optionflags=flags),
         doctest.DocFileSuite('typerecognitor.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('templatefinder.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('relinker.txt', setUp=setUp, tearDown=tearDown),
@@ -321,8 +324,7 @@ def test_suite():
              package='pretaweb.funnelweb',
              test_class=TestCase,
 #            tearDown=zc.buildout.testing.buildoutTearDown,
-             optionflags = doctest.ELLIPSIS | doctest.REPORT_ONLY_FIRST_FAILURE |
-                        doctest.NORMALIZE_WHITESPACE | doctest.REPORT_UDIFF,
+             optionflags = flags,
             #globs=globs,
 #            checker=renormalizing.RENormalizing([
 #               zc.buildout.testing.normalize_path,
