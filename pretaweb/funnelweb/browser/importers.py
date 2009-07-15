@@ -64,8 +64,15 @@ javascript:"""
         default     = u"""\
 application/x-javascript
 text/css
+text/xml
 application/x-java-byte-code\
 """
+        )
+
+    crawler_cache = schema.Bool(
+        title       = u'Cache Crawled Pages',
+        required    = False,
+        default     = True,
         )
 
     title_xpath = schema.TextLine(
@@ -146,7 +153,7 @@ application/x-java-byte-code\
 class WebcrawlerGroup(group.Group):
     label = u'Webcrawler'
     fields = field.Fields(IFunnelwebForm).select(
-        'base_url', 'ignore_urls', 'ignore_minetypes')
+        'base_url', 'ignore_urls', 'ignore_minetypes', 'crawler_cache')
     description = """Collects the web pages from the external site."""
 
 class TemplateGroup(group.Group):
@@ -218,8 +225,8 @@ class FunnelwebForm(group.GroupForm, Form):
 
     def __init__(self, context, request):
         super(FunnelwebForm, self).__init__(context, request)
-        sm = context.getSiteManager()
-        self.service = sm.getUtility(lovely.remotetask.interfaces.ITaskService, name="FunnelwebService")
+#        sm = context.getSiteManager()
+#        self.service = sm.getUtility(lovely.remotetask.interfaces.ITaskService, name="FunnelwebService")
         self.jobid = self.context.REQUEST.SESSION.get('jobid')
 
 
@@ -256,6 +263,8 @@ class FunnelwebForm(group.GroupForm, Form):
             overrides['todrop'] = dict(
                 condition = "python:item.get('_mimetype') not in %s and item.get('_path','').split('.')[-1] not in ['class']"%m
                 )
+        if not data['crawler_cache']:
+            overrides.setdefault('webcrawler',{})['cache'] = data['crawler_cache']
         if not data['index_analyser']:
             overrides['isindex'] = None
         if data['convert_mimetypes']:
@@ -319,6 +328,7 @@ class ImportProgress(KSSView):
 
     @kssaction
     def funnelwebProgress(self):
+        return
         sm = self.context.getSiteManager()
         service = sm.getUtility(lovely.remotetask.interfaces.ITaskService, name="FunnelwebService")
 
