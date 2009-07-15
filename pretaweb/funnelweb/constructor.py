@@ -52,7 +52,7 @@ class SafeConstructorSection(object):
             try:
                 obj = fti._constructInstance(context, id)
             except:
-              msg = "constructor %s:%s" % (type_,item.get('_site_url'))
+              msg = "Error in constructor for %s" % (item)
               logger.log(logging.ERROR, msg,exc_info=True)
               yield item; continue
                 #raise st r(id) + ' - ID PROBLEM'

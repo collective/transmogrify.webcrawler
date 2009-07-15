@@ -39,8 +39,8 @@ class TreeSerializer(object):
             item = items[item]
 
             parts = item['_path'].split('/')
-            if parts[0] == '':
-                parts = parts[1:]
+#            if parts[0] == '':
+#                parts = parts[1:]
 
             basepath = ''
             parentpath = ''
@@ -66,7 +66,7 @@ class TreeSerializer(object):
                                             _site_url = item['_site_url'],
                                             _defaultpage = newname)
                         if basepath != '':
-                            newparent['_type'] = 'Folder'
+                            newparent['_type'] = self.default_containers[0]
                         else:
                             #special case for portal object
                             pass
@@ -78,7 +78,7 @@ class TreeSerializer(object):
                     # parent which hasn't had a folder added yet
                     newparent = dict(
                         _path     = basepath,
-                        _type     = 'Folder',
+                        _type     = self.default_containers[0],
                         _site_url = item['_site_url'])
                     items[item['_site_url']+basepath] = newparent
                     msg = "treeserialize: adding folder %s" %(basepath)
@@ -88,11 +88,10 @@ class TreeSerializer(object):
                     basepath += '/'
 
             #case item is a default page
-            part = parts[-1]
-            if parent and parent.get('_defaultpage') is None and \
-                part in self.default_pages and \
+            if parts and parent and parent.get('_defaultpage') is None and \
+                parts[-1] in self.default_pages and \
                 parent.get('_type') in self.default_containers:
-                    parent['_defaultpage'] = part
+                    parent['_defaultpage'] = parts[-1]
 
 
 

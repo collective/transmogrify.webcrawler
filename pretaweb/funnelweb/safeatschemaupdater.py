@@ -100,9 +100,9 @@ class SafeATSchemaUpdaterSection(object):
                 obj.unmarkCreationFlag()
                 if errors:
                     item['_safeatschemaupdater:error'] = errors
-                    self.feedback.ignored(self.secname,msg)
+                    self.feedback.ignored(self.secname,'')
                 else:
-                    self.feedback.success(self.secname,msg)
+                    self.feedback.success(self.secname,'')
 
 
                 if is_new_object:
