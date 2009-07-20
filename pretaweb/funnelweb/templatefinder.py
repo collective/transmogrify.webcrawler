@@ -6,14 +6,44 @@ from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 from collective.transmogrifier.utils import Matcher
 
-from webstemmer.analyze import PageFeeder, LayoutAnalyzer
+from webstemmer.analyze import PageFeeder, LayoutAnalyzer, LayoutCluster
+from webstemmer.extract import TextExtractor, LayoutPatternSet, LayoutPattern
+from webstemmer.layoutils import sigchars, get_textblocks, retrieve_blocks, WEBSTEMMER_VERSION, KEY_ATTRS
 from webstemmer.zipdb import ACLDB
+from webstemmer.htmldom import parse
 from lxml import etree
 import lxml.html
 import lxml.html.soupparser
 
 from StringIO import StringIO
 from sys import stderr
+
+#patch LayoutCluster to make it LayoutPattern
+def match_blocks(self, blocks0, strict=True):
+    diffs = [ d for (d,m,p) in self.pattern ]
+    mains = [ m for (d,m,p) in self.pattern ]
+    paths = [ p for (d,m,p) in self.pattern ]
+    layout = []
+    for (diffscore,mainscore,blocks1,path) in zip(diffs, mains, retrieve_blocks(paths, blocks0), paths):
+      if strict and not blocks1:
+        return None
+      layout.append(LayoutSection(len(layout), diffscore, mainscore, blocks1, path))
+    return layout
+LayoutCluster.match_blocks = match_blocks
+LayoutCluster.main_sectno = -1
+
+class LayoutSection:
+
+  def __init__(self, id, diffscore, mainscore, blocks,path):
+    self.id = id
+    self.diffscore = diffscore
+    self.mainscore = mainscore
+    self.weight = sum( b.weight for b in blocks )
+    self.blocks = blocks
+    self.path = path
+    return
+
+
 
 
 """
@@ -56,8 +86,8 @@ attr = re.compile(r':(?P<attr>[^/:]*)=(?P<val>[^/:]*)')
 def toXPath(pat):
     #td:valign=top/p:class=msonormal/span
     pat = attr.sub(r'[re:test(@\g<attr>,"^\g<val>$","i")]', pat)
-    pat = pat.replace('/','//')
-    return "//"+pat
+    pat = pat.replace('/', '//')
+    return "//" + pat
 
 
 
@@ -65,131 +95,218 @@ class TemplateFinder(object):
     classProvides(ISectionBlueprint)
     implements(ISection)
 
+    """ Template finder will associate groups take groups of xpaths and try to extract
+    field information using them. If any xpath fails for a given group then none of the
+    extracted text in that group is used and the next xpath is tried. The last group to
+    be tried is an automatic group made up of xpaths analysed by clustering the pages
+    Format for options is
+
+    1:content = text //div
+    2:content = html //div
+    1:title = text //h1
+    2:title = html //h2
+    """
+
 
 
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
-        self.auto=options.get('auto',True)
+        self.auto = options.get('auto', True)
         self.groups = {}
-        for key,value in options.items():
-            try:
-                group,field = key.split('_',1)
-            except:
+        for key, value in options.items():
+            if key in ['blueprint','auto']:
                 continue
-            group = self.groups.setdefault(group,{})
-            group[field] = value.strip().split('\n')
+            try:
+                group, field = key.split(':', 1)
+            except:
+                group, field = '1',key
+            xps = []
+            for line in value.strip().split('\n'):
+                res = re.findall("^(text |html |)(.*)$", line)
+                if not res:
+                    continue
+                else:
+                    format,xp = res[0]
+                format.strip()
+                format = format == '' and 'html' or format
+                xps.append((format,xp))
+            group = self.groups.setdefault(group, {})
+            group[field] = xps
 
 
     def __iter__(self):
 
-        if self.auto:
-            items = self.analyse(self.previous)
-        else:
-            items = self.previous
 
-        for item in items:
-            path,content = self.ishtml(item)
-            if not path:
+        notextracted = []
+        for item in self.previous:
+            content = self.getHtml(item)
+            if content is None:
                 yield item
                 continue
-            tree = lxml.html.soupparser.fromstring(item['text'])
-            auto = self.groups.get(path,{})
-            groups = self.groups.values() + [auto]
-            for group in groups:
-                if group.get('path',path) != path:
-                    continue
-                title,text = self.extract(group.items(),tree)
-                if title or text:
-                    if text:
-                        item['text'] = '<div>%s</div>' % text
-                    if title:
-                        item['title'] = ' '.join(title.split())
-                    item['_template'] = True #TODO: make it the real template
+            path = item['_site_url'] + item['_path']
+            # try each group in turn to see if they work
+            gotit = False
+            for groupname in sorted(self.groups.keys()):
+                group = self.groups[groupname]
+                if group.get('path', path) == path and self.extract(group, tree, item):
+                    gotit = True
                     break
-            yield item
+            if gotit:
+                yield item
+            else:
+                notextracted.append(item)
 
 
-    def extract(self, pats, tree):
-        res = ''
-        title = ''
-        for field,xps in pats:
-            for xp in xps:
-                result = tree.xpath(xp,namespaces=ns)
-                if not result:
-                    return '',''
-                for node in result:
-                    if field == 'title':
-                        title += etree.tostring(node,method='text',encoding='utf8')+' '
-                    else:
-                        res += etree.tostring(node,method='html')
-                if result:
-                    #TODO create a template without content
-                    pass
-        return title,res
+        if self.auto:
+            for item in self.analyse(notextracted):
+                yield item
+        else:
+            for item in notextracted:
+                yield item
 
-    def ishtml(self, item):
-              path = item.get('_path',None)
-              content = item.get('_content',None) or item.get('text',None)
-              mimetype = item.get('_mimetype',None)
-              if  path and content and mimetype in ['text/xhtml', 'text/html']:
-                  return path,content
+
+    def extract(self, pats, tree, item):
+        unique = {}
+        for field, xps in pats.items():
+            if field == 'path':
+                continue
+            for format, xp in xps:
+                print xp
+                nodes = tree.xpath(xp, namespaces=ns)
+                if not nodes:
+                    return False
+                nodes = [(format, n) for n in nodes]
+                unique[field] = nonoverlap(unique.setdefault(field,[]), nodes)
+        extracted = {}
+        for field, nodes in unique.items():
+            for format, node in nodes:
+                if format == 'text':
+                    extracted.setdefault(field,'')
+                    extracted[field] += etree.tostring(node, method='text', encoding='utf8') + ' '
+                else:
+                    extracted.setdefault(field,'')
+                    extracted[field] += '<div>%s</div>' % etree.tostring(node, method='html')
+        item.update(extracted)
+        item['_template'] = None
+        return True
+
+    def getHtml(self, item):
+              path = item.get('_path', None)
+              content = item.get('_content', None) or item.get('text', None)
+              mimetype = item.get('_mimetype', None)
+              if  path is not None and \
+                    content is not None and \
+                    mimetype in ['text/xhtml', 'text/html']:
+                  return content
               else:
-                  return None,None
+                  return None
 
 
     def analyse(self, previous):
-
-          (debug, cluster_threshold, title_threshold, score_threshold, default_charset) = (0, 0.97, 0.6, 100, 'utf-8')
-          mangle_pat = None
-          linkinfo = 'linkinfo'
-          #
-          analyzer = LayoutAnalyzer(debug=debug)
-          if mangle_pat:
+        (debug, cluster_threshold, title_threshold, score_threshold, default_charset) = (0, 0.97, 0.6, 100, 'utf-8')
+        mangle_pat = None
+        linkinfo = 'linkinfo'
+        #
+        analyzer = LayoutAnalyzer(debug=debug)
+        if mangle_pat:
             analyzer.set_encoder(mangle_pat)
 
-          feeder = PageFeeder(analyzer, linkinfo=linkinfo, acldb=None,
+        feeder = PageFeeder(analyzer, linkinfo=linkinfo, acldb=None,
                                 default_charset=default_charset, debug=debug)
 
-          items = []
-          for item in previous:
-              path,content = self.ishtml(item)
-              if path:
-                  feeder.feed_page(path, content)
-                  items.append(item)
+        items = []
+        for item in previous:
+            content = self.getHtml(item)
+            if content is not None:
+                feeder.feed_page(item['_site_url'] + item['_path'], content)
+                items.append(item)
+            else:
+                yield item
+            feeder.close()
+
+        self.clusters = {}
+        clusters = analyzer.analyze(cluster_threshold, title_threshold)
+        patternset = LayoutPatternSet()
+        patternset.pats = [c for c in clusters if c.pattern and score_threshold <= c.score]
+
+        default_charset='iso-8859-1'
+        pat_threshold=0.8
+        self.debug = 0
+        strict=True
+        for item in items:
+            content = self.getHtml(item)
+            name = item['_site_url'] + item['_path']
+            if name == 'linkinfo': continue
+            tree = parse(content, charset=default_charset)
+            (pat1, layout) = patternset.identify_layout(tree, pat_threshold, strict=strict)
+            etree = lxml.html.fromstring(content)
+            item.update( self.dump_text(name, pat1, layout, etree) )
+            yield item
+
+
+    def dump_text(self, name, pat1, layout, tree):
+        codec_out='utf-8'
+        diffscore_threshold=0.5
+        main_threshold=50
+
+        item = {}
+
+        enc = lambda x: x.encode(codec_out, 'replace')
+        if not layout:
+          print '!UNMATCHED: %s' % name
+        else:
+          print '!MATCHED: %s' % name
+          print 'PATTERN: %s' % pat1.name
+          if self.debug:
+            for sect in layout:
+              print >>stderr, 'DEBUG: SECT-%d: diffscore=%.2f' % (sect.id, sect.diffscore)
+              for b in sect.blocks:
+                print >>stderr, '   %s' % enc(b.orig_text)
+
+
+          for sectno in xrange(len(layout)):
+            sect = layout[sectno]
+            field = None
+            if sectno == pat1.title_sectno:
+              field = 'title'
+              for b in sect.blocks:
+                print 'TITLE: %s' % enc(b.orig_text)
+
+            elif diffscore_threshold <= sect.diffscore:
+              if pat1.title_sectno < sectno and main_threshold <= sect.mainscore:
+                field = 'text'
+                for b in sect.blocks:
+                  print 'MAIN-%d: %s' % (sect.id, enc(b.orig_text))
               else:
-                  yield item
-          feeder.close()
+                field = 'text'
+                for b in sect.blocks:
+                  print 'SUB-%d: %s' % (sect.id, enc(b.orig_text))
 
-          cluster = {}
-          for c in analyzer.analyze(cluster_threshold, title_threshold):
-            if c.pattern and score_threshold <= c.score:
-                for p in c.pages:
-                    cluster[p.name] = c
-
-          for item in items:
-              path = item.get('_path')
-              c = cluster.get(path)
-              if path and c:
-                  #parser = etree.HTMLParser(recover=True)
-                  #tree = etree.parse(StringIO(item['text']), parser)
-                  tree = lxml.html.soupparser.fromstring(item['text'])
-                  failed = False
-                  group = {'text':[],'title':[],'path':path}
-                  index = 0
-                  for diffscore, diffscorewight, pat in c.pattern:
-                      #TODO: need to make this section work
-                      if not pat:
-                          continue
-                      xp = toXPath(pat)
-                      print >> stderr, path,pat,xp,c.title_sectno==index
-                      if c.title_sectno == index:
-                          group['title'].append(xp)
-                      else:
-                          group['text'].append(xp)
-                      index = index +1
-                  self.groups[path] = group
-              yield item
+              if field:
+                  for node in tree.xpath(toXPath(sect.path), namespaces=ns):
+                      item.setdefault(field,'')
+                      method = field == 'title' and 'text' or 'html'
+                      item[field] += etree.tostring(node, method=method, encoding='utf8') + ' '
 
 
+        print
+        return item
+
+
+def nonoverlap(unique, new):
+    """ return the elements which aren't descentants of each other """
+    for format,e1 in new:
+        #if e1 is an ascendant then replace
+        add = True
+        for f,e in unique:
+            if e1 in [n for n in e.iterancestors()]:
+                unique.remove((f,e))
+        #if e1 is an descendant don't use it
+            if e in [n for n in e1.iterancestors()]:
+                add = False
+                break
+        if add:
+            unique.append((format,e1))
+    return unique
 
 
