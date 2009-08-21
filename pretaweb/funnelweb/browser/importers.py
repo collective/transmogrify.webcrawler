@@ -75,6 +75,12 @@ application/x-java-byte-code\
         default     = True,
         )
 
+    result_crawler = schema.Text(
+        title       = u'Log of last crawl',
+        required    = False,
+        )
+
+
     title_xpath = schema.TextLine(
         title       = u'Title XPath',
         required    = False,
@@ -153,7 +159,7 @@ application/x-java-byte-code\
 class WebcrawlerGroup(group.Group):
     label = u'Webcrawler'
     fields = field.Fields(IFunnelwebForm).select(
-        'base_url', 'ignore_urls', 'ignore_minetypes', 'crawler_cache')
+        'base_url', 'ignore_urls', 'ignore_minetypes', 'crawler_cache', 'result_crawler')
     description = """Collects the web pages from the external site."""
 
 class TemplateGroup(group.Group):
@@ -310,7 +316,9 @@ class FunnelwebForm(group.GroupForm, Form):
         wchit,wcignore = feedback.getTotals('webcrawler')
         updaterhit,updaterignore = feedback.getTotals('schemaupdater')
         msg = "Crawled %s pages and imported %s" % (wchit, updaterhit)
-        IStatusMessage(self.request).addStatusMessage(msg, type='info')
+        #IStatusMessage(self.request).addStatusMessage(msg, type='info')
+        data['result_crawwler'] = msg
+        self.successMessage = msg
 
         return True
 
