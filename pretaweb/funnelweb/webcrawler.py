@@ -18,6 +18,7 @@ import lxml.html.soupparser
 from lxml.html.clean import Cleaner
 import urlparse
 import logging
+from HTMLParser import HTMLParseError
 logger = logging.getLogger('Plone')
 
 VERBOSE = 0                             # Verbosity level (0-3)
@@ -31,13 +32,13 @@ NONAMES = 0         # Force name anchor checking
 class WebCrawler(object):
     classProvides(ISectionBlueprint)
     implements(ISection)
-    
+
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
         self.open_url = MyURLopener().open
         self.options = options
         self.ignore_re = [re.compile(pat.strip()) for pat in options.get("ignore",'').split('\n') if pat]
-        
+
 
         self.checkext  = options.get('checkext', CHECKEXT)
         self.verbose   = options.get('verbose', VERBOSE)
@@ -45,7 +46,7 @@ class WebCrawler(object):
         self.nonames   = options.get('nonames', NONAMES)
         self.site_url  = options.get('site_url', None)
         self.alias_bases  = [a for a in options.get('alias_bases', '').split() if a]
-        # make sure we end with a / 
+        # make sure we end with a /
         if self.site_url[-1] != '/':
             self.site_url=self.site_url+'/'
 
@@ -55,7 +56,7 @@ class WebCrawler(object):
 
         if not self.site_url:
             return
-        
+
         options = self.options
         infos = {}
         files = {}
@@ -68,10 +69,10 @@ class WebCrawler(object):
             def message(self, format, *args):
                 pass # stop printing out crap
 
-            
+
             def openhtml(self, url_pair):
                 oldurl, fragment = url_pair
-                                
+
                 f = self.openpage(url_pair)
                 if f:
                     url = f.geturl()
@@ -85,7 +86,7 @@ class WebCrawler(object):
                 else:
                     url = oldurl
                 return f, url
-                    
+
             def openpage(self, url_pair):
                 url, fragment = url_pair
                 old_pair = url_pair
@@ -102,7 +103,7 @@ class WebCrawler(object):
                         path = url[len(a):]
                         url = realbase+path
                         break
-                
+
                 try:
                     return self.urlopener.open(url)
                 except (OSError, IOError), msg:
@@ -114,14 +115,23 @@ class WebCrawler(object):
                     return None
 
         def pagefactory(text, url, verbose=VERBOSE, maxpage=MAXPAGE, checker=None):
-            return LXMLPage(text,url,verbose,maxpage,checker,options)
+            try:
+                page = LXMLPage(text,url,verbose,maxpage,checker,options)
+            except HTMLParseError, msg:
+                #msg = self.sanitize(msg)
+                ##elf.note(0, "Error parsing %s: %s",
+                #          self.format_url(url), msg)
+                # Dont actually mark the URL as bad - it exists, just
+                # we can't parse it!
+                page = None
+            return page
 
         webchecker.Page = pagefactory
-        
+
         checker = MyChecker()
-        checker.setflags(checkext   = self.checkext, 
+        checker.setflags(checkext   = self.checkext,
                          verbose    = self.verbose,
-                         maxpage    = self.maxpage, 
+                         maxpage    = self.maxpage,
                          nonames    = self.nonames)
 
         #must take off the '/' for the crawler to work
@@ -217,7 +227,7 @@ class MyURLopener(urllib.FancyURLopener):
             s.seek(0)
             return s
         return urllib.FancyURLopener.open_file(self, url)
-            
+
 webchecker.MyURLopener = MyURLopener
 
 
@@ -242,7 +252,7 @@ class LXMLPage:
             self.note(0, "Skip huge file %s (%.0f Kbytes)", self.url, (size*0.001))
             self.parser = None
             return
-        
+
         if options:
             text = self.reformat(text, url)
         self.checker.note(2, "  Parsing %s (%d bytes)", self.url, size)
@@ -260,7 +270,7 @@ class LXMLPage:
         #    return self.parser.names
         #else:
             return []
-        
+
     def html(self):
         if self.parser is None:
             return ''
@@ -300,7 +310,7 @@ class LXMLPage:
 
         return infos
 
-            
+
     def reformat(self, text, url):
             pattern = self.options.get('patterns','')
             replace = self.options.get('subs','')

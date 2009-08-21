@@ -3,7 +3,7 @@
 # textcrawler.py
 #
 #  Copyright (c) 2005-2006  Yusuke Shinyama <yusuke at cs dot nyu dot edu>
-#  
+#
 #  Permission is hereby granted, free of charge, to any person
 #  obtaining a copy of this software and associated documentation
 #  files (the "Software"), to deal in the Software without
@@ -12,10 +12,10 @@
 #  sell copies of the Software, and to permit persons to whom the
 #  Software is furnished to do so, subject to the following
 #  conditions:
-#  
+#
 #  The above copyright notice and this permission notice shall be
 #  included in all copies or substantial portions of the Software.
-#  
+#
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
 #  KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
 #  WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
@@ -48,7 +48,7 @@ try:
 except ImportError:
   from StringIO import StringIO
 
-from bsddb import hashopen as dbmopen
+#from bsddb import hashopen as dbmopen
 
 #from threading import Thread
 
@@ -65,9 +65,9 @@ class CrawlerFatalError(RuntimeError): pass
 ##  URLDB
 ##
 class URLDB:
-  
+
   def __init__(self, path, debug=0):
-    self.db = dbmopen(path, 'c')
+#    self.db = dbmopen(path, 'c')
     self.debug = debug
     if self.debug:
       print >>stderr, 'URLDB open: %r' % path
@@ -94,7 +94,7 @@ class SimpleCrawler:
     'Connection': 'keep-alive'
     }
   CONTENT_TYPE_PAT = re.compile(r'([^\s;]+)(.*charset=([^\s;]+))?', re.I)
-  
+
   def __init__(self, starturl, index_html='', maxlevel=1,
                cookie_file=None, acldb=None, urldb=None, default_charset=None,
                delay=0, timeout=300, debug=0):
@@ -133,7 +133,7 @@ class SimpleCrawler:
     if self.acldb and not self.acldb.allowed(url):
       return None
     return url
-  
+
   def inject_url(self, url):
     if (not self.curlevel) or (not url) or (url in self.crawled): return False
     if not self.robotstxt.can_fetch(self.USER_AGENT, url):
@@ -258,12 +258,12 @@ class SimpleCrawler:
       else:
         stderr.write('.'); stderr.flush()
     return
-  
-  
+
+
 ##  RefTextDB
 ##
 class RefTextDB:
-  
+
   def __init__(self, baseid):
     self.baseid = baseid
     self.dic = {}
@@ -285,7 +285,7 @@ class RefTextDB:
 ##  HTMLLinkFinder
 ##
 class HTMLLinkFinder(HTMLHandler):
-  
+
   def __init__(self, crawler, base_href, reftxtdb=None):
     self.crawler = crawler
     self.base_href = base_href
@@ -294,13 +294,13 @@ class HTMLLinkFinder(HTMLHandler):
     self.in_comment = False
     self.reftxtdb = reftxtdb
     return
-  
+
   def start_base(self, _, attrs):
     attrs = dict(attrs)
     if 'href' in attrs:
       self.base_href = urljoin(self.base_href, wash_url(attrs['href']))
     return
-    
+
   def start_a(self, _, attrs):
     attrs = dict(attrs)
     if 'href' in attrs:
@@ -319,22 +319,22 @@ class HTMLLinkFinder(HTMLHandler):
     self.anchor_href = None
     self.anchor_text = []
     return
-  
+
   start_area = start_a
   end_area = end_a
-  
+
   def start_comment(self, _, attrs):
     self.in_comment = True
     return
   def end_comment(self, _):
     self.in_comment = False
     return
-  
+
   def handle_data(self, data):
     if self.anchor_href and not self.in_comment:
       self.anchor_text.append(data)
     return
-  
+
   def start_unknown(self, tag, attrs):
     return
   def end_unknown(self, tag):
@@ -377,7 +377,7 @@ class TextCrawler(SimpleCrawler):
         if self.debug:
           print >>stderr, 'FEED: %r' % name
     return
-  
+
 
 # main
 def main():
@@ -433,7 +433,7 @@ def main():
   for starturl in args:
     try:
       TextCrawler(dumper, starturl, baseid, reftxtdb=reftxtdb,
-                  index_html=index_html, maxlevel=maxlevel, 
+                  index_html=index_html, maxlevel=maxlevel,
                   cookie_file=cookie_file, default_charset=default_charset,
                   acldb=acldb, urldb=urldb, delay=delay, timeout=timeout,
                   debug=debug).run()

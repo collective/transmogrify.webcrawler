@@ -78,15 +78,15 @@ class TemplateFinder(object):
                 continue
             group = self.groups.setdefault(group,{})
             group[field] = value.strip().split('\n')
-            
+
 
     def __iter__(self):
-        
+
         if self.auto:
             items = self.analyse(self.previous)
         else:
             items = self.previous
-                    
+
         for item in items:
             path,content = self.ishtml(item)
             if not path:
@@ -135,7 +135,7 @@ class TemplateFinder(object):
                   return path,content
               else:
                   return None,None
-        
+
 
     def analyse(self, previous):
 
@@ -149,7 +149,7 @@ class TemplateFinder(object):
 
           feeder = PageFeeder(analyzer, linkinfo=linkinfo, acldb=None,
                                 default_charset=default_charset, debug=debug)
-          
+
           items = []
           for item in previous:
               path,content = self.ishtml(item)
@@ -159,7 +159,7 @@ class TemplateFinder(object):
               else:
                   yield item
           feeder.close()
-          
+
           cluster = {}
           for c in analyzer.analyze(cluster_threshold, title_threshold):
             if c.pattern and score_threshold <= c.score:
@@ -189,7 +189,7 @@ class TemplateFinder(object):
                       index = index +1
                   self.groups[path] = group
               yield item
-                          
-       
- 
-    
+
+
+
+

@@ -3,7 +3,7 @@
 # analyze.py
 #
 #  Copyright (c) 2005-2006  Yusuke Shinyama <yusuke at cs dot nyu dot edu>
-#  
+#
 #  Permission is hereby granted, free of charge, to any person
 #  obtaining a copy of this software and associated documentation
 #  files (the "Software"), to deal in the Software without
@@ -12,10 +12,10 @@
 #  sell copies of the Software, and to permit persons to whom the
 #  Software is furnished to do so, subject to the following
 #  conditions:
-#  
+#
 #  The above copyright notice and this permission notice shall be
 #  included in all copies or substantial portions of the Software.
-#  
+#
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
 #  KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
 #  WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
@@ -44,7 +44,7 @@ stderr = sys.stderr
 ##
 ##  Scoring functions
 ##
-  
+
 def titlability0(s1, s2):
   # s1:title, s2:body
   m = [ [ (0,0) for _ in s2 ] for _ in s1 ]
@@ -77,7 +77,7 @@ def dice_coeff(s1, s2):
 
 def diff_score(s1, s2):
   return len(s1) + len(s2) - 2*sum( n for (a,b,n) in seqmatch(s1, s2) )
-    
+
 def find_lcs(s1, s2):
   r = []
   for (a,b,n) in seqmatch(s1, s2):
@@ -90,7 +90,7 @@ def gmax(seq, key=lambda x:x, default=object()):
     k1 = key(x)
     if m == default or k0 < k1: (m,k0) = (x,k1)
   return m
-  
+
 
 ##  LayoutSectionCluster
 ##
@@ -126,7 +126,7 @@ class LayoutSectionCluster:
 ##  find_clusters
 ##
 def find_clusters(para_blocks):
-  
+
   def uniq_path(blocks):
     r = []
     prev = None
@@ -135,7 +135,7 @@ def find_clusters(para_blocks):
         r.append(b.path)
       prev = b.path
     return r
-  
+
   def find_common(seqs):
     s0 = None
     for s1 in seqs:
@@ -147,12 +147,12 @@ def find_clusters(para_blocks):
 
   # obtain the common paths.
   common_paths = find_common([ uniq_path(blocks) for blocks in para_blocks ])
-  
+
   # clusters = [ ( doc1_blocks1, doc2_blocks1, ..., docm_blocks1 ),
   #                ...
   #              ( doc1_blocksn, doc2_blocksn, ..., docm_blocksn ) ]
   clusters = zip(*[ retrieve_blocks(common_paths, blocks) for blocks in para_blocks ])
-  
+
   # compare each cluster of text blocks.
   layout = []
   for blockgroups in clusters:
@@ -165,7 +165,7 @@ def find_clusters(para_blocks):
 ##  LayoutCluster
 ##
 class LayoutCluster:
-  
+
   def __init__(self, name, debug=0):
     self.name = name
     self.debug = debug
@@ -177,7 +177,7 @@ class LayoutCluster:
 
   def __repr__(self):
     return '<%s>' % self.name
-  
+
   def add(self, page):
     self.pages.append(page)
     return
@@ -273,14 +273,14 @@ class HTMLPage:
 
   def __repr__(self):
     return '<%s>' % self.name
-  
+
   def add_anchor_strs(self, anchor_strs):
     for s in anchor_strs:
       s = sigchars(s)
       if s:
         self.anchor_strs.append(s)
     return
-  
+
 class LayoutAnalyzer:
 
   def __init__(self, debug=0):
@@ -288,7 +288,7 @@ class LayoutAnalyzer:
     self.debug = debug
     self.encoder = None
     return
-  
+
   def set_encoder(self, mangle_pat):
     pat = re.compile(mangle_pat)
     def encode_element2(e):
@@ -296,12 +296,12 @@ class LayoutAnalyzer:
                                      for k in e.attrs.keys() if k in KEY_ATTRS ))
     self.encoder = encode_element2
     return
-  
+
   def add_tree(self, name, tree):
     page = HTMLPage(name, tree, encoder=self.encoder)
     self.pages[name] = page
     return len(self.pages)
-  
+
   def add_anchor_strs(self, name, anchor_strs):
     if name in self.pages:
       p = self.pages[name]
@@ -327,7 +327,7 @@ class LayoutAnalyzer:
       for c0 in clusters:
         for page2 in c0.pages:
           layout = find_clusters([ page1.blocks, page2.blocks ])
-          total_weight = sum( c.weight for c in layout )          
+          total_weight = sum( c.weight for c in layout )
           sim = total_weight / lowerbound(float(page1.weight + page2.weight), 1)
           if self.debug:
             print >>stderr, '    sim=%.3f (%d): %r' % (sim, total_weight, page2)
@@ -358,7 +358,7 @@ class LayoutAnalyzer:
 ##  PageFeeder
 ##
 class PageFeeder:
-  
+
   def __init__(self, analyzer, linkinfo='linkinfo', default_charset='utf-8',
                acldb=None, debug=0):
     self.analyzer = analyzer
