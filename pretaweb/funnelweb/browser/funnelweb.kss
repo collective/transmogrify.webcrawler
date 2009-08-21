@@ -1,6 +1,0 @@
-#funnelweb. a:click {
-
-	action-client:      toggleClass;
-	toggleClass-value:	funnelweb.hide;
-
-}

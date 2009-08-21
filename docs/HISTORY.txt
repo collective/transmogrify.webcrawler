@@ -10,5 +10,12 @@ pretaweb.funnelweb 0.1 - October 25, 2008
 
     - renamed package from pretaweb.blueprints to pretaweb.funnelweb.
       [djay]
-      
+
     - enhanced import view (djay)
+
+
+0.2
+
+16-7-09 djay Added caching of crawled sites
+
+10-7-09 djay Added UI using z3cform

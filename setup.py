@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import os
 
-version = '1.0'
+version = '0.2'
 
 setup(name='pretaweb.funnelweb',
       version=version,
@@ -29,9 +29,13 @@ setup(name='pretaweb.funnelweb',
           'BeautifulSoup',
           'collective.transmogrifier',
           'plone.app.transmogrifier',
-          'plone.i18n'
+          'plone.i18n',
+          'plone.app.z3cform',
+          'plone.z3cform',
+          'zc.testbrowser',
           ],
       entry_points="""
-      # -*- Entry points: -*-
-      """,
-      )
+            [z3c.autoinclude.plugin]
+            target = plone
+            """,
+            )

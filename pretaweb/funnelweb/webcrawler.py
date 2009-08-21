@@ -12,14 +12,12 @@ import re
 from htmlentitydefs import entitydefs
 import urllib,os
 from sys import stderr
-from lxml import etree
-import lxml.html
-import lxml.html.soupparser
-from lxml.html.clean import Cleaner
 import urlparse
 import logging
-from HTMLParser import HTMLParseError
 logger = logging.getLogger('Plone')
+from interfaces import ISectionFeedback
+from zope.annotation.interfaces import IAnnotations
+
 
 VERBOSE = 0                             # Verbosity level (0-3)
 MAXPAGE = 0                        # Ignore files bigger than this
@@ -35,6 +33,7 @@ class WebCrawler(object):
 
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
+        self.feedback = ISectionFeedback(transmogrifier)
         self.open_url = MyURLopener().open
         self.options = options
         self.ignore_re = [re.compile(pat.strip()) for pat in options.get("ignore",'').split('\n') if pat]
@@ -45,6 +44,8 @@ class WebCrawler(object):
         self.maxpage   = options.get('maxpage', MAXPAGE)
         self.nonames   = options.get('nonames', NONAMES)
         self.site_url  = options.get('site_url', None)
+        self.cache = options.get('cache', True)
+        self.context = transmogrifier.context
         self.alias_bases  = [a for a in options.get('alias_bases', '').split() if a]
         # make sure we end with a /
         if self.site_url[-1] != '/':
@@ -58,61 +59,6 @@ class WebCrawler(object):
             return
 
         options = self.options
-        infos = {}
-        files = {}
-        redirected = {}
-        alias_bases = self.alias_bases
-        site_url = self.site_url
-
-        class MyChecker(Checker):
-            link_names = {} #store link->[name]
-            def message(self, format, *args):
-                pass # stop printing out crap
-
-
-            def openhtml(self, url_pair):
-                oldurl, fragment = url_pair
-
-                f = self.openpage(url_pair)
-                if f:
-                    url = f.geturl()
-                    if url != oldurl:
-                        redirected[oldurl] = url
-                    infos[url] = info = f.info()
-                    if not self.checkforhtml(info, url):
-                        files[url] = f.read()
-                        self.safeclose(f)
-                        f = None
-                else:
-                    url = oldurl
-                return f, url
-
-            def openpage(self, url_pair):
-                url, fragment = url_pair
-                old_pair = url_pair
-                # actually open alias instead
-                realbase = site_url
-                if site_url.endswith('/'):
-                    realbase=site_url[:-1]
-
-                for a in [realbase]: #+alias_bases:
-                    if a.endswith('/'):
-                        a=a[:-1]
-                    if a and url.startswith(a):
-                        base = url[:len(a)]
-                        path = url[len(a):]
-                        url = realbase+path
-                        break
-
-                try:
-                    return self.urlopener.open(url)
-                except (OSError, IOError), msg:
-                    msg = self.sanitize(msg)
-                    self.note(0, "Error %s", msg)
-                    if self.verbose > 0:
-                        self.show(" HREF ", url, "  from", self.todo[url_pair])
-                    self.setbad(old_pair, msg)
-                    return None
 
         def pagefactory(text, url, verbose=VERBOSE, maxpage=MAXPAGE, checker=None):
             try:
@@ -128,43 +74,49 @@ class WebCrawler(object):
 
         webchecker.Page = pagefactory
 
-        checker = MyChecker()
-        checker.setflags(checkext   = self.checkext,
+        if not self.restoreCache():
+            self.checker = MyChecker()
+        self.checker.alias_bases = self.alias_bases
+        self.checker.site_url = self.site_url
+
+        self.checker.setflags(checkext   = self.checkext,
                          verbose    = self.verbose,
                          maxpage    = self.maxpage,
                          nonames    = self.nonames)
 
+
         #must take off the '/' for the crawler to work
-        checker.addroot(self.site_url[:-1])
+        self.checker.addroot(self.site_url[:-1])
         for root in self.alias_bases:
-            checker.addroot(root, add_to_do = 0)
+            self.checker.addroot(root, add_to_do = 0)
 
 
-        while checker.todo:
-            urls = checker.todo.keys()
+        while self.checker.todo:
+            urls = self.checker.todo.keys()
             urls.sort()
             del urls[1:]
             for url,part in urls:
                 if self.ignore(url):
-                    checker.markdone((url,part))
+                    self.checker.markdone((url,part))
                     print >> stderr, "Ignoring: "+ str(url)
                     msg = "webcrawler: Ignoring: %s" %str(url)
                     logger.log(logging.DEBUG, msg)
+                    self.feedback.ignored('webcrawler',msg)
                     yield dict(_bad_url = url)
                 else:
                     print >> stderr, "Crawling: "+ str(url)
                     msg = "webcrawler: Crawling: %s" %str(url)
                     logger.log(logging.DEBUG, msg)
                     base = self.site_url
-                    checker.dopage((url,part))
-                    page = checker.name_table.get(url) #have to usse unredirected
+                    self.checker.dopage((url,part))
+                    page = self.checker.name_table.get(url) #have to usse unredirected
                     origin = url
-                    url = redirected.get(url,url)
-                    names = checker.link_names.get(url,[])
+                    url = self.checker.redirected.get(url,url)
+                    names = self.checker.link_names.get(url,[])
                     path = url[len(self.site_url):]
                     path = '/'.join([p for p in path.split('/') if p])
-                    info = infos.get(url)
-                    file = files.get(url)
+                    info = self.checker.infos.get(url)
+                    file = self.checker.files.get(url)
                     if info:
                         text = page and page.html() or file
                         item = dict(_path         = path,
@@ -174,20 +126,132 @@ class WebCrawler(object):
                                        _content_info = info,)
                         if origin != url:
                             item['_origin'] = origin
+                        self.feedback.success('webcrawler',msg)
                         yield item
                     else:
                         msg = "webcrawler: bad_url: %s" %str(url)
                         print >> stderr, msg
                         logger.log(logging.DEBUG, msg)
+                        self.feedback.ignored('webcrawler',msg)
                         yield dict(_bad_url = origin)
+        self.storeCache()
 
     def ignore(self, url):
-#        if not url.startswith(self.site_url[:-1]):
-#            return True
+        if not url.startswith(self.site_url[:-1]):
+            return True
         for pat in self.ignore_re:
             if pat and pat.search(url):
                 return True
         return False
+
+    CACHE_KEY = 'funnelweb_cache'
+    def restoreCache(self):
+        """ get cached pages from annotation and use them instead of recrawling"""
+        checker = IAnnotations(self.context).get('funnelweb.checker')
+        options = IAnnotations(self.context).get('funnelweb.options')
+        if not self.cache or self.options != options:
+            return False
+        if checker is not None:
+            self.checker = checker
+            self.checker.resetRun()
+            return True
+        return False
+
+    def storeCache(self):
+        """ get cached pages from annotation and use them instead of recrawling"""
+        if not self.cache:
+            return
+        IAnnotations(self.context)['funnelweb.checker'] = self.checker
+        IAnnotations(self.context)['funnelweb.options'] = self.options
+
+
+class MyChecker(Checker):
+    link_names = {} #store link->[name]
+    def message(self, format, *args):
+        pass # stop printing out crap
+
+    def reset(self):
+        self.infos = {}
+        self.files = {}
+        self.redirected = {}
+        self.alias_bases = {}
+        self.html_cache = {}
+        Checker.reset(self)
+
+    def __getstate__(self):
+        mystate = self.infos, self.files, self.redirected, self.html_cache
+        return (Checker.__getstate__(self),mystate)
+
+    def __setstate__(self, state):
+        self.reset()
+        try:
+            cstate,mystate = state
+            Checker.__setstate__(self,cstate)
+            self.infos, self.files, self.redirected, self.html_cache = mystate
+        except:
+            pass
+        self.resetRun()
+
+    def resetRun(self):
+        self.roots = []
+        self.todo = {}
+        self.done = {}
+        self.bad = {}
+
+    def readhtml(self, url_pair):
+        if url_pair in self.html_cache:
+            return self.html_cache[url_pair]
+        else:
+            res = Checker.readhtml(self, url_pair)
+            self.html_cache[url_pair] = res
+            return res
+
+
+    def openhtml(self, url_pair):
+        oldurl, fragment = url_pair
+
+        f = self.openpage(url_pair)
+        if f:
+            url = f.geturl()
+            if url != oldurl:
+                self.redirected[oldurl] = url
+            self.infos[url] = info = f.info()
+            if not self.checkforhtml(info, url):
+                self.files[url] = f.read()
+                self.safeclose(f)
+                f = None
+        else:
+            url = oldurl
+        return f, url
+
+    def openpage(self, url_pair):
+        url, fragment = url_pair
+        old_pair = url_pair
+        # actually open alias instead
+        realbase = self.site_url
+        if self.site_url.endswith('/'):
+            realbase=self.site_url[:-1]
+
+        for a in [realbase]: #+alias_bases:
+            if a.endswith('/'):
+                a=a[:-1]
+            if a and url.startswith(a):
+                base = url[:len(a)]
+                path = url[len(a):]
+                url = realbase+path
+                break
+
+        try:
+            return self.urlopener.open(url)
+        except (OSError, IOError), msg:
+            msg = self.sanitize(msg)
+            self.note(0, "Error %s", msg)
+            if self.verbose > 0:
+                self.show(" HREF ", url, "  from", self.todo[url_pair])
+            self.setbad(old_pair, msg)
+            return None
+
+
 
 class MyURLopener(urllib.FancyURLopener):
 
@@ -230,6 +294,15 @@ class MyURLopener(urllib.FancyURLopener):
 
 webchecker.MyURLopener = MyURLopener
 
+from lxml import etree
+import lxml.html
+import lxml.html.soupparser
+from lxml.html.clean import Cleaner
+from lxml.html.clean import clean_html
+import HTMLParser
+from HTMLParser import HTMLParseError
+from lxml.etree import tostring
+
 
 # do tidy and parsing and links via lxml. also try to encode page properly
 class LXMLPage:
@@ -256,7 +329,22 @@ class LXMLPage:
         if options:
             text = self.reformat(text, url)
         self.checker.note(2, "  Parsing %s (%d bytes)", self.url, size)
-        self.parser = lxml.html.soupparser.fromstring(text)
+        text = clean_html(text)
+        try:
+            self.parser = lxml.html.fromstring(text)
+            self._html = tostring(self.parser, encoding=unicode, method="html")
+            return
+        except UnicodeDecodeError, HTMLParseError:
+            pass
+        try:
+            self.parser = lxml.html.soupparser.fromstring(text)
+            self._html = tostring(self.parser,
+                                             encoding="US-ASCII",
+                                             method="html",
+                                             pretty_print=True)
+        except HTMLParser.HTMLParseError:
+            logger.log(logging.INFO, "webcrawler: HTMLParseError %s"%url)
+            raise
 #        MyHTMLParser(url, verbose=self.verbose,
 #                                   checker=self.checker)
 #        self.parser.feed(self.text)
@@ -274,10 +362,9 @@ class LXMLPage:
     def html(self):
         if self.parser is None:
             return ''
-        html = etree.tostring(self.parser, encoding="utf8", method="html",pretty_print=True)
         #cleaner = Cleaner(page_structure=False, links=False)
         #rhtml = cleaner.clean_html(html)
-        return html
+        return self._html
 
     def getlinkinfos(self):
         # File reading is done in __init__() routine.  Store parser in
