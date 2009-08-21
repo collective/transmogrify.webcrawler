@@ -246,6 +246,7 @@ def test_suite():
         doctest.DocFileSuite('relinker.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('pathmover.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('simplexpath.txt', setUp=setUp, tearDown=tearDown),
+        doctest.DocFileSuite('testsites.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('safeatschemaupdater.txt',
                 setUp=SafeATSchemaUpdaterSetUp,
                 tearDown=tearDown),
