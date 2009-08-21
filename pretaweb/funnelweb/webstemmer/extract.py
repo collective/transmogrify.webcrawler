@@ -127,6 +127,7 @@ class LayoutPatternSet:
   def dump_text(self, name, tree,
                 pat_threshold, diffscore_threshold, main_threshold,
                 codec_out='utf-8', strict=True):
+    import pdb; pdb.set_trace()
     enc = lambda x: x.encode(codec_out, 'replace')
     (pat1, layout) = self.identify_layout(tree, pat_threshold, strict=strict)
     if not layout:
