@@ -9,7 +9,6 @@
 	  <include package="collective.transmogrifier" file="meta.zcml"/>
 	  <include package="collective.transmogrifier"/>
 	  <include package="plone.app.transmogrifier"/>
-	  <include package="lovely.remotetask"/>
 
 <adapter
     for="collective.transmogrifier.interfaces.ITransmogrifier"
