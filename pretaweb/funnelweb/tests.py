@@ -253,7 +253,7 @@ def setup_product():
     zcml.load_config('configure.zcml', pretaweb.funnelweb)
     fiveconfigure.debug_mode = False
     ztc.installPackage('plone.app.z3cform')
-    ztc.installPackage('lovely.remotetask')
+#    ztc.installPackage('lovely.remotetask')
     ztc.installPackage('pretaweb.funnelweb')
 
 

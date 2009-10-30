@@ -35,7 +35,6 @@ from zope.interface import Interface
 from zope.annotation.interfaces import IAnnotatable
 from plone.theme.interfaces import IDefaultPloneLayer
 from pretaweb.funnelweb.interfaces import ISectionFeedback
-import lovely
 from pretaweb.funnelweb.setuphandlers import ISiteInstalledEvent
 
 
@@ -337,14 +336,15 @@ class ImportProgress(KSSView):
     def funnelwebProgress(self):
         return
         sm = self.context.getSiteManager()
-        service = sm.getUtility(lovely.remotetask.interfaces.ITaskService, name="FunnelwebService")
+        #service = sm.getUtility(lovely.remotetask.interfaces.ITaskService, name="FunnelwebService")
 
         ksscore = self.getCommandSet('core')
         selector = ksscore.getHtmlIdSelector('form-widgets-results')
         session = self.context.REQUEST.SESSION
         jobid = session.get('jobid')
         if jobid:
-            status = service.getStatus(jobid)
+            #status = service.getStatus(jobid)
+            status = None
         else:
             status = None
         feedback = session.get('funnelwebfeedback')
