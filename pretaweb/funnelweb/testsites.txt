@@ -1,0 +1,34 @@
+TestSites
+=========
+
+Teach a bunch of sites to see how they go.
+
+
+>>> from collective.transmogrifier.tests import registerConfig
+>>> from collective.transmogrifier.transmogrifier import Transmogrifier
+>>> transmogrifier = Transmogrifier(plone)
+>>> from os.path import dirname, abspath
+>>> import urllib
+>>> here = abspath(dirname(__file__))
+>>> url = urllib.pathname2url(here)
+
+>>> registerConfig('funnelweb', open(here+'/browser/funnelweb.cfg').read())
+
+
+>>> config = """
+... [transmogrifier]
+... include = funnelweb 
+... pipeline +=
+...     printer
+... pipeline -=
+...     constructor
+...     workflowupdater
+...     browserdefault    
+... [source]
+... site_url=http://osia.net.au
+...
+... [printer]
+... blueprint = collective.transmogrifier.sections.tests.pprinter
+... """ 
+>>> registerConfig(u'test1', config)
+>>> transmogrifier(u'test1')
