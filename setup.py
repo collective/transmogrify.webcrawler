@@ -32,7 +32,6 @@ setup(name='pretaweb.funnelweb',
           'plone.i18n',
           'plone.app.z3cform',
           'plone.z3cform',
-          'zc.testbrowser',
           ],
       entry_points="""
             [z3c.autoinclude.plugin]
