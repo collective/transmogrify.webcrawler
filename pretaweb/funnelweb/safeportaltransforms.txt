@@ -38,8 +38,7 @@ The following test will transform the html by adding two images.
 ...
 ... """
 >>> registerConfig(u'test1', config)
->>> from pprint import pprint
->>> pprint(transmogrifier(u'test1'))
+>>> transmogrifier(u'test1')
 {'_default_page': 'one',
  '_path': 'one',
  '_site_url': 'http://test.com/',
@@ -104,7 +103,7 @@ it.
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
 ... """
 >>> registerConfig(u'test2', config)
->>> type( transmogrifier(u'test2') )
+>>> transmogrifier(u'test2')
 {'_type': 'Folder', '_site_url': 'http://test.com/', '_path': 'a'}
 {'_default_page': 'content1',
  '_path': 'a/content1',

@@ -20,7 +20,7 @@ from Products.Archetypes.interfaces import IBaseObject
 # Override in order to swollow exceptions in updating
 #####################################################
 
-class StaticCreator(object):
+class StaticCreatorSection(object):
     classProvides(ISectionBlueprint)
     implements(ISection)
     

@@ -87,15 +87,19 @@ class IsIndex(object):
         items.sort()
         count,item,toppath,links,dir = items[-1]
         for count,item,path,links,dir in items:
-            item.setdefault('_origin',path)
             if False: #path == toppath: #TODO need a better way to work out default view
                 file = 'index_html'
             else:
                 file = path.split('/')[-1]
+            
             if dir:
-                item['_path'] = dir+'/'+file
+                target = dir+'/'+file
             else:
-                item['_path'] = file
+                target = file
+            if item['_path'] == target:
+                continue
+            item.setdefault('_origin',path)
+            item['_path'] = target
                 
             self.moved[path] = item['_path']
             msg = "isindex: moved %s to %s" %(path,dir+'/'+file)
