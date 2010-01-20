@@ -33,7 +33,10 @@ class WebCrawler(object):
 
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
-        self.feedback = ISectionFeedback(transmogrifier)
+        try:
+            self.feedback = ISectionFeedback(transmogrifier)
+        except:
+            self.feedback = None
         self.open_url = MyURLopener().open
         self.options = options
         self.ignore_re = [re.compile(pat.strip()) for pat in options.get("ignore",'').split('\n') if pat]
@@ -61,6 +64,7 @@ class WebCrawler(object):
         options = self.options
 
         def pagefactory(text, url, verbose=VERBOSE, maxpage=MAXPAGE, checker=None):
+
             try:
                 page = LXMLPage(text,url,verbose,maxpage,checker,options)
             except HTMLParseError, msg:
@@ -101,7 +105,8 @@ class WebCrawler(object):
                     print >> stderr, "Ignoring: "+ str(url)
                     msg = "webcrawler: Ignoring: %s" %str(url)
                     logger.log(logging.DEBUG, msg)
-                    self.feedback.ignored('webcrawler',msg)
+                    if self.feedback:
+                        self.feedback.ignored('webcrawler',msg)
                     yield dict(_bad_url = url)
                 else:
                     print >> stderr, "Crawling: "+ str(url)
@@ -124,15 +129,19 @@ class WebCrawler(object):
                                        _backlinks    = names,
                                        _content      = text,
                                        _content_info = info,)
+                        if page and page.html() and hasattr(page, 'parser'):
+                            item['_tree'] = page.parser
                         if origin != url:
                             item['_origin'] = origin
-                        self.feedback.success('webcrawler',msg)
+                        if self.feedback:
+                            self.feedback.success('webcrawler',msg)
                         yield item
                     else:
                         msg = "webcrawler: bad_url: %s" %str(url)
                         print >> stderr, msg
                         logger.log(logging.DEBUG, msg)
-                        self.feedback.ignored('webcrawler',msg)
+                        if self.feedback:
+                            self.feedback.ignored('webcrawler',msg)
                         yield dict(_bad_url = origin)
         self.storeCache()
 
@@ -147,8 +156,11 @@ class WebCrawler(object):
     CACHE_KEY = 'funnelweb_cache'
     def restoreCache(self):
         """ get cached pages from annotation and use them instead of recrawling"""
-        checker = IAnnotations(self.context).get('funnelweb.checker')
-        options = IAnnotations(self.context).get('funnelweb.options')
+        try:
+            checker = IAnnotations(self.context).get('funnelweb.checker')
+            options = IAnnotations(self.context).get('funnelweb.options')
+        except:
+            return False
         if not self.cache or self.options != options:
             return False
         if checker is not None:
@@ -161,8 +173,11 @@ class WebCrawler(object):
         """ get cached pages from annotation and use them instead of recrawling"""
         if not self.cache:
             return
-        IAnnotations(self.context)['funnelweb.checker'] = self.checker
-        IAnnotations(self.context)['funnelweb.options'] = self.options
+        try:
+            IAnnotations(self.context)['funnelweb.checker'] = self.checker
+            IAnnotations(self.context)['funnelweb.options'] = self.options
+        except:
+            return
 
 
 class MyChecker(Checker):
@@ -331,15 +346,20 @@ class LXMLPage:
         self.checker.note(2, "  Parsing %s (%d bytes)", self.url, size)
         text = clean_html(text)
         try:
-            self.parser = lxml.html.fromstring(text)
-            self._html = tostring(self.parser, encoding=unicode, method="html")
+#            self.parser = lxml.html.fromstring(text)
+            self.parser = lxml.html.soupparser.fromstring(text)
+            self._html = tostring(self.parser,
+                                             encoding="UTF-8",
+                                             method="html",
+                                             xml_declaration=True,
+                                             pretty_print=True)
             return
         except UnicodeDecodeError, HTMLParseError:
             pass
         try:
             self.parser = lxml.html.soupparser.fromstring(text)
             self._html = tostring(self.parser,
-                                             encoding="US-ASCII",
+                                             encoding="UTF-8",
                                              method="html",
                                              pretty_print=True)
         except HTMLParser.HTMLParseError:

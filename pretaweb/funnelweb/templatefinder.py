@@ -90,6 +90,7 @@ def toXPath(pat):
     return "//" + pat
 
 
+default_charset='utf-8'
 
 class TemplateFinder(object):
     classProvides(ISectionBlueprint)
@@ -101,10 +102,10 @@ class TemplateFinder(object):
     be tried is an automatic group made up of xpaths analysed by clustering the pages
     Format for options is
 
-    1:content = text //div
-    2:content = html //div
-    1:title = text //h1
-    2:title = html //h2
+    1-content = text //div
+    2-content = html //div
+    1-title = text //h1
+    2-title = html //h2
     """
 
 
@@ -112,12 +113,13 @@ class TemplateFinder(object):
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
         self.auto = options.get('auto', True)
+        self.auto = self.auto in ['True','true','yes','Y']
         self.groups = {}
         for key, value in options.items():
             if key in ['blueprint','auto']:
                 continue
             try:
-                group, field = key.split(':', 1)
+                group, field = key.split('-', 1)
             except:
                 group, field = '1',key
             xps = []
@@ -127,7 +129,7 @@ class TemplateFinder(object):
                     continue
                 else:
                     format,xp = res[0]
-                format.strip()
+                format = format.strip()
                 format = format == '' and 'html' or format
                 xps.append((format,xp))
             group = self.groups.setdefault(group, {})
@@ -144,6 +146,11 @@ class TemplateFinder(object):
                 yield item
                 continue
             path = item['_site_url'] + item['_path']
+            if '_tree' in item:
+                tree = item['_tree']
+            else:
+                tree = lxml.html.soupparser.fromstring(content)
+            
             # try each group in turn to see if they work
             gotit = False
             for groupname in sorted(self.groups.keys()):
@@ -171,24 +178,26 @@ class TemplateFinder(object):
             if field == 'path':
                 continue
             for format, xp in xps:
-                print xp
                 nodes = tree.xpath(xp, namespaces=ns)
                 if not nodes:
                     return False
                 nodes = [(format, n) for n in nodes]
                 unique[field] = nonoverlap(unique.setdefault(field,[]), nodes)
+                print "TemplateFinder: %s=%s(%s)" % (field, format, xp)
         extracted = {}
         for field, nodes in unique.items():
             for format, node in nodes:
                 if format == 'text':
                     extracted.setdefault(field,'')
-                    extracted[field] += etree.tostring(node, method='text', encoding='utf8') + ' '
+                    extracted[field] += etree.tostring(node, method='text', encoding='utf8', xml_declaration=True) + ' '
                 else:
                     extracted.setdefault(field,'')
-                    extracted[field] += '<div>%s</div>' % etree.tostring(node, method='html')
+                    extracted[field] += '<div>%s</div>' % etree.tostring(node, method='html', encoding='utf8', xml_declaration=True)
         item.update(extracted)
+        if '_tree' in item:
+            del item['_tree']
         item['_template'] = None
-        return True
+        return item
 
     def getHtml(self, item):
               path = item.get('_path', None)
@@ -203,7 +212,7 @@ class TemplateFinder(object):
 
 
     def analyse(self, previous):
-        (debug, cluster_threshold, title_threshold, score_threshold, default_charset) = (0, 0.97, 0.6, 100, 'utf-8')
+        (debug, cluster_threshold, title_threshold, score_threshold) = (0, 0.97, 0.6, 100)
         mangle_pat = None
         linkinfo = 'linkinfo'
         #
@@ -229,7 +238,7 @@ class TemplateFinder(object):
         patternset = LayoutPatternSet()
         patternset.pats = [c for c in clusters if c.pattern and score_threshold <= c.score]
 
-        default_charset='iso-8859-1'
+        #default_charset='iso-8859-1'
         pat_threshold=0.8
         self.debug = 0
         strict=True
@@ -286,7 +295,8 @@ class TemplateFinder(object):
                   for node in tree.xpath(toXPath(sect.path), namespaces=ns):
                       item.setdefault(field,'')
                       method = field == 'title' and 'text' or 'html'
-                      item[field] += etree.tostring(node, method=method, encoding='utf8') + ' '
+                      item[field] += etree.tostring(node, method=method, encoding='utf8', xml_declaration=True) + ' '
+                      
 
 
         print

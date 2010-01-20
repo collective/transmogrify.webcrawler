@@ -31,7 +31,10 @@ class SafeATSchemaUpdaterSection(object):
         else:
             pathkeys = defaultKeys(options['blueprint'], name, 'path')
         self.pathkey = Matcher(*pathkeys)
-        self.feedback = ISectionFeedback(transmogrifier)
+        try:
+            self.feedback = ISectionFeedback(transmogrifier)
+        except:
+            self.feedback = None
         self.secname = name
 
 
@@ -100,9 +103,9 @@ class SafeATSchemaUpdaterSection(object):
                 obj.unmarkCreationFlag()
                 if errors:
                     item['_safeatschemaupdater:error'] = errors
-                    self.feedback.ignored(self.secname,'')
+                    if self.feedback: self.feedback.ignored(self.secname,'')
                 else:
-                    self.feedback.success(self.secname,'')
+                    if self.feedback: self.feedback.success(self.secname,'')
 
 
                 if is_new_object:

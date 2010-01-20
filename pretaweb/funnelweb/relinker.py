@@ -117,7 +117,7 @@ def relinkHTML(item, changes, bad={}, link_expr=None):
     try:
         tree = lxml.html.soupparser.fromstring(item['text'])
         tree.rewrite_links(replace, base_href=oldbase)
-        item['text'] = etree.tostring(tree,pretty_print=True,encoding="utf8")
+        item['text'] = etree.tostring(tree,pretty_print=True,encoding="utf8",xml_declaration=True,)
     except Exception:
         msg = "ERROR: relinker parse error %s, %s" % (path,str(Exception))
         logger.log(logging.ERROR, msg, exc_info=True)

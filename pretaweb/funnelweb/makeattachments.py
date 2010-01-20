@@ -17,6 +17,7 @@ class MakeAttachments(object):
         self.previous = previous
         self.fields=Expression(options.get('fields','python:False'), transmogrifier, name, options)
         self.condition=Condition(options.get('condition','python:True'), transmogrifier, name, options)
+        self.defaultpage = options.get('defaultpage','index-html')
 
     def __iter__(self):
 
@@ -71,10 +72,10 @@ class MakeAttachments(object):
                         folder = dict(_path=item['_path'],
                                       _site_url=base,
                                       _type="Folder",
-                                      _defaultpage='index-html')
+                                      _defaultpage=self.defaultpage)
                         if not item.get('_origin'):
                             item['_origin']=item['_path']
-                        item['_path'] = '/'.join(item['_path'].split('/') + ['index-html'])
+                        item['_path'] = '/'.join(item['_path'].split('/') + [self.defaultpage])
                     if '_origin' not in subitem:
                         subitem['_origin'] = subitem['_path']
                     file = subitem['_path'].split('/')[-1]
