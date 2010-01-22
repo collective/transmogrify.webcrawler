@@ -38,15 +38,9 @@
 		     name="pretaweb.funnelweb.workflowupdater" />
     <utility component=".debugsection.DebugSection"
 		     name="pretaweb.funnelweb.debugsection" />
+
     <utility component=".remoteconstructor.RemoteConstructorSection"
 		     name="pretaweb.funnelweb.remoteconstructor" />
-
-<!--
-    <utility component=".fsconstructor.FSConstructorSection"
-		     name="pretaweb.funnelweb.fsconstructor" />
-    <utility component=".fsschemaupdater.FSSchemaUpdaterSection"
-		     name="pretaweb.funnelweb.fsschemaupdater" />
--->		     
     <utility component=".staticcreator.StaticCreatorSection"
 		     name="pretaweb.funnelweb.staticcreator" />
     <utility component=".remoteschemaupdater.RemoteSchemaUpdaterSection"

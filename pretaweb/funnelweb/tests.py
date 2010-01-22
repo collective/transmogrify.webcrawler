@@ -44,11 +44,17 @@ class HTMLSource(object):
 
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
-        def item(path, text):
-            i = dict(_mimetype="text/html",_site_url="http://test.com/")
-            i.update(dict(_path=key,text=value,_mimetype="text/html"))
-            return i
-        self.items = [item(key,value) for key,value in options.items() if key!='blueprint']
+        self.items = []
+        for order,item in zip(range(0,len(options)),options.items()):
+            path,text = item 
+            if path in ['blueprint']:
+                continue
+            item_ = dict(_mimetype="text/html",
+                        _site_url="http://test.com/",
+                        _path=path,    
+                        text=text,
+                        _sortorder=order)
+            self.items.append(item_)
 
     def __iter__(self):
         for item in self.previous:
@@ -153,8 +159,8 @@ def setUp(test):
     from debugsection import DebugSection
     provideUtility(DebugSection,
         name=u'pretaweb.funnelweb.debugsection')
-    from staticcreator import StaticCreator
-    provideUtility(StaticCreator,
+    from staticcreator import StaticCreatorSection
+    provideUtility(StaticCreatorSection,
         name=u'pretaweb.funnelweb.staticcreator')
 
     provideUtility(HTMLSource,
