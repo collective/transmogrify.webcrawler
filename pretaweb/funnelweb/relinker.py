@@ -94,7 +94,16 @@ def relinkHTML(item, changes, bad={}, link_expr=None):
     path = item['_path']
     oldbase = item['_site_url']+item['_origin']
     newbase = item['_site_url']+path
+    def swapfragment(link, newfragment):
+        t = urlparse.urlparse(rawlink)
+        fragment = t[-1]
+        t = t[:-1] + (newfragment,)
+        link = urlparse.urlunparse(t)
+        return link, fragment
+    
     def replace(link):
+        link, fragment = swapfragment(link, '')
+
         linked = changes.get(link)
         if not linked:
             link = urllib.unquote_plus(link)
@@ -105,14 +114,14 @@ def relinkHTML(item, changes, bad={}, link_expr=None):
                 linkedurl = item['_site_url']+link_expr(linked)
             else:
                 linkedurl = item['_site_url']+linked['_path']
-            return relative_url(newbase, linkedurl)
+            return swapfragment(relative_url(newbase, linkedurl), fragment)[0]
         else:
             #if path.count('commercial-part-codes.doc'):
             if link not in bad:
                 msg = "relinker: no match for %s in %s" % (link,path)
                 logger.log(logging.DEBUG, msg)
                 print >> stderr, msg
-            return relative_url(newbase, link)
+            return swapfragment(relative_url(newbase, link), fragment)[0]
     
     try:
         tree = lxml.html.soupparser.fromstring(item['text'])
