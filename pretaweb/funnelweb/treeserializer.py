@@ -33,7 +33,9 @@ class TreeSerializer(object):
 
         # build tree
         items_keys = items.keys()
+        
         items_keys.sort()
+        
         for item in items_keys:
             item_fullurl = item
             item = items[item]
@@ -96,12 +98,25 @@ class TreeSerializer(object):
 
 
 
-
-
-        # has to be in order so they get created
+        # sort items based on which were found first ie sortorder, but also need to keep in tree order
+        order = []
         items_keys = items.keys()
         items_keys.sort()
-        for item in items_keys:
-            yield items[item]
+        treeorder = []
+        for path in items_keys:
+            item = items[path]
+            depth = item['_path'].count('/')+1
+            sortorder = [item.get('_sortorder', None)]
+            # fill in any previous blanks on all copies
+            for i in order:
+                if i[0] is None:
+                    i[0] = sortorder[0]
+            order = [i for i in order[:depth-1] + [sortorder] ]
+            treeorder.append( (order, path, item) )
+        treeorder.sort()
+
+        for sortorder, path, item in treeorder:
+            print sortorder, item['_path']
+            yield item
 
 

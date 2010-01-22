@@ -97,7 +97,7 @@ class WebCrawler(object):
 
         while self.checker.todo:
             urls = self.checker.todo.keys()
-            urls.sort()
+            #urls.sort()
             del urls[1:]
             for url,part in urls:
                 if self.ignore(url):
@@ -122,11 +122,13 @@ class WebCrawler(object):
                     path = '/'.join([p for p in path.split('/') if p])
                     info = self.checker.infos.get(url)
                     file = self.checker.files.get(url)
+                    sortorder = self.checker.sortorder[url]
                     if info:
                         text = page and page.html() or file
                         item = dict(_path         = path,
                                        _site_url     = base,
                                        _backlinks    = names,
+                                       _sortorder    = sortorder,
                                        _content      = text,
                                        _content_info = info,)
                         if page and page.html() and hasattr(page, 'parser'):
@@ -191,6 +193,8 @@ class MyChecker(Checker):
         self.redirected = {}
         self.alias_bases = {}
         self.html_cache = {}
+        self.sortorder = {}
+        self.counter = 0
         Checker.reset(self)
 
     def __getstate__(self):
@@ -231,6 +235,7 @@ class MyChecker(Checker):
             if url != oldurl:
                 self.redirected[oldurl] = url
             self.infos[url] = info = f.info()
+            #Incement counter to get ordering of links within pages over whole site
             if not self.checkforhtml(info, url):
                 self.files[url] = f.read()
                 self.safeclose(f)
@@ -265,6 +270,14 @@ class MyChecker(Checker):
                 self.show(" HREF ", url, "  from", self.todo[url_pair])
             self.setbad(old_pair, msg)
             return None
+        
+    def setSortOrder(self, link):
+        """ give each link a counter as it's encountered to later use in sorting """
+        if link not in self.sortorder:
+            self.sortorder[link] = self.counter
+            self.counter = self.counter + 1
+            
+        
 
 
 
@@ -412,6 +425,7 @@ class LXMLPage:
             elif attribute == 'src':
                 name = element.get('alt','')
                 self.checker.link_names.setdefault(link,[]).extend([(self.url,name)])
+            self.checker.setSortOrder(link)
             #and to filter list
             infos.append((link, rawlink, fragment))
 
