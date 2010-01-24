@@ -7,6 +7,7 @@ from Acquisition import aq_base
 from Products.CMFCore.utils import getToolByName
 import xmlrpclib
 import urllib
+from urlparse import urlparse, urljoin
 import logging
 logger = logging.getLogger('Plone')
 
@@ -25,8 +26,10 @@ class RemoteConstructorSection(object):
                                       ('portal_type', 'Type'))
         self.pathkey = defaultMatcher(options, 'path-key', name, 'path')
         self.target = options.get('target','http://localhost:8080/plone')
+        self.target = self.target.rstrip('/')+'/'
 
     def __iter__(self):
+        basepath = xmlrpclib.ServerProxy(self.target).getPhysicalPath()
         for item in self.previous:
             keys = item.keys()
             typekey = self.typekey(*keys)[0]
@@ -46,23 +49,34 @@ class RemoteConstructorSection(object):
             elems = path.strip('/').rsplit('/', 1)
             
             url = urllib.basejoin(self.target, path)
-            f = urllib.urlopen(url)
-            nurl = f.geturl()
-            info = f.info()
-            html = f.read()
-            if "Please double check the web address" not in html:
-                yield item
-                continue
-            
+            proxy = xmlrpclib.ServerProxy(url)
             container, id = (len(elems) == 1 and ('', elems[0]) or elems)
+            #if id == 'index.html':
+            try:
+                #test paths in case of acquition
+                rpath = proxy.getPhysicalPath()
+                rpath = rpath[len(basepath):]
+                if path == '/'.join(rpath):
+                    yield item
+                    continue
+            except xmlrpclib.Fault:
+                pass
             url = urllib.basejoin(self.target,container)
-            input =  urllib.urlencode({'type_name':type_,
-                'id':id
-                }
-               )
-            f = urllib.urlopen("%s/invokeFactory" % url, input)
-            nurl = f.geturl()
-            info = f.info()
-            res = f.read()
-
-            yield item
+            proxy = xmlrpclib.ServerProxy(url)
+            try:
+                proxy.invokeFactory(type_, id)
+            except xmlrpclib.ProtocolError,e:
+                if e.errcode == 302:
+                    pass
+                else:
+                    raise
+                #input =  urllib.urlencode({'type_name':type_,
+                #    'id':id
+                #    }
+                #   )
+                #f = urllib.urlopen("%s/invokeFactory" % url, input)
+                #nurl = f.geturl()
+                #info = f.info()
+                #res = f.read()
+            
+            

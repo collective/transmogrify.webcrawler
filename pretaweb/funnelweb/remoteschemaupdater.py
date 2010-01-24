@@ -23,6 +23,7 @@ class RemoteSchemaUpdaterSection(object):
         self.previous = previous
         self.context = transmogrifier.context
         self.target = options['target']
+        self.target = self.target.rstrip('/')+'/'
 
         if 'path-key' in options:
             pathkeys = options['path-key'].splitlines()
@@ -65,14 +66,19 @@ class RemoteSchemaUpdaterSection(object):
                 multicall = xmlrpclib.MultiCall(proxy)
                 for key, parts in fields.items():
                     value, arguments = parts
+                    if type(value) == type(u''):
+                        value = value.encode('utf8')
 
-                    input = urllib.urlencode(dict(value=value))
-                    f = urllib.urlopen(url+'/set%s'%key.capitalize(), input)
-                    #f = urllib.urlopen(url+'/atct_edit', input)
-                    #nurl = f.geturl()
-                    #info = f.info()
                     #getattr(proxy,'set%s'%key.capitalize())(value)
-                #result = multicall()      
+                    arguments.update(dict(value=value))
+                    input = urllib.urlencode(arguments)
+                    f = urllib.urlopen(url+'/set%s'%key.capitalize(), input)
+                    nurl = f.geturl()
+                    info = f.info()
+                if '_defaultpage' in item:
+                    proxy.setDefaultPage(item['_defaultpage']) 
+                #result = multicall()
+                proxy.update() #does indexing
                 if errors:
                     item['_safeatschemaupdater:error'] = errors
 
