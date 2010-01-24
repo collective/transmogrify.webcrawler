@@ -6,9 +6,11 @@ from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 from collective.transmogrifier.utils import Matcher
 from urllib import unquote
+import urlparse
 import re
 import logging
 logger = logging.getLogger('Plone')
+from treeserializer import TreeSerializer
 
 """
 Backlinks Title
@@ -29,20 +31,29 @@ class BacklinksTitle(object):
 
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
-        self.toignore=options.get('ignore','').strip().split('\n')
+        self.toignore=options.get('ignore','next\nprevios\n').strip().split('\n')
+        self.treeserializer = TreeSerializer(transmogrifier, name, options, previous)
 
     def __iter__(self):
-        for item in self.previous:
+        items = []
+        defaultpages  = {}
+        for item in self.treeserializer:
             path = item.get('_path')
             backlinks = item.get('_backlinks')
             title = item.get('title')
-            if not backlinks:
-                self.titlefromid(item)
-
-                yield item
-                continue
+            defaultpage = item.get('_defaultpage')
             if title:
-                yield item
+                items.append( item )
+                continue
+            elif defaultpage:
+                # save and we'll use that for title
+                indexpath = urlparse.urljoin(path+'/', defaultpage)
+                defaultpages[indexpath] = item
+                items.append( item )
+                continue
+            elif not backlinks:
+                self.titlefromid(item)
+                items.append( item )
                 continue
             names = [name for url, name in backlinks if not self.ignore(name)]
             # do a vote
@@ -57,6 +68,20 @@ class BacklinksTitle(object):
                 logger.log(logging.DEBUG, msg)
             else:
                 self.titlefromid(item)
+            # go back and title the folder if this is a default page
+                
+            items.append( item )
+        items2 = []
+        for item in items:
+            path = item.get('_path')
+            folder = defaultpages.get(path)
+            if folder:
+                if 'title' in item:
+                    folder['title'] = item['title']
+                if 'description' in item:
+                    folder['description'] = item['description']
+            items2.append( item )
+        for item in items2:
             yield item
 
     def ignore(self, name):
