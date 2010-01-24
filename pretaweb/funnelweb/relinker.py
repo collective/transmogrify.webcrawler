@@ -14,9 +14,13 @@ from external.relative_url import relative_url
 from sys import stderr
 from collective.transmogrifier.utils import Expression
 import logging
-from external.normalize import urlnormalizer
+from external.normalize import urlnormalizer as normalizer
+import urlparse
 logger = logging.getLogger('Plone')
 from sys import stderr
+#from plone.i18n.normalizer import urlnormalizer as normalizer
+
+INVALID_IDS = ['security']
 
 
 class Relinker(object):
@@ -35,7 +39,8 @@ class Relinker(object):
         #if util:
         #    self.normalize = util.normalize
         #else:
-        self.normalize = urlnormalizer.normalize
+        self.locale = Expression(options.get('locale', 'python:None'), 
+                                transmogrifier, name, options)
         
     
     
@@ -58,7 +63,16 @@ class Relinker(object):
                 yield item
                 continue
             base = item.get('_site_url','')
-            norm = lambda part: self.normalize(urllib.unquote_plus(part))
+            
+            def norm(part):
+                # Get the information we require for normalization
+                keywords = dict(text=urllib.unquote_plus(part), locale=self.locale(item))
+                # Perform Normalization
+                part = normalizer.normalize(**keywords)
+                if part in INVALID_IDS:
+                    return part+'-1'
+                else:
+                    return part 
             newpath = '/'.join([norm(part) for part in path.split('/')])
             origin = item.get('_origin')
             if not origin:
@@ -95,7 +109,7 @@ def relinkHTML(item, changes, bad={}, link_expr=None):
     oldbase = item['_site_url']+item['_origin']
     newbase = item['_site_url']+path
     def swapfragment(link, newfragment):
-        t = urlparse.urlparse(rawlink)
+        t = urlparse.urlparse(link)
         fragment = t[-1]
         t = t[:-1] + (newfragment,)
         link = urlparse.urlunparse(t)
@@ -123,10 +137,9 @@ def relinkHTML(item, changes, bad={}, link_expr=None):
                 print >> stderr, msg
             return swapfragment(relative_url(newbase, link), fragment)[0]
     
-    try:
-        tree = lxml.html.soupparser.fromstring(item['text'])
-        tree.rewrite_links(replace, base_href=oldbase)
-        item['text'] = etree.tostring(tree,pretty_print=True,encoding="utf8",xml_declaration=True,)
-    except Exception:
-        msg = "ERROR: relinker parse error %s, %s" % (path,str(Exception))
-        logger.log(logging.ERROR, msg, exc_info=True)
+    tree = lxml.html.fragment_fromstring(item['text'])
+    tree.rewrite_links(replace, base_href=oldbase)
+    item['text'] = etree.tostring(tree,pretty_print=True,encoding=unicode)
+ #   except Exception:
+ #       msg = "ERROR: relinker parse error %s, %s" % (path,str(Exception))
+ #       logger.log(logging.ERROR, msg, exc_info=True)

@@ -362,9 +362,8 @@ class LXMLPage:
 #            self.parser = lxml.html.fromstring(text)
             self.parser = lxml.html.soupparser.fromstring(text)
             self._html = tostring(self.parser,
-                                             encoding="UTF-8",
+                                             encoding=unicode,
                                              method="html",
-                                             xml_declaration=True,
                                              pretty_print=True)
             return
         except UnicodeDecodeError, HTMLParseError:
@@ -372,7 +371,7 @@ class LXMLPage:
         try:
             self.parser = lxml.html.soupparser.fromstring(text)
             self._html = tostring(self.parser,
-                                             encoding="UTF-8",
+                                             encoding=unicode,
                                              method="html",
                                              pretty_print=True)
         except HTMLParser.HTMLParseError:

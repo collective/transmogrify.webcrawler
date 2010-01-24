@@ -146,15 +146,12 @@ class TemplateFinder(object):
                 yield item
                 continue
             path = item['_site_url'] + item['_path']
-            if '_tree' in item:
-                tree = item['_tree']
-            else:
-                tree = lxml.html.soupparser.fromstring(content)
             
             # try each group in turn to see if they work
             gotit = False
             for groupname in sorted(self.groups.keys()):
                 group = self.groups[groupname]
+                tree = lxml.html.fromstring(content)
                 if group.get('path', path) == path and self.extract(group, tree, item):
                     gotit = True
                     break
@@ -180,19 +177,22 @@ class TemplateFinder(object):
             for format, xp in xps:
                 nodes = tree.xpath(xp, namespaces=ns)
                 if not nodes:
+                    print "TemplateFinder: NOMATCH: %s=%s(%s)" % (field, format, xp)
                     return False
                 nodes = [(format, n) for n in nodes]
                 unique[field] = nonoverlap(unique.setdefault(field,[]), nodes)
-                print "TemplateFinder: %s=%s(%s)" % (field, format, xp)
         extracted = {}
+        # we will pull selected nodes out of tree so data isn't repeated
         for field, nodes in unique.items():
             for format, node in nodes:
+                node.drop_tree()
+        for field, nodes in unique.items():
+            for format, node in nodes:
+                extracted.setdefault(field,'')
                 if format == 'text':
-                    extracted.setdefault(field,'')
-                    extracted[field] += etree.tostring(node, method='text', encoding='utf8', xml_declaration=True) + ' '
+                    extracted[field] += etree.tostring(node, method='text', encoding=unicode) + ' '
                 else:
-                    extracted.setdefault(field,'')
-                    extracted[field] += '<div>%s</div>' % etree.tostring(node, method='html', encoding='utf8', xml_declaration=True)
+                    extracted[field] += '<div>%s</div>' % etree.tostring(node, method='html', encoding=unicode)
         item.update(extracted)
         if '_tree' in item:
             del item['_tree']
@@ -295,7 +295,7 @@ class TemplateFinder(object):
                   for node in tree.xpath(toXPath(sect.path), namespaces=ns):
                       item.setdefault(field,'')
                       method = field == 'title' and 'text' or 'html'
-                      item[field] += etree.tostring(node, method=method, encoding='utf8', xml_declaration=True) + ' '
+                      item[field] += etree.tostring(node, method=method, encoding=unicode) + ' '
                       
 
 

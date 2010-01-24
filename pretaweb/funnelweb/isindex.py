@@ -43,7 +43,7 @@ class IsIndex(object):
                 yield item
                 continue
             
-            tree = lxml.html.soupparser.fromstring(html)
+            tree = lxml.html.fragment_fromstring(html)
             base = item.get('_site_url','')
             tree.make_links_absolute(base+path)
             if '_origin' in item:

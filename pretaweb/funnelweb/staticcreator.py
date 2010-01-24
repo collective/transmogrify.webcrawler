@@ -67,6 +67,8 @@ class StaticCreatorSection(object):
 
 
     def savefile(self, text, path):
+        if type(text) == type(u''):
+            text = text.encode('utf8')
         dir, base = os.path.split(path)
         if text is None:
             msg = "static creator: None in contents %s" %str(path)
