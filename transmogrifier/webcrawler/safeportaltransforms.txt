@@ -21,17 +21,17 @@ The following test will transform the html by adding two images.
 ...
 ...
 ... [webcrawler]
-... blueprint = pretaweb.funnelweb.test.htmlsource
+... blueprint = transmogrify.webcrawler.test.htmlsource
 ... one=<a href="two">2</a>
 ...
 ... [convert]
-... blueprint = pretaweb.funnelweb.safeportaltransforms
+... blueprint = transmogrify.webcrawler.safeportaltransforms
 ... mimetype_field = _mimetype
 ... target = text/blah
 ... keys = text
 ...
 ... [treeserializer]
-... blueprint = pretaweb.funnelweb.treeserializer
+... blueprint = transmogrify.webcrawler.treeserializer
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
@@ -75,29 +75,29 @@ it.
 ...     printer
 ...
 ... [source]
-... blueprint = pretaweb.funnelweb.test.htmlbacklinksource
+... blueprint = transmogrify.webcrawler.test.htmlbacklinksource
 ... f oo/content1=blah
 ...
 ... [moves]
-... blueprint = pretaweb.funnelweb.pathmover
+... blueprint = transmogrify.webcrawler.pathmover
 ... moves =
 ...    f%20oo a
 ...
 ... [convert]
-... blueprint = pretaweb.funnelweb.safeportaltransforms
+... blueprint = transmogrify.webcrawler.safeportaltransforms
 ... mimetype_field = _mimetype
 ... target = text/xhtml
 ... keys = text
 ...
 ... [makeattachments]
-... blueprint = pretaweb.funnelweb.makeattachments
+... blueprint = transmogrify.webcrawler.makeattachments
 ... fields = python:[('attach%i'%i,subitem['image'])]
 ...
 ... [relinker]
-... blueprint = pretaweb.funnelweb.relinker
+... blueprint = transmogrify.webcrawler.relinker
 ...
 ... [treeserializer]
-... blueprint = pretaweb.funnelweb.treeserializer
+... blueprint = transmogrify.webcrawler.treeserializer
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter

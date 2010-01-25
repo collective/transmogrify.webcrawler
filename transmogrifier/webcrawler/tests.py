@@ -19,21 +19,21 @@ from collective.transmogrifier.tests import tearDown
 from collective.transmogrifier.sections.tests import PrettyPrinter
 from collective.transmogrifier.sections.tests import SampleSource
 
-from pretaweb.funnelweb.webcrawler import WebCrawler
-from pretaweb.funnelweb.treeserializer import TreeSerializer
-from pretaweb.funnelweb.typerecognitor import TypeRecognitor
-from pretaweb.funnelweb.safeportaltransforms import  SafePortalTransforms
-from pretaweb.funnelweb.makeattachments import MakeAttachments
+from transmogrify.webcrawler.webcrawler import WebCrawler
+from transmogrify.webcrawler.treeserializer import TreeSerializer
+from transmogrify.webcrawler.typerecognitor import TypeRecognitor
+from transmogrify.webcrawler.safeportaltransforms import  SafePortalTransforms
+from transmogrify.webcrawler.makeattachments import MakeAttachments
 from templatefinder import TemplateFinder
-from pretaweb.funnelweb.relinker import Relinker
-from pretaweb.funnelweb.simplexpath import SimpleXPath
+from transmogrify.webcrawler.relinker import Relinker
+from transmogrify.webcrawler.simplexpath import SimpleXPath
 from plone.i18n.normalizer import urlnormalizer
 from lxml import etree
 import lxml.html
 import lxml.html.soupparser
 from lxml.html.clean import Cleaner
 import urlparse
-import pretaweb.funnelweb
+import transmogrify.webcrawler
 from os.path import dirname, abspath
 import urllib
 
@@ -124,49 +124,49 @@ def setUp(test):
     provideUtility(PrettyPrinter,
         name=u'collective.transmogrifier.sections.tests.pprinter')
     provideUtility(WebCrawler,
-        name=u'pretaweb.funnelweb.webcrawler')
+        name=u'transmogrify.webcrawler.webcrawler')
     provideUtility(TreeSerializer,
-        name=u'pretaweb.funnelweb.treeserializer')
+        name=u'transmogrify.webcrawler.treeserializer')
     provideUtility(TypeRecognitor,
-        name=u'pretaweb.funnelweb.typerecognitor')
+        name=u'transmogrify.webcrawler.typerecognitor')
     provideUtility(TemplateFinder,
-        name=u'pretaweb.funnelweb.templatefinder')
+        name=u'transmogrify.webcrawler.templatefinder')
     provideUtility(urlnormalizer)
     provideUtility(Relinker,
-        name=u'pretaweb.funnelweb.relinker')
+        name=u'transmogrify.webcrawler.relinker')
     provideUtility(SimpleXPath,
-        name=u'pretaweb.funnelweb.simplexpath')
+        name=u'transmogrify.webcrawler.simplexpath')
     provideUtility(SafePortalTransforms,
-        name=u'pretaweb.funnelweb.safeportaltransforms')
+        name=u'transmogrify.webcrawler.safeportaltransforms')
     from backlinkstitle import BacklinksTitle
     provideUtility(BacklinksTitle,
-        name=u'pretaweb.funnelweb.backlinkstitle')
+        name=u'transmogrify.webcrawler.backlinkstitle')
     from isindex import IsIndex
     provideUtility(IsIndex,
-        name=u'pretaweb.funnelweb.isindex')
+        name=u'transmogrify.webcrawler.isindex')
     from pathmover import PathMover
     provideUtility(PathMover,
-        name=u'pretaweb.funnelweb.pathmover')
+        name=u'transmogrify.webcrawler.pathmover')
     from safeatschemaupdater import SafeATSchemaUpdaterSection
     provideUtility(SafeATSchemaUpdaterSection,
-        name=u'pretaweb.funnelweb.safeatschemaupdater')
+        name=u'transmogrify.webcrawler.safeatschemaupdater')
     from constructor import SafeConstructorSection
     provideUtility(SafeConstructorSection,
-        name=u'pretaweb.funnelweb.constructor')
+        name=u'transmogrify.webcrawler.constructor')
     from makeattachments import MakeAttachments
     provideUtility(MakeAttachments,
-        name=u'pretaweb.funnelweb.makeattachments')
+        name=u'transmogrify.webcrawler.makeattachments')
     from debugsection import DebugSection
     provideUtility(DebugSection,
-        name=u'pretaweb.funnelweb.debugsection')
+        name=u'transmogrify.webcrawler.debugsection')
     from staticcreator import StaticCreatorSection
     provideUtility(StaticCreatorSection,
-        name=u'pretaweb.funnelweb.staticcreator')
+        name=u'transmogrify.webcrawler.staticcreator')
 
     provideUtility(HTMLSource,
-        name=u'pretaweb.funnelweb.test.htmlsource')
+        name=u'transmogrify.webcrawler.test.htmlsource')
     provideUtility(HTMLBacklinkSource,
-        name=u'pretaweb.funnelweb.test.htmlbacklinksource')
+        name=u'transmogrify.webcrawler.test.htmlbacklinksource')
 
 
 def SafeATSchemaUpdaterSetUp(test):
@@ -220,7 +220,7 @@ def SafeATSchemaUpdaterSetUp(test):
                  'file.mimetype': 'image/jpeg',},
             )
     provideUtility(SafeATSchemaUpdaterSectionSource,
-        name=u'pretaweb.funnelweb.tests.safeatschemaupdatersource')
+        name=u'transmogrify.webcrawler.tests.safeatschemaupdatersource')
 
 def MakeAttachmentsSetUp(test):
     setUp(test)
@@ -248,24 +248,24 @@ def MakeAttachmentsSetUp(test):
                  '_type': 'Image'},
             )
     provideUtility(MakeAttachmentsSource,
-        name=u'pretaweb.funnelweb.tests.makeattachments')
+        name=u'transmogrify.webcrawler.tests.makeattachments')
     provideUtility(MakeAttachments,
-        name=u'pretaweb.funnelweb.makeattachments')
+        name=u'transmogrify.webcrawler.makeattachments')
 
 @onsetup
 def setup_product():
     """ """
     fiveconfigure.debug_mode = True
-    zcml.load_config('configure.zcml', pretaweb.funnelweb)
+    zcml.load_config('configure.zcml', transmogrify.webcrawler)
     fiveconfigure.debug_mode = False
     ztc.installPackage('plone.app.z3cform')
 #    ztc.installPackage('lovely.remotetask')
-    ztc.installPackage('pretaweb.funnelweb')
+    ztc.installPackage('transmogrify.webcrawler')
 
 
 setup_product()
-#ptc.setupPloneSite(extension_profiles=('pretaweb.funnelweb:default',), with_default_memberarea=False)
-ptc.setupPloneSite(products=['pretaweb.funnelweb'])
+#ptc.setupPloneSite(extension_profiles=('transmogrify.webcrawler:default',), with_default_memberarea=False)
+ptc.setupPloneSite(products=['transmogrify.webcrawler'])
 
 class TestCase(ptc.FunctionalTestCase):
     """ We use this base class for all the tests in this package. If necessary,
@@ -355,7 +355,7 @@ def test_suite():
                 tearDown=tearDown),
         ztc.FunctionalDocFileSuite(
             'README.txt',
-             package='pretaweb.funnelweb',
+             package='transmogrify.webcrawler',
              test_class=TestCase,
 #            tearDown=zc.buildout.testing.buildoutTearDown,
              optionflags = flags,

@@ -15,26 +15,26 @@ SimpleXPath
 ...     printer
 ...     
 ... [webcrawler]
-... blueprint = pretaweb.funnelweb.webcrawler
+... blueprint = transmogrify.webcrawler.webcrawler
 ... site_url  = file:///%s/test_staticsite
 ...
 ... [treeserializer]
-... blueprint = pretaweb.funnelweb.treeserializer
+... blueprint = transmogrify.webcrawler.treeserializer
 ...
 ... [typerecognitor]
-... blueprint = pretaweb.funnelweb.typerecognitor
+... blueprint = transmogrify.webcrawler.typerecognitor
 ...
 ... [relinker]
-... blueprint = pretaweb.funnelweb.relinker
+... blueprint = transmogrify.webcrawler.relinker
 ...
 ... [simplexpath-title]
-... blueprint = pretaweb.funnelweb.simplexpath
+... blueprint = transmogrify.webcrawler.simplexpath
 ... from_key = text
 ... key = title
 ... xpath = //title
 ...
 ... [simplexpath-text]
-... blueprint = pretaweb.funnelweb.simplexpath
+... blueprint = transmogrify.webcrawler.simplexpath
 ... key = text
 ... xpath = //div[@id="content"]
 ...
@@ -44,8 +44,8 @@ SimpleXPath
 ... """ % abspath(dirname(__file__)).replace('\\','/')
 
 >>> from collective.transmogrifier.tests import registerConfig
->>> registerConfig(u'pretaweb.funnelweb.typerecognitor.test', config)
+>>> registerConfig(u'transmogrify.webcrawler.typerecognitor.test', config)
 
 >>> from collective.transmogrifier.transmogrifier import Transmogrifier
 >>> transmogrifier = Transmogrifier(plone)
->>> transmogrifier(u'pretaweb.funnelweb.typerecognitor.test')
+>>> transmogrifier(u'transmogrify.webcrawler.typerecognitor.test')

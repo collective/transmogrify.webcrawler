@@ -12,7 +12,7 @@ from OFS.SimpleItem import Item
 #    pass
 
 def import_various(context):
-    if context.readDataFile('pretaweb.funnelweb-various.txt') is None:
+    if context.readDataFile('transmogrify.webcrawler-various.txt') is None:
         return
 
     portal = context.getSite()

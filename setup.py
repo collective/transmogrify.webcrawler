@@ -3,7 +3,7 @@ import os
 
 version = '0.2'
 
-setup(name='pretaweb.funnelweb',
+setup(name='transmogrify.webcrawler',
       version=version,
       description="",
       long_description=open("README.txt").read() + "\n" +
@@ -19,7 +19,7 @@ setup(name='pretaweb.funnelweb',
       url='http://www.pretaweb.com',
       license='GPL',
       packages=find_packages(exclude=['ez_setup']),
-      namespace_packages=['pretaweb'],
+      namespace_packages=['transmogrify'],
       include_package_data=True,
       zip_safe=False,
       install_requires=[
@@ -28,13 +28,7 @@ setup(name='pretaweb.funnelweb',
           'lxml',
           'BeautifulSoup',
           'collective.transmogrifier',
-          'plone.app.transmogrifier',
-          'plone.i18n',
-          'plone.app.z3cform',
-          'plone.z3cform',
           ],
       entry_points="""
-            [z3c.autoinclude.plugin]
-            target = plone
             """,
             )

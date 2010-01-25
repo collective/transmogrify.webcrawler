@@ -5,9 +5,9 @@ from zope.interface import classProvides
 from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 
-from pretaweb.funnelweb.external import webchecker
-from pretaweb.funnelweb.external.webchecker import Checker,Page
-from pretaweb.funnelweb.external.webchecker import MyHTMLParser,MyStringIO
+from transmogrify.webcrawler.external import webchecker
+from transmogrify.webcrawler.external.webchecker import Checker,Page
+from transmogrify.webcrawler.external.webchecker import MyHTMLParser,MyStringIO
 import re
 from htmlentitydefs import entitydefs
 import urllib,os

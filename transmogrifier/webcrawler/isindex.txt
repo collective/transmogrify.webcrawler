@@ -32,13 +32,13 @@ The strategy used is as follows:
 ...     printer
 ...     
 ... [source]
-... blueprint = pretaweb.funnelweb.test.htmlbacklinksource
+... blueprint = transmogrify.webcrawler.test.htmlbacklinksource
 ... content=<a href="f1/blah1"></a><a href="f1/blah2"></a>
 ... f1/blah1=blah1
 ... f1/blah2=blah2
 ...
 ... [isindex]
-... blueprint = pretaweb.funnelweb.isindex
+... blueprint = transmogrify.webcrawler.isindex
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
@@ -68,13 +68,13 @@ The strategy used is as follows:
 ...     isindex 
 ...     printer
 ... [source]
-... blueprint = pretaweb.funnelweb.test.htmlbacklinksource
+... blueprint = transmogrify.webcrawler.test.htmlbacklinksource
 ... f1/content=<a href="blah1"></a><a href="blah2"></a>
 ... f1/blah1=blah1
 ... f1/blah2=blah2
 ...
 ... [isindex]
-... blueprint = pretaweb.funnelweb.isindex
+... blueprint = transmogrify.webcrawler.isindex
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter

@@ -5,7 +5,7 @@ from collective.transmogrifier.transmogrifier import configuration_registry
 from Products.Five import zcml
 from zope.component import provideUtility
 from zope.interface import classProvides, implements
-import pretaweb.funnelweb
+import transmogrify.webcrawler
 
 class Context:
     pass
@@ -19,7 +19,7 @@ def transmogrify(config, args):
     zcml.load_config('meta.zcml', zope.app.component)
     zcml.load_config('meta.zcml', collective.transmogrifier)
     zcml.load_config('configure.zcml', collective.transmogrifier.sections)
-    zcml.load_config('sections.zcml', pretaweb.funnelweb)
+    zcml.load_config('sections.zcml', transmogrify.webcrawler)
 
 
     context = Context()

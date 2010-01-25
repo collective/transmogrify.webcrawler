@@ -12,17 +12,17 @@ Relinker
 ...     printer
 ...     
 ... [webcrawler]
-... blueprint = pretaweb.funnelweb.test.htmlsource
+... blueprint = transmogrify.webcrawler.test.htmlsource
 ... level3/index=<a href="../level2/index">Level 2</a>
 ... level2/index=<a href="../level3/index">Level 3</a><img src="+&image%20blah">
 ... level2/+&image%20blah=<h1>content</h1>
 ...
 ... [relinker]
-... blueprint = pretaweb.funnelweb.relinker
+... blueprint = transmogrify.webcrawler.relinker
 ... link_expr = python:item['_path']+'/image_web'
 ...
 ... [moves]
-... blueprint = pretaweb.funnelweb.pathmover
+... blueprint = transmogrify.webcrawler.pathmover
 ... moves =
 ... 	level2	level3
 ... 	level3	level2
@@ -57,12 +57,12 @@ It is designed to cope with any combination of quoting of urls
 ...     printer
 ...     
 ... [webcrawler]
-... blueprint = pretaweb.funnelweb.test.htmlsource
+... blueprint = transmogrify.webcrawler.test.htmlsource
 ... one%20two's+strange1=<a href="one two+is+strange2">Level 2</a>
 ... one%20two%20is+strange2=<a href="one two's%20strange1">Level 2</a>
 ...
 ... [relinker]
-... blueprint = pretaweb.funnelweb.relinker
+... blueprint = transmogrify.webcrawler.relinker
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
@@ -91,20 +91,20 @@ It is designed to cope with any combination of quoting of urls
 ...     printer
 ...     
 ... [source]
-... blueprint = pretaweb.funnelweb.test.htmlbacklinksource
+... blueprint = transmogrify.webcrawler.test.htmlbacklinksource
 ... a/img=blah
 ... a/content1=<a href="img">
 ...
 ... [moves]
-... blueprint = pretaweb.funnelweb.pathmover
+... blueprint = transmogrify.webcrawler.pathmover
 ... moves = 
 ...    a	b
 ...
 ... [relinker]
-... blueprint = pretaweb.funnelweb.relinker
+... blueprint = transmogrify.webcrawler.relinker
 ...
 ... [treeserializer]
-... blueprint = pretaweb.funnelweb.treeserializer
+... blueprint = transmogrify.webcrawler.treeserializer
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter

@@ -15,11 +15,11 @@ the reaccuring patterns away to effectively detemplate a site leaving just the h
 ...     printer
 ...     
 ... [webcrawler]
-... blueprint = pretaweb.funnelweb.webcrawler
+... blueprint = transmogrify.webcrawler.webcrawler
 ... site_url  = file:///%s/test_staticsite/
 ...
 ... [treeserializer]
-... blueprint = pretaweb.funnelweb.templatefinder
+... blueprint = transmogrify.webcrawler.templatefinder
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
@@ -27,11 +27,11 @@ the reaccuring patterns away to effectively detemplate a site leaving just the h
 ... """ % abspath(dirname(__file__)).replace('\\','/')
 
 >>> from collective.transmogrifier.tests import registerConfig
->>> registerConfig(u'pretaweb.funnelweb.templatefinder.test', config)
+>>> registerConfig(u'transmogrify.webcrawler.templatefinder.test', config)
 
 >>> from collective.transmogrifier.transmogrifier import Transmogrifier
 >>> transmogrifier = Transmogrifier(plone)
->>> transmogrifier(u'pretaweb.funnelweb.templatefinder.test')
+>>> transmogrifier(u'transmogrify.webcrawler.templatefinder.test')
 {'_path': '/cia-plone-view-source.jpg',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/pretaweb.funnelweb/pretaweb/blueprints/test_staticsite'}
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite'}
 
