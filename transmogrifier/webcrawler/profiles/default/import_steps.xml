@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<import-steps>
- <import-step id="transmogrify.webcrawler-various" version="20090112"
-              handler="transmogrify.webcrawler.setuphandlers.import_various"
-              title="Additional Funnelweb Site policy setup">
-  <dependency step="types" />
-  Funnelweb Site Policy
- </import-step>
-</import-steps>
