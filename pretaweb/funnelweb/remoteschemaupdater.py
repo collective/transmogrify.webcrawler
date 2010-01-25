@@ -44,24 +44,23 @@ class RemoteSchemaUpdaterSection(object):
             
             url = urllib.basejoin(self.target, path)
             
-            if True:
-                changed = False
-                errors = []
+            changed = False
+            errors = []
 
-                # support field arguments via 'fieldname.argument' syntax
-                # result is dict with tuple (value, fieldarguments)
-                # stored in fields variable
-                fields = {}
-                for key, value in item.iteritems():
-                    if key.startswith('_'):
-                        continue
-                    parts = key.split('.',1)
-                    fields.setdefault(parts[0], [None,{}])
-                    if len(parts)==1:
-                        fields[parts[0]][0] = value
-                    else:
-                        fields[parts[0]][1][parts[1]] = value
-
+            # support field arguments via 'fieldname.argument' syntax
+            # result is dict with tuple (value, fieldarguments)
+            # stored in fields variable
+            fields = {}
+            for key, value in item.iteritems():
+                if key.startswith('_'):
+                    continue
+                parts = key.split('.',1)
+                fields.setdefault(parts[0], [None,{}])
+                if len(parts)==1:
+                    fields[parts[0]][0] = value
+                else:
+                    fields[parts[0]][1][parts[1]] = value
+                    
                 proxy = xmlrpclib.ServerProxy(url)
                 multicall = xmlrpclib.MultiCall(proxy)
                 for key, parts in fields.items():
@@ -75,12 +74,19 @@ class RemoteSchemaUpdaterSection(object):
                     f = urllib.urlopen(url+'/set%s'%key.capitalize(), input)
                     nurl = f.geturl()
                     info = f.info()
-                if '_defaultpage' in item:
-                    proxy.setDefaultPage(item['_defaultpage']) 
-                #result = multicall()
-                proxy.update() #does indexing
-                if errors:
-                    item['_safeatschemaupdater:error'] = errors
+                
+                for attempt in range(0,3):
+                    try:
+                        if '_defaultpage' in item:
+                            proxy.setDefaultPage(item['_defaultpage']) 
+                        #result = multicall()
+                        proxy.update() #does indexing
+                        break
+                    except xmlrpclib.ProtocolError,e:
+                        if e.errcode == 503:
+                            continue
+                        else:
+                            raise
 
 
             yield item

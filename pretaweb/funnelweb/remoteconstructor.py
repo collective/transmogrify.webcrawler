@@ -48,35 +48,36 @@ class RemoteConstructorSection(object):
 
             elems = path.strip('/').rsplit('/', 1)
             
-            url = urllib.basejoin(self.target, path)
-            proxy = xmlrpclib.ServerProxy(url)
-            container, id = (len(elems) == 1 and ('', elems[0]) or elems)
-            #if id == 'index.html':
-            try:
-                #test paths in case of acquition
-                rpath = proxy.getPhysicalPath()
-                rpath = rpath[len(basepath):]
-                if path == '/'.join(rpath):
-                    yield item
-                    continue
-            except xmlrpclib.Fault:
-                pass
-            url = urllib.basejoin(self.target,container)
-            proxy = xmlrpclib.ServerProxy(url)
-            try:
-                proxy.invokeFactory(type_, id)
-            except xmlrpclib.ProtocolError,e:
-                if e.errcode == 302:
-                    pass
-                else:
-                    raise
-                #input =  urllib.urlencode({'type_name':type_,
-                #    'id':id
-                #    }
-                #   )
-                #f = urllib.urlopen("%s/invokeFactory" % url, input)
-                #nurl = f.geturl()
-                #info = f.info()
-                #res = f.read()
+            for attempt in range(0, 3):
+                try:
+                
+                    url = urllib.basejoin(self.target, path)
+                    proxy = xmlrpclib.ServerProxy(url)
+                    container, id = (len(elems) == 1 and ('', elems[0]) or elems)
+                    #if id == 'index.html':
+                    try:
+                        #test paths in case of acquition
+                        rpath = proxy.getPhysicalPath()
+                        rpath = rpath[len(basepath):]
+                        if path == '/'.join(rpath):
+                            break
+                    except xmlrpclib.Fault:
+                        pass
+                    purl = urllib.basejoin(self.target,container)
+                    pproxy = xmlrpclib.ServerProxy(purl)
+                    try:
+                        pproxy.invokeFactory(type_, id)
+                    except xmlrpclib.ProtocolError,e:
+                        if e.errcode == 302:
+                            pass
+                        else:
+                            raise
+                    break
+                except xmlrpclib.ProtocolError,e:
+                    if e.errcode == 503:
+                        continue
+                    else:
+                        raise
             
+            yield item
             
