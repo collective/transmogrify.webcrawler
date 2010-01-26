@@ -5,6 +5,44 @@ transmogrify.webcrawler
 A transmogrifier blueprint source which will crawl a url reading in all pages
 until all have been crawled.
 
+Options
+-------
+
+site_url
+  URL to start crawling. The URL will be treated as the base and any links outside
+  this base will be ignored
+
+ignore
+   Regular expressions for urls not to follow
+  
+alias_bases
+   Substitutions for url bases. This is useful where url to access is not the same as absolute
+   urls of links in the pages
+
+patterns
+   Regular expressions to substitute before html is parsed. New line seperated 
+   
+subs
+   Text to replace 
+
+
+checkext
+   checkext
+   
+verbose
+   verbose
+   
+maxpage
+   maxpage
+   
+nonames
+   nonames
+   
+cache
+   cache
+
+
+
 >>> from os.path import dirname, abspath
 >>> config = """
 ... [transmogrifier]
@@ -14,8 +52,8 @@ until all have been crawled.
 ...     printer
 ...     
 ... [webcrawler]
-... blueprint = transmogrify.webcrawler.webcrawler
-... site_url  = file:///%s/test_staticsite
+... blueprint = transmogrify.webcrawler
+... site_url  = file://%s/test_staticsite
 ... alias_bases = http://somerandomsite file:///
 ... patterns =
 ...		(?s)<SCRIPT.*Abbreviation"\) 
@@ -25,15 +63,11 @@ until all have been crawled.
 ...     </head><body>
 ...		<a href="\g<u>">\g<a></a>
 ...     <br>
+...
 ... [clean]
 ... blueprint = collective.transmogrifier.sections.manipulator
-... #keys = file
-... #destination = python:item.get("_mimetype") in ["text/html"] and 'text'
 ... delete = 
-...		file 
-... 	image 
-... 	text 
-...		_content
+...     _content
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
@@ -46,23 +80,45 @@ until all have been crawled.
 >>> from collective.transmogrifier.transmogrifier import Transmogrifier
 >>> transmogrifier = Transmogrifier(plone)
 >>> transmogrifier(u'transmogrify.webcrawler.webcrawler.test')
-{'_path': '/plone_schema.png',
- '_site_url': 'file:///.../src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite'}
-{'_path': '/egenius-plone.gif',
- '_site_url': 'file:///.../src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite'}
-{'_path': '/cia-plone-view-source.jpg',
- '_site_url': 'file:///.../src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite'}
-{'_path': '/file4.HTML',
- '_site_url': 'file:///.../src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite'}
-{'_path': '/file.doc',
- '_site_url': 'file:///.../src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite'}
-{'_path': '/subfolder',
- '_site_url': 'file:///.../src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite'}
-{'_path': '/file2.htm',
- '_site_url': 'file:///.../src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite'}
-{'_path': '/subfolder/subfile1.htm',
- '_site_url': 'file:///.../src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite'}
-{'_path': '/file3.html',
- '_site_url': 'file:///.../src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite'}
-{'_path': '/file1.htm',
- '_site_url': 'file:///.../src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite'}
+{'_backlinks': [],
+ '_content_info': {'content-type': 'text/html'},
+ '_origin': 'file://.../test_staticsite',
+ '_path': '',
+ '_site_url': 'file://.../test_staticsite/',
+ '_sortorder': 0}
+ ...
+
+The item attributes have the following meanings
+
+_content
+  The main content of the url
+_content_info
+  Headers returned
+_path
+  the path of the url not including the base
+_origin
+  the original path in case retriving the url caused a redirection
+_site_url
+  the base of the url
+_sortoder
+  a count on when this path was first encountered in when parsing links in html
+_backlinks
+  A list of tuples of which pages linked to this item. (url, path)
+
+>>> transmogrifier(u'transmogrify.webcrawler.webcrawler.test')
+{...
+ '_path': '',
+ ...}
+{...
+ '_path': 'file2.htm',
+ ...}
+{...
+ '_path': 'subfolder',
+ ...}
+{...
+ '_path': 'egenius-plone.gif',
+ ...}
+{...
+ '_path': 'plone_schema.png',
+ ...}
+...

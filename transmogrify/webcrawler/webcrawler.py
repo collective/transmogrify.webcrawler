@@ -15,7 +15,7 @@ from sys import stderr
 import urlparse
 import logging
 logger = logging.getLogger('Plone')
-from interfaces import ISectionFeedback
+#from interfaces import ISectionFeedback
 from zope.annotation.interfaces import IAnnotations
 
 
@@ -91,8 +91,10 @@ class WebCrawler(object):
 
         #must take off the '/' for the crawler to work
         self.checker.addroot(self.site_url[:-1])
+        self.checker.sortorder[self.site_url] = 0
         for root in self.alias_bases:
             self.checker.addroot(root, add_to_do = 0)
+            self.checker.sortorder[root] = 0
 
 
         while self.checker.todo:
@@ -122,7 +124,7 @@ class WebCrawler(object):
                     path = '/'.join([p for p in path.split('/') if p])
                     info = self.checker.infos.get(url)
                     file = self.checker.files.get(url)
-                    sortorder = self.checker.sortorder[url]
+                    sortorder = self.checker.sortorder[origin]
                     if info:
                         text = page and page.html() or file
                         item = dict(_path         = path,
@@ -131,8 +133,6 @@ class WebCrawler(object):
                                        _sortorder    = sortorder,
                                        _content      = text,
                                        _content_info = info,)
-                        if page and page.html() and hasattr(page, 'parser'):
-                            item['_tree'] = page.parser
                         if origin != url:
                             item['_origin'] = origin
                         if self.feedback:

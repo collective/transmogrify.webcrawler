@@ -1,5 +1,9 @@
 TypeRecognitor
-==========
+==============
+
+TypeRecognitor is a transmogrifier blue print which determines the plone type of the
+item from the mime_type in the header. It reads the mimetype from the headers in
+_content_info set by transmogrify.webrawler
 
 >>> from os.path import dirname
 >>> from os.path import abspath
@@ -8,19 +12,23 @@ TypeRecognitor
 ... [transmogrifier]
 ... pipeline =
 ...     webcrawler
-...     treeserializer
 ...     typerecognitor
+...     clean
 ...     printer
 ...     
 ... [webcrawler]
-... blueprint = transmogrify.webcrawler.webcrawler
-... site_url  = file:///%s/test_staticsite
-...
-... [treeserializer]
-... blueprint = transmogrify.webcrawler.treeserializer
+... blueprint = transmogrify.webcrawler
+... site_url  = file://%s/test_staticsite
 ...
 ... [typerecognitor]
 ... blueprint = transmogrify.webcrawler.typerecognitor
+...
+... [clean]
+... blueprint = collective.transmogrifier.sections.manipulator
+... delete = 
+...   file
+...   text
+...   image
 ...
 ... [printer]
 ... blueprint = collective.transmogrifier.sections.tests.pprinter
@@ -33,11 +41,15 @@ TypeRecognitor
 >>> from collective.transmogrifier.transmogrifier import Transmogrifier
 >>> transmogrifier = Transmogrifier(plone)
 >>> transmogrifier(u'transmogrify.webcrawler.typerecognitor.test')
-{'_mimetype': 'image/jpeg',
- '_path': '/cia-plone-view-source.jpg',
- '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite',
- '_transform': None,
- '_type': 'Image'}
+{...
+ '_mimetype': 'image/jpeg',
+ ...
+ '_path': 'cia-plone-view-source.jpg',
+ ...
+ '_type': 'Image',
+ ...}
+ ...
+ 
 {'_mimetype': 'image/gif',
  '_path': '/egenius-plone.gif',
  '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite',

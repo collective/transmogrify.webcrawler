@@ -12,5 +12,8 @@
     <utility component=".webcrawler.WebCrawler"
              name="transmogrify.webcrawler" />
 
+    <utility component=".typerecognitor.TypeRecognitor"
+             name="transmogrify.webcrawler.typerecognitor" />
+
 
 </configure>
