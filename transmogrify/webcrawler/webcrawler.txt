@@ -1,6 +1,9 @@
 
-WebCrawler
-==========
+transmogrify.webcrawler
+=======================
+
+A transmogrifier blueprint source which will crawl a url reading in all pages
+until all have been crawled.
 
 >>> from os.path import dirname, abspath
 >>> config = """
