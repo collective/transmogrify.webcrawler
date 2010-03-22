@@ -7,7 +7,8 @@ setup(name='transmogrify.webcrawler',
       version=version,
       description="",
       long_description=open(os.path.join("transmogrify", "webcrawler", "webcrawler.txt")).read() + "\n" +
-                       open(os.path.join("docs", "HISTORY.txt")).read(),
+                        open(os.path.join("transmogrify", "webcrawler", "typerecognitor.txt")).read() + "\n" +
+                        open(os.path.join("docs", "HISTORY.txt")).read(),
       # Get more strings from http://www.python.org/pypi?%3Aaction=list_classifiers
       classifiers=[
         "Programming Language :: Python",
@@ -30,5 +31,7 @@ setup(name='transmogrify.webcrawler',
           'collective.transmogrifier',
           ],
       entry_points="""
+            [z3c.autoinclude.plugin]
+            target = transmogrify
             """,
             )

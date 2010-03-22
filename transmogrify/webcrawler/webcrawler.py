@@ -124,7 +124,7 @@ class WebCrawler(object):
                     path = '/'.join([p for p in path.split('/') if p])
                     info = self.checker.infos.get(url)
                     file = self.checker.files.get(url)
-                    sortorder = self.checker.sortorder[origin]
+                    sortorder = self.checker.sortorder.get(origin,0)
                     if info:
                         text = page and page.html() or file
                         item = dict(_path         = path,

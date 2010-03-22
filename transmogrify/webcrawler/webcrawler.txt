@@ -41,71 +41,47 @@ nonames
 cache
    cache
 
+The following set the keys items added to the pipeline
+
+pathkey
+ default: _path. The path of the url not including the base
+
+siteurlkey
+ default: _site_url. The base of the url
+ 
+originkey
+  default: _origin. The original path in case retriving the url caused a redirection
+
+contentkey
+ default: _content. The main content of the url
+ 
+contentinfokey
+ default: _content_info. Headers returned by urlopen
+
+sortorderkey
+  default: _sortoder. A count on when a link to this item was first encounted while crawling
+
+backlinkskey
+  default: _backlinks. A list of tuples of which pages linked to this item. (url, path)
 
 
->>> from os.path import dirname, abspath
->>> config = """
-... [transmogrifier]
-... pipeline =
-...     webcrawler
-...     clean
-...     printer
-...     
+>>> testtransmogrifier(dontprint=['_content'], source="""
 ... [webcrawler]
 ... blueprint = transmogrify.webcrawler
 ... site_url  = file://%s/test_staticsite
 ... alias_bases = http://somerandomsite file:///
-... patterns =
-...		(?s)<SCRIPT.*Abbreviation"\) 
-...		(?s)MakeLink\('(?P<u>[^']*)','(?P<a>[^']*)'\)
-...     (?s)State=.*<body[^>]*>
-... subs = 
-...     </head><body>
-...		<a href="\g<u>">\g<a></a>
-...     <br>
-...
-... [clean]
-... blueprint = collective.transmogrifier.sections.manipulator
-... delete = 
-...     _content
-...
-... [printer]
-... blueprint = collective.transmogrifier.sections.tests.pprinter
-...
-... """ % abspath(dirname(__file__)).replace('\\','/')
+... """)
 
->>> from collective.transmogrifier.tests import registerConfig
->>> registerConfig(u'transmogrify.webcrawler.webcrawler.test', config)
-
->>> from collective.transmogrifier.transmogrifier import Transmogrifier
->>> transmogrifier = Transmogrifier(plone)
->>> transmogrifier(u'transmogrify.webcrawler.webcrawler.test')
 {'_backlinks': [],
  '_content_info': {'content-type': 'text/html'},
  '_origin': 'file://.../test_staticsite',
  '_path': '',
  '_site_url': 'file://.../test_staticsite/',
  '_sortorder': 0}
- ...
+...
 
-The item attributes have the following meanings
 
-_content
-  The main content of the url
-_content_info
-  Headers returned
-_path
-  the path of the url not including the base
-_origin
-  the original path in case retriving the url caused a redirection
-_site_url
-  the base of the url
-_sortoder
-  a count on when this path was first encountered in when parsing links in html
-_backlinks
-  A list of tuples of which pages linked to this item. (url, path)
-
->>> transmogrifier(u'transmogrify.webcrawler.webcrawler.test')
+>>> testtransmogrifier(source=webcrawler, strip=['_content'])
 {...
  '_path': '',
  ...}
@@ -122,3 +98,18 @@ _backlinks
  '_path': 'plone_schema.png',
  ...}
 ...
+
+>>> source = """
+... [webcrawler]
+... blueprint = transmogrify.webcrawler
+... site_url  = file://%s/test_staticsite
+... alias_bases = http://somerandomsite file:///
+... patterns =
+...		(?s)<SCRIPT.*Abbreviation"\) 
+...		(?s)MakeLink\('(?P<u>[^']*)','(?P<a>[^']*)'\)
+...     (?s)State=.*<body[^>]*>
+... subs = 
+...     </head><body>
+...		<a href="\g<u>">\g<a></a>
+...     <br>
+... """

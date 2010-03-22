@@ -15,5 +15,8 @@
     <utility component=".typerecognitor.TypeRecognitor"
              name="transmogrify.webcrawler.typerecognitor" />
 
+    <utility component=".staticcreator.StaticCreatorSection"
+		     name="transmogrify.webcrawler.fscache" />
+
 
 </configure>
