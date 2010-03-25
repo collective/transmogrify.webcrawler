@@ -25,7 +25,6 @@ patterns
 subs
    Text to replace 
 
-
 checkext
    checkext
    
@@ -40,6 +39,9 @@ nonames
    
 cache
    cache
+
+Keys inserted
+-------------
 
 The following set the keys items added to the pipeline
 
@@ -65,13 +67,15 @@ backlinkskey
   default: _backlinks. A list of tuples of which pages linked to this item. (url, path)
 
 
+Tests
+-----
+
 >>> testtransmogrifier(dontprint=['_content'], source="""
 ... [webcrawler]
 ... blueprint = transmogrify.webcrawler
 ... site_url  = file://%s/test_staticsite
 ... alias_bases = http://somerandomsite file:///
 ... """)
-
 {'_backlinks': [],
  '_content_info': {'content-type': 'text/html'},
  '_origin': 'file://.../test_staticsite',
@@ -113,3 +117,12 @@ backlinkskey
 ...		<a href="\g<u>">\g<a></a>
 ...     <br>
 ... """
+
+
+
+External scripts used
+---------------------
+
+http://svn.python.org/projects/python/trunk/Tools/webchecker/webchecker.py
+http://svn.python.org/projects/python/trunk/Tools/webchecker/websucker.py
+

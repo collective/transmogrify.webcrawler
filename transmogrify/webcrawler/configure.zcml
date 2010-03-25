@@ -16,7 +16,7 @@
              name="transmogrify.webcrawler.typerecognitor" />
 
     <utility component=".staticcreator.StaticCreatorSection"
-		     name="transmogrify.webcrawler.fscache" />
+		     name="transmogrify.webcrawler.cache" />
 
 
 </configure>
