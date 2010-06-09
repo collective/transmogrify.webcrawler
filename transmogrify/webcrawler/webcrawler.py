@@ -361,6 +361,7 @@ class LXMLPage:
         try:
 #            self.parser = lxml.html.fromstring(text)
             self.parser = lxml.html.soupparser.fromstring(text)
+            self.parser.resolve_base_href()
             self._html = tostring(self.parser,
                                              encoding=unicode,
                                              method="html",
@@ -370,6 +371,7 @@ class LXMLPage:
             pass
         try:
             self.parser = lxml.html.soupparser.fromstring(text)
+            self.parser.resolve_base_href()
             self._html = tostring(self.parser,
                                              encoding=unicode,
                                              method="html",
