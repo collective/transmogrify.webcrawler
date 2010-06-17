@@ -128,11 +128,12 @@ class WebCrawler(object):
                     if info:
                         text = page and page.html() or file
                         item = dict(_path         = path,
-                                       _site_url     = base,
-                                       _backlinks    = names,
-                                       _sortorder    = sortorder,
-                                       _content      = text,
-                                       _content_info = info,)
+                                    _site_url     = base,
+                                    _backlinks    = names,
+                                    _sortorder    = sortorder,
+                                    _content      = text,
+                                    _content_info = info,
+                                    _orig_path    = path)
                         if origin != url:
                             item['_origin'] = origin
                         if self.feedback:
