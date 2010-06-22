@@ -135,7 +135,9 @@ class WebCrawler(object):
                                     _content_info = info,
                                     _orig_path    = path)
                         if origin != url:
-                            item['_origin'] = origin
+                            orig_path = origin[len(self.site_url):]
+                            orig_path = '/'.join([p for p in orig_path.split('/') if p])
+                            item['_origin'] = orig_path
                         if self.feedback:
                             self.feedback.success('webcrawler',msg)
                         yield item
