@@ -43,14 +43,15 @@ def setUp(test):
     import collective.transmogrifier.sections
     zcml.load_config('meta.zcml', zope.app.component)
     zcml.load_config('configure.zcml', collective.transmogrifier.sections)
+    zcml.load_config('configure.zcml', transmogrify.webcrawler)
 
 
     provideUtility(PrettyPrinter,
         name=u'collective.transmogrifier.sections.tests.pprinter')
-    provideUtility(WebCrawler,
-        name=u'transmogrify.webcrawler')
-    provideUtility(TypeRecognitor,
-        name=u'transmogrify.webcrawler.typerecognitor')
+#    provideUtility(WebCrawler,
+#        name=u'transmogrify.webcrawler')
+#    provideUtility(TypeRecognitor,
+#        name=u'transmogrify.webcrawler.typerecognitor')
 
 
 
@@ -116,6 +117,13 @@ def test_suite():
         doctest.DocFileSuite('typerecognitor.txt', 
                 setUp=setUp, 
                 optionflags = flags,
+                globs = globs,
+                tearDown=tearDown),
+
+        doctest.DocFileSuite('staticcreator.txt', 
+                setUp=setUp, 
+                optionflags = flags,
+                globs = globs,
                 tearDown=tearDown),
 
 
