@@ -5,20 +5,12 @@ from collective.transmogrifier.interfaces import ISection
 from collective.transmogrifier.utils import Matcher
 from collective.transmogrifier.utils import defaultKeys
 import logging
-logger = logging.getLogger('Plone')
+logger = logging.getLogger('funnelweb')
 import os
 import sys
 import urllib
 from sys import stderr
 
-#from Products.Archetypes.interfaces import IBaseObject
-#from Products.Archetypes.event import ObjectInitializedEvent
-#from Products.Archetypes.event import ObjectEditedEvent
-
-#####################################################
-# from plone.app.transmogrifier
-# Override in order to swollow exceptions in updating
-#####################################################
 
 class StaticCreatorSection(object):
     classProvides(ISectionBlueprint)
@@ -59,14 +51,13 @@ class StaticCreatorSection(object):
                 self.savefile(item['image'],path)
             elif type in ['Folder','ContentFolder']:
                 makedirs(path)
-                
-                        
-
-            
+            elif item.get('_content') is not None:
+                self.savefile(item['_content'], path)
             yield item
 
 
     def savefile(self, text, path):
+        path = self.savefilename(path)
         if type(text) == type(u''):
             text = text.encode('utf8')
         dir, base = os.path.split(path)
@@ -75,8 +66,11 @@ class StaticCreatorSection(object):
             logger.log(logging.DEBUG, msg)
             print >> stderr, msg
             return
+        
             
         makedirs(dir)
+        if os.path.isdir(path):
+            path = path + "index.html"            
         try:
             f = open(path, "wb")
             f.write(text)
@@ -84,20 +78,20 @@ class StaticCreatorSection(object):
         except IOError, msg:
             pass
 
-    def savefilename(self, url):
-        type, rest = urllib.splittype(url)
-        host, path = urllib.splithost(rest)
-        path = path.lstrip("/")
-        user, host = urllib.splituser(host)
-        host, port = urllib.splitnport(host)
-        host = host.lower()
+    def savefilename(self, path):
+        #type, rest = urllib.splittype(url)
+        #host, path = urllib.splithost(rest)
+        #path = path.lstrip("/")
+        #user, host = urllib.splituser(host)
+        #host, port = urllib.splitnport(host)
+        #host = host.lower()
         if not path or path[-1] == "/":
             path = path + "index.html"
         if os.sep != "/":
             path = os.sep.join(path.split("/"))
             if os.name == "mac":
                 path = os.sep + path
-        path = os.path.join(host, path)
+        path = os.path.join(path)
         return path
 
 
