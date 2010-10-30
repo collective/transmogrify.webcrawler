@@ -52,8 +52,7 @@ class TypeRecognitor(object):
             # needed parameters to be able to recognize
             if '_path' not in item or \
                '_site_url' not in item or \
-               '_content' not in item or \
-               '_content_info' not in item:
+               '_content' not in item:
                 yield item; continue
             
             # if type is defined then dont mess with it
@@ -61,7 +60,7 @@ class TypeRecognitor(object):
                 yield item; continue
 
             url = item['_site_url'] + item['_path']
-            item.update(self.getFileType(item['_content_info'], url))
+            item.update(self.getFileType(item.get('_content_info'), url))
           
             # copy content to appropriate field
             if item['_type'] == 'File':
@@ -80,7 +79,8 @@ class TypeRecognitor(object):
         
     def getFileType(self, info, file):
         # recognize type of data
-        if info.has_key('content-type'):
+            
+        if info is None or info.has_key('content-type'):
             ctype = cgi.parse_header(info['content-type'])[0].lower()
             if ';' in ctype:
                 # handle content-type: text/html; charset=iso8859-1 :

@@ -70,7 +70,7 @@ backlinkskey
 Tests
 -----
 
->>> testtransmogrifier(dontprint=['_content'], source="""
+>>> testtransmogrifier("""
 ... [webcrawler]
 ... blueprint = transmogrify.webcrawler
 ... site_url  = file://%s/test_staticsite
@@ -78,22 +78,47 @@ Tests
 ... """)
 {'_backlinks': [],
  '_content_info': {'content-type': 'text/html'},
+ '_mimetype': 'text/html',
  '_origin': 'file://.../test_staticsite',
  '_path': '',
  '_site_url': 'file://.../test_staticsite/',
- '_sortorder': 0}
+ '_sortorder': 0,
+ '_type': 'Document'}
 ...
 
 
->>> testtransmogrifier(source=webcrawler, strip=['_content'])
+>>> testtransmogrifier("""
+... [webcrawler]
+... blueprint = transmogrify.webcrawler
+... site_url  = file://%s/test_staticsite
+... alias_bases = http://somerandomsite file:///
+... """)
 {...
  '_path': '',
+ ...}
+{...
+ '_path': 'cia-plone-view-source.jpg',
+ ...}
+{...
+ '_path': 'subfolder',
+ ...}
+{...
+ '_path': 'subfolder2',
+ ...}
+{...
+ '_path': 'file3.html',
+ ...}
+{...
+ '_path': 'subfolder/subfile1.htm',
+ ...}
+{...
+ '_path': 'file.doc',
  ...}
 {...
  '_path': 'file2.htm',
  ...}
 {...
- '_path': 'subfolder',
+ '_path': 'file4.HTML',
  ...}
 {...
  '_path': 'egenius-plone.gif',
@@ -101,9 +126,15 @@ Tests
 {...
  '_path': 'plone_schema.png',
  ...}
+{...
+ '_path': 'file1.htm',
+ ...}
+{...
+'_path': 'subfolder2/subfile1.htm', 
+ ...}
 ...
 
->>> source = """
+>>> testtransmogrifier("""
 ... [webcrawler]
 ... blueprint = transmogrify.webcrawler
 ... site_url  = file://%s/test_staticsite
@@ -116,7 +147,7 @@ Tests
 ...     </head><body>
 ...		<a href="\g<u>">\g<a></a>
 ...     <br>
-... """
+... """)
 
 
 
