@@ -1,0 +1,122 @@
+transmogrify.webcrawler.cache
+=============================
+
+
+Transmogrifier blueprint to save content to the filesystem. It can be used in conjunction
+with transmogrifier.webcrawler to save crawler content locally so subsequent runs don't
+redownload the content again.
+
+For instance we can take this test source and save it to files in a temporary directory
+
+>>> testtransmogrifier("""
+... 
+... [transmogrifier]
+... pipeline =
+...     source
+...     cache
+...     ...
+...     
+... [source]
+... blueprint = transmogrify.htmltesting.htmlbacklinksource
+... level3/index=<a href="../level2/index">Level 2</a>
+... level2/index=<a href="../level3/index">Level 3</a><img src="+&image%20blah">
+... level2/+&image%20blah=<h1>content</h1>
+...
+... [cache]
+... blueprint = transmogrify.webcrawler.cache
+... output  = %(tempdir)s
+... """ % globals())
+{...
+
+This will have saved files and directories to our temp directory. Now we can crawl them as if they came from
+a real site
+
+
+>>> testtransmogrifier("""
+... 
+... [transmogrifier]
+... pipeline =
+...     source
+...     cache
+...     
+... [webcrawler]
+... blueprint = transmogrify.webcrawler
+... base  = http://somesite
+... cache = %(tempdir)
+...
+... [cache]
+... blueprint = transmogrify.webcrawler.cache
+... output  = %(tempdir)s
+... """ % globals())
+{...
+
+
+Note that the cache is looked at first and the base is never crawled unless a url is not found.
+
+
+
+
+
+
+
+>>> from collective.transmogrifier.tests import registerConfig
+>>> registerConfig(u'transmogrify.webcrawler.typerecognitor.test', config)
+
+>>> from collective.transmogrifier.transmogrifier import Transmogrifier
+>>> transmogrifier = Transmogrifier(plone)
+>>> transmogrifier(u'transmogrify.webcrawler.typerecognitor.test')
+{...
+ '_mimetype': 'image/jpeg',
+ ...
+ '_path': 'cia-plone-view-source.jpg',
+ ...
+ '_type': 'Image',
+ ...}
+ ...
+ 
+{'_mimetype': 'image/gif',
+ '_path': '/egenius-plone.gif',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite',
+ '_transform': None,
+ '_type': 'Image'}
+{'_mimetype': 'application/msword',
+ '_path': '/file.doc',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite',
+ '_transform': 'doc_to_html',
+ '_type': 'Document'}
+{'_mimetype': 'text/html',
+ '_path': '/file1.htm',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite',
+ '_transform': None,
+ '_type': 'Document'}
+{'_mimetype': 'text/html',
+ '_path': '/file2.htm',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite',
+ '_transform': None,
+ '_type': 'Document'}
+{'_mimetype': 'text/html',
+ '_path': '/file3.html',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite',
+ '_transform': None,
+ '_type': 'Document'}
+{'_mimetype': 'text/html',
+ '_path': '/file4.HTML',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite',
+ '_transform': None,
+ '_type': 'Document'}
+{'_mimetype': 'image/png',
+ '_path': '/plone_schema.png',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite',
+ '_transform': None,
+ '_type': 'Image'}
+{'_mimetype': 'text/html',
+ '_path': '/subfolder',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite',
+ '_transform': None,
+ '_type': 'Document'}
+{'_mimetype': 'text/html',
+ '_path': '/subfolder/subfile1.htm',
+ '_site_url': 'file:///home/rok/Projects/pretaweb_dev/src/transmogrify.webcrawler/pretaweb/blueprints/test_staticsite',
+ '_transform': None,
+ '_type': 'Document'}
+
