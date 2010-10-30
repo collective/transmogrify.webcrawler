@@ -47,12 +47,15 @@ class WebCrawler(object):
         self.maxpage   = options.get('maxpage', MAXPAGE)
         self.nonames   = options.get('nonames', NONAMES)
         self.site_url  = options.get('site_url', None)
-        self.cache = options.get('cache', True)
+        self.max = options.get('max',None)
+        self.cache = options.get('cache', None)
         self.context = transmogrifier.context
-        self.alias_bases  = [a for a in options.get('alias_bases', '').split() if a]
+        #self.alias_bases  = [a for a in options.get('alias_bases', '').split() if a]
         # make sure we end with a /
         if self.site_url[-1] != '/':
             self.site_url=self.site_url+'/'
+        if os.path.exists(self.site_url):
+            self.site_url = 'file://'+urllib.pathname2url(self.site_url)
 
     def __iter__(self):
         for item in self.previous:
@@ -80,7 +83,8 @@ class WebCrawler(object):
 
         if not self.restoreCache():
             self.checker = MyChecker()
-        self.checker.alias_bases = self.alias_bases
+        #self.checker.alias_bases = self.alias_bases
+        self.checker.cache = self.cache
         self.checker.site_url = self.site_url
 
         self.checker.setflags(checkext   = self.checkext,
@@ -92,12 +96,14 @@ class WebCrawler(object):
         #must take off the '/' for the crawler to work
         self.checker.addroot(self.site_url[:-1])
         self.checker.sortorder[self.site_url] = 0
-        for root in self.alias_bases:
-            self.checker.addroot(root, add_to_do = 0)
-            self.checker.sortorder[root] = 0
+        #for root in self.alias_bases:
+        #    self.checker.addroot(root, add_to_do = 0)
+        #    self.checker.sortorder[root] = 0
 
 
         while self.checker.todo:
+            if self.max and len(self.checker.done) == int(self.max):
+                break
             urls = self.checker.todo.keys()
             #urls.sort()
             del urls[1:]
@@ -232,6 +238,9 @@ class MyChecker(Checker):
         f = self.openpage(url_pair)
         if f:
             url = f.geturl()
+            cache = self.cache
+            if cache:
+                url = oldurl
             if url != oldurl:
                 self.redirected[oldurl] = url
             self.infos[url] = info = f.info()
@@ -247,29 +256,41 @@ class MyChecker(Checker):
     def openpage(self, url_pair):
         url, fragment = url_pair
         old_pair = url_pair
+        old_url = url
         # actually open alias instead
-        realbase = self.site_url
-        if self.site_url.endswith('/'):
-            realbase=self.site_url[:-1]
+        
+        cache = self.cache
+        if cache:
+            cache = cache.rstrip('/')+'/'
+            url = cache + url[len(self.site_url):]
+            if not url.startswith('file:'):
+                url = 'file:'+ url
+        
+        
+#        if self.site_url.endswith('/'):
+#            realbase=self.site_url[:-1]
 
-        for a in [realbase]: #+alias_bases:
-            if a.endswith('/'):
-                a=a[:-1]
-            if a and url.startswith(a):
-                base = url[:len(a)]
-                path = url[len(a):]
-                url = realbase+path
-                break
+#        for a in self.alias_bases:
+#            if a.endswith('/'):
+#                a=a[:-1]
+#            if a and url.startswith(a):
+#                base = url[:len(a)]
+#                path = url[len(a):]
+#                url = realbase+path
+#                break
 
         try:
             return self.urlopener.open(url)
         except (OSError, IOError), msg:
-            msg = self.sanitize(msg)
-            self.note(0, "Error %s", msg)
-            if self.verbose > 0:
-                self.show(" HREF ", url, "  from", self.todo[url_pair])
-            self.setbad(old_pair, msg)
-            return None
+            try:
+                return self.urlopener.open(old_url)
+            except (OSError, IOError), msg:
+                msg = self.sanitize(msg)
+                self.note(0, "Error %s", msg)
+                if self.verbose > 0:
+                    self.show(" HREF ", url, "  from", self.todo[url_pair])
+                self.setbad(old_pair, msg)
+                return None
         
     def setSortOrder(self, link):
         """ give each link a counter as it's encountered to later use in sorting """
