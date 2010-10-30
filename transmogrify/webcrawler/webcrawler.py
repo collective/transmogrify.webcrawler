@@ -134,13 +134,16 @@ class WebCrawler(object):
                     if info:
                         text = page and page.html() or file
                         item = dict(_path         = path,
-                                       _site_url     = base,
-                                       _backlinks    = names,
-                                       _sortorder    = sortorder,
-                                       _content      = text,
-                                       _content_info = info,)
+                                    _site_url     = base,
+                                    _backlinks    = names,
+                                    _sortorder    = sortorder,
+                                    _content      = text,
+                                    _content_info = info,
+                                    _orig_path    = path)
                         if origin != url:
-                            item['_origin'] = origin
+                            orig_path = origin[len(self.site_url):]
+                            orig_path = '/'.join([p for p in orig_path.split('/') if p])
+                            item['_origin'] = orig_path
                         if self.feedback:
                             self.feedback.success('webcrawler',msg)
                         yield item
@@ -382,6 +385,7 @@ class LXMLPage:
         try:
 #            self.parser = lxml.html.fromstring(text)
             self.parser = lxml.html.soupparser.fromstring(text)
+            self.parser.resolve_base_href()
             self._html = tostring(self.parser,
                                              encoding=unicode,
                                              method="html",
@@ -391,6 +395,7 @@ class LXMLPage:
             pass
         try:
             self.parser = lxml.html.soupparser.fromstring(text)
+            self.parser.resolve_base_href()
             self._html = tostring(self.parser,
                                              encoding=unicode,
                                              method="html",
