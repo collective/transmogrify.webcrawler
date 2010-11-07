@@ -10,7 +10,7 @@ from transmogrify.webcrawler.external.webchecker import Checker,Page
 from transmogrify.webcrawler.external.webchecker import MyHTMLParser,MyStringIO
 import re
 from htmlentitydefs import entitydefs
-import urllib,os
+import urllib,os, urlparse
 from sys import stderr
 import urlparse
 import logging
@@ -21,7 +21,7 @@ from zope.annotation.interfaces import IAnnotations
 
 VERBOSE = 0                             # Verbosity level (0-3)
 MAXPAGE = 0                        # Ignore files bigger than this
-CHECKEXT = True    # Check external references (1 deep)
+CHECKEXT = False    # Check external references (1 deep)
 VERBOSE = 0         # Verbosity level (0-3)
 MAXPAGE = 150000    # Ignore files bigger than this
 NONAMES = 0         # Force name anchor checking
@@ -44,7 +44,7 @@ class WebCrawler(object):
 
         self.checkext  = options.get('checkext', CHECKEXT)
         self.verbose   = options.get('verbose', VERBOSE)
-        self.maxpage   = options.get('maxpage', MAXPAGE)
+        self.maxpage   = options.get('maxsize', MAXPAGE)
         self.nonames   = options.get('nonames', NONAMES)
         self.site_url  = options.get('site_url', None)
         self.max = options.get('max',None)
@@ -320,7 +320,8 @@ class MyURLopener(urllib.FancyURLopener):
         return None
 
     def open_file(self, url):
-        path = urllib.url2pathname(urllib.unquote(url))
+        
+        path = urllib.url2pathname(urlparse.urlparse(url)[2])
         if os.path.isdir(path):
             if path[-1] != os.sep:
                 url = url + '/'
