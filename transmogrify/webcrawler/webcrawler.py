@@ -46,7 +46,7 @@ class WebCrawler(object):
         self.verbose   = options.get('verbose', VERBOSE)
         self.maxpage   = options.get('maxsize', MAXPAGE)
         self.nonames   = options.get('nonames', NONAMES)
-        self.site_url  = options.get('site_url', None)
+        self.site_url  = options.get('site_url', options.get('url', None))
         self.max = options.get('max',None)
         self.cache = options.get('cache', None)
         self.context = transmogrifier.context
@@ -320,8 +320,8 @@ class MyURLopener(urllib.FancyURLopener):
         return None
 
     def open_file(self, url):
-        
-        path = urllib.url2pathname(urlparse.urlparse(url)[2])
+        #scheme,netloc,path,parameters,query,fragment = urlparse.urlparse(url)
+        path = urllib.url2pathname(url)
         if os.path.isdir(path):
             if path[-1] != os.sep:
                 url = url + '/'

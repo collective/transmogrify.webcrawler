@@ -15,9 +15,6 @@ site_url
 ignore
    Regular expressions for urls not to follow
   
-alias_bases
-   Substitutions for url bases. This is useful where url to access is not the same as absolute
-   urls of links in the pages
 
 patterns
    Regular expressions to substitute before html is parsed. New line seperated 
@@ -155,5 +152,8 @@ External scripts used
 ---------------------
 
 http://svn.python.org/projects/python/trunk/Tools/webchecker/webchecker.py
+http://svn.python.org/projects/python/trunk/Tools/webchecker/websucker.py
+
+thon.org/projects/python/trunk/Tools/webchecker/webchecker.py
 http://svn.python.org/projects/python/trunk/Tools/webchecker/websucker.py
 
