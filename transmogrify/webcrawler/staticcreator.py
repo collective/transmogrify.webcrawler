@@ -35,7 +35,7 @@ class StaticCreatorSection(object):
             
             pathkey = self.pathkey(*item.keys())[0]
             
-            if not pathkey:         # not enough info
+            if not pathkey or not self.output:         # not enough info
                 yield item; continue
             
             path = item[pathkey]

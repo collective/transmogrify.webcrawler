@@ -1,21 +1,38 @@
 Changelog
 =========
 
-1.0 - Unreleased
+1.0b2 (2010-11-09)
+------------------
+
+- Stopped localhost output when no output set
+
+1.0b1 (2010-11-08)
+------------------
+
+- change site_url to just url.
+
+- rename maxpage to maxsize
+
+- fix file: style urls 
+
+- Added cache option to replace base_alias
+
+- fix _origin key set by webcrawler, instead of url now it is path as expected by further blue
+  [Vitaliy Podoba]
+
+- add _orig_path to pipeline item to keep original path for any further purposes, we will need
+  [Vitaliy Podoba]
+
+- make all url absolute taking into account base tags inside webcrawler blueprint
+   [Vitaliy Podoba] 
+
+
+0.1 (2008-09-25)
 ----------------
 
-* Initial release
-
-transmogrify.webcrawler 0.1 - October 25, 2008
-
-    - renamed package from pretaweb.blueprints to transmogrify.webcrawler.
+- renamed package from pretaweb.blueprints to transmogrify.webcrawler.
       [djay]
 
-    - enhanced import view (djay)
+- enhanced import view (djay)
 
 
-0.2
-
-16-7-09 djay Added caching of crawled sites
-
-10-7-09 djay Added UI using z3cform
