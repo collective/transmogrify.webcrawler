@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.0b3 (2010-11-10)
+------------------
+
+- Fixed bug in cache that caused many links to be ignored in some cases
+- Fix documentation up
+
 1.0b2 (2010-11-09)
 ------------------
 
