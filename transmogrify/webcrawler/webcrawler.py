@@ -92,7 +92,6 @@ class WebCrawler(object):
                          maxpage    = self.maxpage,
                          nonames    = self.nonames)
 
-
         #must take off the '/' for the crawler to work
         self.checker.addroot(self.site_url[:-1])
         self.checker.sortorder[self.site_url] = 0
@@ -108,13 +107,18 @@ class WebCrawler(object):
             #urls.sort()
             del urls[1:]
             for url,part in urls:
-                if self.ignore(url):
+
+                if not url.startswith(self.site_url[:-1]):
                     self.checker.markdone((url,part))
-                    print >> stderr, "Ignoring: "+ str(url)
+                    msg = "webcrawler: External: %s" %str(url)
+                    logger.log(logging.DEBUG, msg)
+                    print >> stderr, msg
+                    yield dict(_bad_url = url)
+                elif [pat for pat in self.ignore_re if pat and pat.search(url)]:
+                    self.checker.markdone((url,part))
                     msg = "webcrawler: Ignoring: %s" %str(url)
                     logger.log(logging.DEBUG, msg)
-                    if self.feedback:
-                        self.feedback.ignored('webcrawler',msg)
+                    print >> stderr, msg
                     yield dict(_bad_url = url)
                 else:
                     print >> stderr, "Crawling: "+ str(url)
@@ -155,14 +159,6 @@ class WebCrawler(object):
                             self.feedback.ignored('webcrawler',msg)
                         yield dict(_bad_url = origin)
         self.storeCache()
-
-    def ignore(self, url):
-        if not url.startswith(self.site_url[:-1]):
-            return True
-        for pat in self.ignore_re:
-            if pat and pat.search(url):
-                return True
-        return False
 
     CACHE_KEY = 'funnelweb_cache'
     def restoreCache(self):
@@ -241,9 +237,6 @@ class MyChecker(Checker):
         f = self.openpage(url_pair)
         if f:
             url = f.geturl()
-            cache = self.cache
-            if cache:
-                url = oldurl
             if url != oldurl:
                 self.redirected[oldurl] = url
             self.infos[url] = info = f.info()
@@ -261,15 +254,7 @@ class MyChecker(Checker):
         old_pair = url_pair
         old_url = url
         # actually open alias instead
-        
-        cache = self.cache
-        if cache:
-            cache = cache.rstrip('/')+'/'
-            url = cache + url[len(self.site_url):]
-            if not url.startswith('file:'):
-                url = 'file:'+ url
-        
-        
+
 #        if self.site_url.endswith('/'):
 #            realbase=self.site_url[:-1]
 
@@ -282,18 +267,37 @@ class MyChecker(Checker):
 #                url = realbase+path
 #                break
 
-        try:
-            return self.urlopener.open(url)
-        except (OSError, IOError), msg:
+        
+        cache = self.cache
+        if cache and not url.startswith('file://'):
+            cache = cache.rstrip('/')+'/'
+            url = cache + url[len(self.site_url):]
+            if not url.startswith('file:'):
+                url = 'file:'+ url
+
             try:
-                return self.urlopener.open(old_url)
+                f = self.urlopener.open(url)
+                newurl = f.geturl()
+                #we need to check if there was a redirection in cache
+                newpath = newurl[len(cache):]
+                oldpath = old_url[len(self.site_url):]
+                diff = newpath[len(oldpath):]
+                if diff:
+                    f.url = old_url.rstrip('/') + '/' + diff
+                else:
+                    f.url = old_url
+                return f
             except (OSError, IOError), msg:
-                msg = self.sanitize(msg)
-                self.note(0, "Error %s", msg)
-                if self.verbose > 0:
-                    self.show(" HREF ", url, "  from", self.todo[url_pair])
-                self.setbad(old_pair, msg)
-                return None
+                pass
+        try:
+            return self.urlopener.open(old_url)
+        except (OSError, IOError), msg:
+            msg = self.sanitize(msg)
+            self.note(0, "Error %s", msg)
+            if self.verbose > 0:
+                self.show(" HREF ", url, "  from", self.todo[url_pair])
+            self.setbad(old_pair, msg)
+            return None
         
     def setSortOrder(self, link):
         """ give each link a counter as it's encountered to later use in sorting """
