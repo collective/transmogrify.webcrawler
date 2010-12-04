@@ -42,7 +42,10 @@ class StaticCreatorSection(object):
             type = item.get('_type')
             path = os.path.join(base,urllib.url2pathname(path))
             if type in ['Document']:
-                self.savefile(item['text'],path)
+                if item.get('_html',None) is not None:
+                    self.savefile(item['_html'], path)
+                else:
+                    self.savefile(item['text'],path)
             elif type in ['Page']:
                 self.savefile(item['body'],path)
             elif type in ['File']:

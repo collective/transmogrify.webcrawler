@@ -10,6 +10,7 @@ from transmogrify.webcrawler.external.webchecker import Checker,Page
 from transmogrify.webcrawler.external.webchecker import MyHTMLParser,MyStringIO
 import re
 from htmlentitydefs import entitydefs
+from BeautifulSoup import UnicodeDammit
 import urllib,os, urlparse
 from sys import stderr
 import urlparse
@@ -144,6 +145,8 @@ class WebCrawler(object):
                                     _content      = text,
                                     _content_info = info,
                                     _orig_path    = path)
+                        if page and page.html():
+                            item['_html'] = page.text #so cache save no cleaned version
                         if origin != url:
                             orig_path = origin[len(self.site_url):]
                             orig_path = '/'.join([p for p in orig_path.split('/') if p])
@@ -388,8 +391,14 @@ class LXMLPage:
         self.checker.note(2, "  Parsing %s (%d bytes)", self.url, size)
         text = clean_html(text)
         try:
-#            self.parser = lxml.html.fromstring(text)
-            self.parser = lxml.html.soupparser.fromstring(text)
+            converted = UnicodeDammit(text, isHTML=True)
+            if not converted.unicode:
+                raise UnicodeDecodeError(
+                    "Failed to detect encoding, tried [%s]",
+                    ', '.join(converted.triedEncodings))
+            # print converted.originalEncoding
+            self.parser = lxml.html.fromstring(converted.unicode)
+            #self.parser = lxml.html.soupparser.fromstring(text)
             self.parser.resolve_base_href()
             self._html = tostring(self.parser,
                                              encoding=unicode,
