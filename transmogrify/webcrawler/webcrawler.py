@@ -15,7 +15,7 @@ import urllib,os, urlparse
 from sys import stderr
 import urlparse
 import logging
-logger = logging.getLogger('Plone')
+logger = logging.getLogger('webcrawler')
 #from interfaces import ISectionFeedback
 from zope.annotation.interfaces import IAnnotations
 
@@ -111,20 +111,14 @@ class WebCrawler(object):
 
                 if not url.startswith(self.site_url[:-1]):
                     self.checker.markdone((url,part))
-                    msg = "webcrawler: External: %s" %str(url)
-                    logger.log(logging.DEBUG, msg)
-                    print >> stderr, msg
+                    logger.debug("External: %s" %str(url))
                     yield dict(_bad_url = url)
                 elif [pat for pat in self.ignore_re if pat and pat.search(url)]:
                     self.checker.markdone((url,part))
-                    msg = "webcrawler: Ignoring: %s" %str(url)
-                    logger.log(logging.DEBUG, msg)
-                    print >> stderr, msg
+                    logger.debug("Ignoring: %s" %str(url))
                     yield dict(_bad_url = url)
                 else:
-                    print >> stderr, "Crawling: "+ str(url)
-                    msg = "webcrawler: Crawling: %s" %str(url)
-                    logger.log(logging.DEBUG, msg)
+                    logger.info("Crawling: %s" %str(url))
                     base = self.site_url
                     self.checker.dopage((url,part))
                     page = self.checker.name_table.get(url) #have to usse unredirected
@@ -155,11 +149,8 @@ class WebCrawler(object):
                             self.feedback.success('webcrawler',msg)
                         yield item
                     else:
-                        msg = "webcrawler: bad_url: %s" %str(url)
-                        print >> stderr, msg
-                        logger.log(logging.DEBUG, msg)
-                        if self.feedback:
-                            self.feedback.ignored('webcrawler',msg)
+                        msg = "bad_url: %s" %str(url)
+                        logger.debug(msg)
                         yield dict(_bad_url = origin)
         self.storeCache()
 
@@ -478,6 +469,6 @@ class LXMLPage:
                 if p and r:
                     text,n = re.subn(p,r,text)
                     if n:
-                        print >>stderr, "patching %s with %i * %s" % (url,n,p)
+                        log.debug( "patching %s with %i * %s" % (url,n,p) )
             return text
 
