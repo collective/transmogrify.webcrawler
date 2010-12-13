@@ -5,7 +5,6 @@ from collective.transmogrifier.interfaces import ISection
 from collective.transmogrifier.utils import Matcher
 from collective.transmogrifier.utils import defaultKeys
 import logging
-logger = logging.getLogger('funnelweb')
 import os
 import sys
 import urllib
@@ -27,6 +26,7 @@ class StaticCreatorSection(object):
         self.pathkey = Matcher(*pathkeys)
 
         self.output = options.get('output')
+        self.logger = logging.getLogger('funnelweb')
 
     
     def __iter__(self):
@@ -42,9 +42,6 @@ class StaticCreatorSection(object):
             type = item.get('_type')
             path = os.path.join(base,urllib.url2pathname(path))
             if type in ['Document']:
-                if item.get('_html',None) is not None:
-                    self.savefile(item['_html'], path)
-                else:
                     self.savefile(item['text'],path)
             elif type in ['Page']:
                 self.savefile(item['body'],path)
@@ -54,6 +51,8 @@ class StaticCreatorSection(object):
                 self.savefile(item['image'],path)
             elif type in ['Folder','ContentFolder']:
                 makedirs(path)
+            elif item.get('_html',None) is not None:
+                self.savefile(item['_html'], path)
             elif item.get('_content') is not None:
                 self.savefile(item['_content'], path)
             yield item
@@ -65,9 +64,7 @@ class StaticCreatorSection(object):
             text = text.encode('utf8')
         dir, base = os.path.split(path)
         if text is None:
-            msg = "static creator: None in contents %s" %str(path)
-            logger.log(logging.DEBUG, msg)
-            print >> stderr, msg
+            self.logger.debug("static creator: None in contents %s", str(path))
             return
         
             
