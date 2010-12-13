@@ -74,6 +74,8 @@ class TypeRecognitor(object):
             elif item['_type'] == 'Document':
                 item['text'] = item['_content']
             del item['_content']
+            if '_html' in item:
+                del item['_html']
             
             yield item
         
