@@ -15,7 +15,6 @@ import urllib,os, urlparse
 from sys import stderr
 import urlparse
 import logging
-logger = logging.getLogger('webcrawler')
 #from interfaces import ISectionFeedback
 from zope.annotation.interfaces import IAnnotations
 
@@ -41,7 +40,7 @@ class WebCrawler(object):
         self.open_url = MyURLopener().open
         self.options = options
         self.ignore_re = [re.compile(pat.strip()) for pat in options.get("ignore",'').split('\n') if pat]
-
+        self.logger = logging.getLogger(name)
 
         self.checkext  = options.get('checkext', CHECKEXT)
         self.verbose   = options.get('verbose', VERBOSE)
@@ -82,8 +81,7 @@ class WebCrawler(object):
 
         webchecker.Page = pagefactory
 
-        if not self.restoreCache():
-            self.checker = MyChecker()
+        self.checker = MyChecker()
         #self.checker.alias_bases = self.alias_bases
         self.checker.cache = self.cache
         self.checker.site_url = self.site_url
@@ -111,14 +109,14 @@ class WebCrawler(object):
 
                 if not url.startswith(self.site_url[:-1]):
                     self.checker.markdone((url,part))
-                    logger.debug("External: %s" %str(url))
+                    self.logger.debug("External: %s" %str(url))
                     yield dict(_bad_url = url)
                 elif [pat for pat in self.ignore_re if pat and pat.search(url)]:
                     self.checker.markdone((url,part))
-                    logger.debug("Ignoring: %s" %str(url))
+                    self.logger.debug("Ignoring: %s" %str(url))
                     yield dict(_bad_url = url)
                 else:
-                    logger.info("Crawling: %s" %str(url))
+                    self.logger.info("Crawling: %s" %str(url))
                     base = self.site_url
                     self.checker.dopage((url,part))
                     page = self.checker.name_table.get(url) #have to usse unredirected
@@ -149,36 +147,9 @@ class WebCrawler(object):
                             self.feedback.success('webcrawler',msg)
                         yield item
                     else:
-                        msg = "bad_url: %s" %str(url)
-                        logger.debug(msg)
+                        self.logger.debug("bad_url: %s" %str(url))
                         yield dict(_bad_url = origin)
-        self.storeCache()
 
-    CACHE_KEY = 'funnelweb_cache'
-    def restoreCache(self):
-        """ get cached pages from annotation and use them instead of recrawling"""
-        try:
-            checker = IAnnotations(self.context).get('funnelweb.checker')
-            options = IAnnotations(self.context).get('funnelweb.options')
-        except:
-            return False
-        if not self.cache or self.options != options:
-            return False
-        if checker is not None:
-            self.checker = checker
-            self.checker.resetRun()
-            return True
-        return False
-
-    def storeCache(self):
-        """ get cached pages from annotation and use them instead of recrawling"""
-        if not self.cache:
-            return
-        try:
-            IAnnotations(self.context)['funnelweb.checker'] = self.checker
-            IAnnotations(self.context)['funnelweb.options'] = self.options
-        except:
-            return
 
 
 class MyChecker(Checker):
@@ -406,7 +377,7 @@ class LXMLPage:
                                              method="html",
                                              pretty_print=True)
         except HTMLParser.HTMLParseError:
-            logger.log(logging.INFO, "webcrawler: HTMLParseError %s"%url)
+            checker.logger.log(logging.INFO, "webcrawler: HTMLParseError %s"%url)
             raise
 #        MyHTMLParser(url, verbose=self.verbose,
 #                                   checker=self.checker)
