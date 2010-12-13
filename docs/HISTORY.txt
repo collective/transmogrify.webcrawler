@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.0b4 (2010-12-13)
+------------------
+- improve logging
+- fix encoding bug caused by cache
+
 1.0b3 (2010-11-10)
 ------------------
 
