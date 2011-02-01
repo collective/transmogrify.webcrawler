@@ -316,7 +316,6 @@ class MyURLopener(urllib.FancyURLopener):
 
 webchecker.MyURLopener = MyURLopener
 
-from lxml import etree
 import lxml.html
 import lxml.html.soupparser
 from lxml.html.clean import Cleaner
