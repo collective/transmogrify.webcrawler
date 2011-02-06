@@ -85,11 +85,11 @@ class StaticCreatorSection(object):
                 while getattr(fp,'fp',None):
                     fp = fp.fp
                 if getattr(fp,'name',_marker) != path:
-                    f = open(path, "wb")
                     content = text.read()
+                    text.close()
+                    f = open(path, "wb")
                     f.write(content)
                     f.close()
-                    text.close()
                     res = open(path,"r")
                 else:
                     res = text
