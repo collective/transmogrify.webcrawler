@@ -16,11 +16,11 @@ _marker = object()
 class StaticCreatorSection(object):
     classProvides(ISectionBlueprint)
     implements(ISection)
-    
+
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
         self.context = transmogrifier.context
-        
+
         if 'path-key' in options:
             pathkeys = options['path-key'].splitlines()
         else:
@@ -30,38 +30,38 @@ class StaticCreatorSection(object):
         self.output = options.get('output')
         self.logger = logging.getLogger('funnelweb')
 
-    
+
     def __iter__(self):
-        base =urllib.url2pathname(self.output)
+        base = urllib.url2pathname(self.output)
         for item in self.previous:
-            
             pathkey = self.pathkey(*item.keys())[0]
-            
+
             if not pathkey or not self.output:         # not enough info
-                yield item; continue
-            
+                yield item;
+                continue
+
             path = item[pathkey]
             type = item.get('_type')
-            path = os.path.join(base,urllib.url2pathname(path))
+            path = os.path.join(base, urllib.url2pathname(path))
             #TODO replace field in item with file object and make other
             # blueprints expect a file. This will reduce memory usage.
             meta_data = item.get('_content_info')
             if meta_data:
                 meta_data = dict(meta_data)
             if type in ['Document']:
-                item['text']= self.savefile(item['text'],path,meta_data)
+                item['text'] = self.savefile(item['text'], path, meta_data)
             elif type in ['Page']:
-                item['body'] = self.savefile(item['body'],path,meta_data)
+                item['body'] = self.savefile(item['body'], path, meta_data)
             elif type in ['File']:
-                item['file'] = self.savefile(item['file'],path,meta_data)
+                item['file'] = self.savefile(item['file'], path, meta_data)
             elif type in ['Image']:
-                item['image']= self.savefile(item['image'],path,meta_data)
-            elif type in ['Folder','ContentFolder']:
+                item['image'] = self.savefile(item['image'], path, meta_data)
+            elif type in ['Folder', 'ContentFolder']:
                 makedirs(path)
-            elif item.get('_html',None) is not None:
-                item['_html'] = self.savefile(item['_html'], path,meta_data)
+            elif item.get('_html', None) is not None:
+                item['_html'] = self.savefile(item['_html'], path, meta_data)
             elif item.get('_content') is not None:
-                item['_content'] = self.savefile(item['_content'], path,meta_data)
+                item['_content'] = self.savefile(item['_content'], path, meta_data)
             yield item
 
 
@@ -71,42 +71,49 @@ class StaticCreatorSection(object):
             text = text.encode('utf8')
         dir, base = os.path.split(path)
         if text is None:
-            self.logger.debug("static creator: None in contents %s", str(path))
+            self.logger.debug("None in contents %s", str(path))
             return
-        
-            
+
         makedirs(dir)
         if os.path.isdir(path):
-            path = path + "index.html"            
-        try:
-            if getattr(text,'read',_marker) is not _marker:
-                # we might have already read this from the cache
-                fp = text
-                while getattr(fp,'fp',None):
-                    fp = fp.fp
-                if getattr(fp,'name',_marker) != path:
-                    content = text.read()
-                    text.close()
+            path = path + "index.html"
+
+        if getattr(text, 'read', _marker) is not _marker:
+            # it's a file
+
+            # we might have already read this from the cache
+            fp = text
+            while getattr(fp, 'fp', None):
+                fp = fp.fp
+            if getattr(fp, 'name', _marker) != path:
+                try:
                     f = open(path, "wb")
-                    f.write(content)
+                    for content in text:
+                        f.write(content)
                     f.close()
-                    res = open(path,"r")
-                else:
-                    res = text
+                    text.close()
+                    res = open(path, "r")
+                except IOError, msg:
+                    self.logger.error("copying file to cache %s"%path)
             else:
+                res = text
+        else:
+            try:
                 f = open(path, "wb")
                 f.write(text)
+            except:
+                self.logger.error("writing text to cache %s"%path)
+            finally:
                 f.close()
-                res = text
-            if metadata is not None:
-                mfile = ConfigParser.RawConfigParser()
-                mfile.add_section('metadata')
-                for key,value in metadata.items():
-                    mfile.set('metadata', key, value)
-                with open(path+'.metadata','wb') as configfile:
-                    mfile.write(configfile)
-        except IOError, msg:
-            pass
+            res = text
+        if metadata is not None:
+            mfile = ConfigParser.RawConfigParser()
+            mfile.add_section('metadata')
+            for key, value in metadata.items():
+                mfile.set('metadata', key, value)
+            with open(path + '.metadata', 'wb') as configfile:
+                mfile.write(configfile)
+
         return res
 
     def savefilename(self, path):
