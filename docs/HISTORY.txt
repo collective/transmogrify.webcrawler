@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.0b5 (2011-02-06)
+------------------
+- files use file pointers to reduce memory usage
+- cache saves .metadata files to record and playback headersx
+
 1.0b4 (2010-12-13)
 ------------------
 - improve logging
