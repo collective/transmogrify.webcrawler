@@ -79,13 +79,22 @@ class StaticCreatorSection(object):
         if os.path.isdir(path):
             path = path + "index.html"            
         try:
-            f = open(path, "wb")
             if getattr(text,'read',_marker) is not _marker:
-                f.write(text.read())
-                text.close()
-                f.close()
-                res = open(path,"r")
+                # we might have already read this from the cache
+                fp = text
+                while getattr(fp,'fp',None):
+                    fp = fp.fp
+                if getattr(fp,'name',_marker) != path:
+                    f = open(path, "wb")
+                    content = text.read()
+                    f.write(content)
+                    f.close()
+                    text.close()
+                    res = open(path,"r")
+                else:
+                    res = text
             else:
+                f = open(path, "wb")
                 f.write(text)
                 f.close()
                 res = text
