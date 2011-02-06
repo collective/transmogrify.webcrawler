@@ -15,6 +15,7 @@ import urllib,os, urlparse
 from sys import stderr
 import urlparse
 import logging
+from ConfigParser import ConfigParser
 #from interfaces import ISectionFeedback
 from zope.annotation.interfaces import IAnnotations
 
@@ -162,24 +163,10 @@ class MyChecker(Checker):
         self.files = {}
         self.redirected = {}
         self.alias_bases = {}
-        self.html_cache = {}
         self.sortorder = {}
         self.counter = 0
         Checker.reset(self)
 
-    def __getstate__(self):
-        mystate = self.infos, self.files, self.redirected, self.html_cache
-        return (Checker.__getstate__(self),mystate)
-
-    def __setstate__(self, state):
-        self.reset()
-        try:
-            cstate,mystate = state
-            Checker.__setstate__(self,cstate)
-            self.infos, self.files, self.redirected, self.html_cache = mystate
-        except:
-            pass
-        self.resetRun()
 
     def resetRun(self):
         self.roots = []
@@ -188,13 +175,8 @@ class MyChecker(Checker):
         self.bad = {}
 
     def readhtml(self, url_pair):
-        if url_pair in self.html_cache:
-            return self.html_cache[url_pair]
-        else:
-            res = Checker.readhtml(self, url_pair)
-            self.html_cache[url_pair] = res
-            return res
-
+        res = Checker.readhtml(self, url_pair)
+        return res
 
     def openhtml(self, url_pair):
         oldurl, fragment = url_pair
@@ -207,8 +189,9 @@ class MyChecker(Checker):
             self.infos[url] = info = f.info()
             #Incement counter to get ordering of links within pages over whole site
             if not self.checkforhtml(info, url):
-                self.files[url] = f.read()
-                self.safeclose(f)
+                #self.files[url] = f.read()
+                self.files[url] = f
+                #self.safeclose(f)
                 f = None
         else:
             url = oldurl
@@ -312,7 +295,15 @@ class MyURLopener(urllib.FancyURLopener):
                 s.write('<A HREF="%s">%s</A>\n' % (q, q))
             s.seek(0)
             return s
-        return urllib.FancyURLopener.open_file(self, url)
+        f = urllib.FancyURLopener.open_file(self, url)
+        # add any saved metadata
+        mfile = ConfigParser()
+        mfile.read(path+'.metadata')
+        if mfile.has_section('metadata'):
+            headers = mfile.items('metadata')
+            f = urllib.addinfourl(f, dict(headers), url)
+        
+        return f
 
 webchecker.MyURLopener = MyURLopener
 
@@ -428,7 +419,6 @@ class LXMLPage:
             self.checker.setSortOrder(link)
             #and to filter list
             infos.append((link, rawlink, fragment))
-
         return infos
 
 

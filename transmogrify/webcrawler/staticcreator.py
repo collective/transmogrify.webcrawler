@@ -9,7 +9,9 @@ import os
 import sys
 import urllib
 from sys import stderr
+import ConfigParser
 
+_marker = object()
 
 class StaticCreatorSection(object):
     classProvides(ISectionBlueprint)
@@ -41,24 +43,29 @@ class StaticCreatorSection(object):
             path = item[pathkey]
             type = item.get('_type')
             path = os.path.join(base,urllib.url2pathname(path))
+            #TODO replace field in item with file object and make other
+            # blueprints expect a file. This will reduce memory usage.
+            meta_data = item.get('_content_info')
+            if meta_data:
+                meta_data = dict(meta_data)
             if type in ['Document']:
-                    self.savefile(item['text'],path)
+                item['text']= self.savefile(item['text'],path,meta_data)
             elif type in ['Page']:
-                self.savefile(item['body'],path)
+                item['body'] = self.savefile(item['body'],path,meta_data)
             elif type in ['File']:
-                self.savefile(item['file'],path)
+                item['file'] = self.savefile(item['file'],path,meta_data)
             elif type in ['Image']:
-                self.savefile(item['image'],path)
+                item['image']= self.savefile(item['image'],path,meta_data)
             elif type in ['Folder','ContentFolder']:
                 makedirs(path)
             elif item.get('_html',None) is not None:
-                self.savefile(item['_html'], path)
+                item['_html'] = self.savefile(item['_html'], path,meta_data)
             elif item.get('_content') is not None:
-                self.savefile(item['_content'], path)
+                item['_content'] = self.savefile(item['_content'], path,meta_data)
             yield item
 
 
-    def savefile(self, text, path):
+    def savefile(self, text, path, metadata):
         path = self.savefilename(path)
         if type(text) == type(u''):
             text = text.encode('utf8')
@@ -73,10 +80,25 @@ class StaticCreatorSection(object):
             path = path + "index.html"            
         try:
             f = open(path, "wb")
-            f.write(text)
-            f.close()
+            if getattr(text,'read',_marker) is not _marker:
+                f.write(text.read())
+                text.close()
+                f.close()
+                res = open(path,"r")
+            else:
+                f.write(text)
+                f.close()
+                res = text
+            if metadata is not None:
+                mfile = ConfigParser.RawConfigParser()
+                mfile.add_section('metadata')
+                for key,value in metadata.items():
+                    mfile.set('metadata', key, value)
+                with open(path+'.metadata','wb') as configfile:
+                    mfile.write(configfile)
         except IOError, msg:
             pass
+        return res
 
     def savefilename(self, path):
         #type, rest = urllib.splittype(url)
