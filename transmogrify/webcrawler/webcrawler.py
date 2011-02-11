@@ -341,7 +341,7 @@ class LXMLPage:
         if options:
             text = self.reformat(text, url)
         self.checker.note(2, "  Parsing %s (%d bytes)", self.url, size)
-        text = clean_html(text)
+        #text = clean_html(text)
         try:
             converted = UnicodeDammit(text, isHTML=True)
             if not converted.unicode:
@@ -419,7 +419,19 @@ class LXMLPage:
             self.checker.setSortOrder(link)
             #and to filter list
             infos.append((link, rawlink, fragment))
+
+        # Need to include any redirects via refresh meta tag
+        # '<meta http-equiv="refresh" content="1;url=http://www.genetics.com.au/home.asp" />'
+        for tag in self.parser.iterdescendants(tag='meta'):
+            if tag.get('http-equiv','').lower() == 'refresh':
+                _,link = tag.get('content','').split("url=",1)
+                infos.append((link,link,""))
+
+
         return infos
+
+
+
 
 
     def reformat(self, text, url):
