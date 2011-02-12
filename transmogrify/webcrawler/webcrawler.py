@@ -1,4 +1,5 @@
-
+from _socket import socket
+from transmogrify.webcrawler.staticcreator import OpenOnRead
 from zope.interface import implements
 from zope.interface import classProvides
 
@@ -271,9 +272,16 @@ class MyURLopener(urllib.FancyURLopener):
     def http_error_401(self, url, fp, errcode, errmsg, headers):
         return None
 
-    def open_file(self, url):
+    def open_local_file(self, url):
         #scheme,netloc,path,parameters,query,fragment = urlparse.urlparse(url)
-        path = urllib.url2pathname(url)
+        import mimetypes, mimetools, email.utils
+        try:
+            from cStringIO import StringIO
+        except ImportError:
+            from StringIO import StringIO
+        host, file = urllib.splithost(url)
+        localname = urllib.url2pathname(file)
+        path = localname
         if os.path.isdir(path):
             if path[-1] != os.sep:
                 url = url + '/'
@@ -295,15 +303,39 @@ class MyURLopener(urllib.FancyURLopener):
                 s.write('<A HREF="%s">%s</A>\n' % (q, q))
             s.seek(0)
             return s
-        f = urllib.FancyURLopener.open_file(self, url)
+
         # add any saved metadata
         mfile = ConfigParser()
         mfile.read(path+'.metadata')
         if mfile.has_section('metadata'):
-            headers = mfile.items('metadata')
-            f = urllib.addinfourl(f, dict(headers), url)
-        
-        return f
+            headers = dict(mfile.items('metadata'))
+        else:
+            try:
+                stats = os.stat(localname)
+            except OSError, e:
+                raise IOError(e.errno, e.strerror, e.filename)
+            size = stats.st_size
+            modified = email.utils.formatdate(stats.st_mtime, usegmt=True)
+            mtype = mimetypes.guess_type(url)[0]
+            headers = mimetools.Message(StringIO(
+                'Content-Type: %s\nContent-Length: %d\nLast-modified: %s\n' %
+                (mtype or 'text/plain', size, modified)))
+        if not host:
+            urlfile = file
+            if file[:1] == '/':
+                urlfile = 'file://' + file
+            return urllib.addinfourl(OpenOnRead(localname, 'rb'),
+                              headers, urlfile)
+        host, port = urllib.splitport(host)
+        if not port \
+           and socket.gethostbyname(host) in (urllib.localhost(), urllib.thishost()):
+            urlfile = file
+            if file[:1] == '/':
+                urlfile = 'file://' + file
+            return urllib.addinfourl(OpenOnRead(localname, 'rb'),
+                              headers, urlfile)
+        raise IOError, ('local file error', 'not on local host')
+
 
 webchecker.MyURLopener = MyURLopener
 
@@ -429,9 +461,6 @@ class LXMLPage:
 
 
         return infos
-
-
-
 
 
     def reformat(self, text, url):

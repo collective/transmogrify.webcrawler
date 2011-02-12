@@ -1,4 +1,3 @@
-#from zope import event
 from zope.interface import classProvides, implements
 from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
@@ -87,12 +86,12 @@ class StaticCreatorSection(object):
                 fp = fp.fp
             if getattr(fp, 'name', _marker) != path:
                 try:
-                    f = open(path, "wb")
-                    for content in text:
-                        f.write(content)
-                    f.close()
+                    with open(path, "wb") as cachefile:
+                        for content in text:
+                            cachefile.write(content)
+                        cachefile.close()
                     text.close()
-                    res = open(path, "r")
+                    res = OpenOnRead(path)
                 except IOError, msg:
                     self.logger.error("copying file to cache %s"%path)
             else:
@@ -113,6 +112,7 @@ class StaticCreatorSection(object):
                 mfile.set('metadata', key, value)
             with open(path + '.metadata', 'wb') as configfile:
                 mfile.write(configfile)
+                configfile.close()
 
         return res
 
@@ -151,3 +151,29 @@ def makedirs(dir):
         return
     makedirs(head)
     os.mkdir(dir, 0777)
+
+class OpenOnRead():
+    """ File like object which only opens the file if it's read """
+
+    def __init__(self, name, mode="r"):
+        self.name = name
+        self.mode = mode
+        self.fp = None
+
+    def getFile(self):
+        if self.fp is None:
+            self.fp = open(self.name, self.mode)
+        return self.fp
+
+    def read(self, size=-1):
+        return self.getFile().read(size)
+
+    def readline(self, size=-1):
+        return self.getFile().readline(size)
+
+    def write(self, str):
+        return self.getFile().read(str)
+
+    def close(self, size=None):
+        self.getFile().close()
+        self.fp = None
