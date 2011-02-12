@@ -177,3 +177,116 @@ class OpenOnRead():
     def close(self, size=None):
         self.getFile().close()
         self.fp = None
+
+    def seek(self, pos):
+        if pos == 0:
+            #let them reopen the file on read
+            self.close()
+        else:
+            self.getFile().seek(pos)
+
+
+class CachingURLopener(urllib.FancyURLopener):
+
+    http_error_default = urllib.URLopener.http_error_default
+
+    def __init__(*args, **vargs):
+        self = args[0]
+        self.cache = vargs.get('cache',None)
+        self.site_url = vargs.get('site_url',None)
+        apply(urllib.FancyURLopener.__init__, args)
+        self.addheaders = [
+            ('User-agent', 'Transmogrifier-crawler/0.1'),
+            ]
+
+    def open(self, url, data=None):
+        cache = self.cache
+        old_url = url
+        if cache and not url.startswith('file://'):
+            cache = cache.rstrip('/')+'/'
+            url = cache + url[len(self.site_url):]
+            if not url.startswith('file:'):
+                url = 'file:'+ url
+
+            f = urllib.FancyURLopener.open(self, url, data)
+            newurl = f.geturl()
+            #we need to check if there was a redirection in cache
+            newpath = newurl[len(cache):]
+            oldpath = old_url[len(self.site_url):]
+            diff = newpath[len(oldpath):]
+            if diff:
+                f.url = old_url.rstrip('/') + '/' + diff
+            else:
+                f.url = old_url
+            return f
+        else:
+            return urllib.FancyURLopener.open(self, old_url, data)
+
+
+    def http_error_401(self, url, fp, errcode, errmsg, headers):
+        return None
+
+    def open_local_file(self, url):
+        #scheme,netloc,path,parameters,query,fragment = urlparse.urlparse(url)
+        import mimetypes, mimetools, email.utils
+        try:
+            from cStringIO import StringIO
+        except ImportError:
+            from StringIO import StringIO
+        host, file = urllib.splithost(url)
+        localname = urllib.url2pathname(file)
+        path = localname
+        if os.path.isdir(path):
+            if path[-1] != os.sep:
+                url += '/'
+            for index in ['index.html','index.htm','index_html']:
+                indexpath = os.path.join(path, index)
+                if os.path.exists(indexpath):
+                    return self.open_file(url + index)
+            try:
+                names = os.listdir(path)
+            except os.error, msg:
+                exc_type, exc_value, exc_tb = sys.exc_info()
+                raise IOError, msg, exc_tb
+            names.sort()
+            s = MyStringIO("file:"+url, {'content-type': 'text/html'})
+            s.write('<BASE HREF="file:%s">\n' %
+                    urllib.quote(os.path.join(path, "")))
+            for name in names:
+                q = urllib.quote(name)
+                s.write('<A HREF="%s">%s</A>\n' % (q, q))
+            s.seek(0)
+            return s
+
+        # add any saved metadata
+        mfile = ConfigParser.ConfigParser()
+        mfile.read(path+'.metadata')
+        if mfile.has_section('metadata'):
+            headers = dict(mfile.items('metadata'))
+        else:
+            try:
+                stats = os.stat(localname)
+            except OSError, e:
+                raise IOError(e.errno, e.strerror, e.filename)
+            size = stats.st_size
+            modified = email.utils.formatdate(stats.st_mtime, usegmt=True)
+            mtype = mimetypes.guess_type(url)[0]
+            headers = mimetools.Message(StringIO(
+                'Content-Type: %s\nContent-Length: %d\nLast-modified: %s\n' %
+                (mtype or 'text/plain', size, modified)))
+        if not host:
+            urlfile = file
+            if file[:1] == '/':
+                urlfile = 'file://' + file
+            return urllib.addinfourl(OpenOnRead(localname, 'rb'),
+                              headers, urlfile)
+        host, port = urllib.splitport(host)
+        if not port \
+           and socket.gethostbyname(host) in (urllib.localhost(), urllib.thishost()):
+            urlfile = file
+            if file[:1] == '/':
+                urlfile = 'file://' + file
+            return urllib.addinfourl(OpenOnRead(localname, 'rb'),
+                              headers, urlfile)
+        raise IOError, ('local file error', 'not on local host')
+

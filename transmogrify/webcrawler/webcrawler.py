@@ -17,9 +17,7 @@ from sys import stderr
 import urlparse
 import logging
 from ConfigParser import ConfigParser
-#from interfaces import ISectionFeedback
-from zope.annotation.interfaces import IAnnotations
-
+from staticcreator import CachingURLopener
 
 VERBOSE = 0                             # Verbosity level (0-3)
 MAXPAGE = 0                        # Ignore files bigger than this
@@ -39,7 +37,7 @@ class WebCrawler(object):
             self.feedback = ISectionFeedback(transmogrifier)
         except:
             self.feedback = None
-        self.open_url = MyURLopener().open
+        #self.open_url = MyURLopener().open
         self.options = options
         self.ignore_re = [re.compile(pat.strip()) for pat in options.get("ignore",'').split('\n') if pat]
         self.logger = logging.getLogger(name)
@@ -55,7 +53,7 @@ class WebCrawler(object):
         #self.alias_bases  = [a for a in options.get('alias_bases', '').split() if a]
         # make sure we end with a /
         if self.site_url[-1] != '/':
-            self.site_url=self.site_url+'/'
+            self.site_url += '/'
         if os.path.exists(self.site_url):
             self.site_url = 'file://'+urllib.pathname2url(self.site_url)
 
@@ -83,10 +81,8 @@ class WebCrawler(object):
 
         webchecker.Page = pagefactory
 
-        self.checker = MyChecker()
+        self.checker = MyChecker(self.site_url, self.cache)
         #self.checker.alias_bases = self.alias_bases
-        self.checker.cache = self.cache
-        self.checker.site_url = self.site_url
 
         self.checker.setflags(checkext   = self.checkext,
                          verbose    = self.verbose,
@@ -156,6 +152,12 @@ class WebCrawler(object):
 
 class MyChecker(Checker):
     link_names = {} #store link->[name]
+
+    def __init__(self, site_url, cache):
+        self.cache = cache
+        self.site_url = site_url
+        self.reset()
+
     def message(self, format, *args):
         pass # stop printing out crap
 
@@ -167,6 +169,7 @@ class MyChecker(Checker):
         self.sortorder = {}
         self.counter = 0
         Checker.reset(self)
+        self.urlopener = CachingURLopener(cache = self.cache, site_url=self.site_url)
 
 
     def resetRun(self):
@@ -216,28 +219,6 @@ class MyChecker(Checker):
 #                url = realbase+path
 #                break
 
-        
-        cache = self.cache
-        if cache and not url.startswith('file://'):
-            cache = cache.rstrip('/')+'/'
-            url = cache + url[len(self.site_url):]
-            if not url.startswith('file:'):
-                url = 'file:'+ url
-
-            try:
-                f = self.urlopener.open(url)
-                newurl = f.geturl()
-                #we need to check if there was a redirection in cache
-                newpath = newurl[len(cache):]
-                oldpath = old_url[len(self.site_url):]
-                diff = newpath[len(oldpath):]
-                if diff:
-                    f.url = old_url.rstrip('/') + '/' + diff
-                else:
-                    f.url = old_url
-                return f
-            except (OSError, IOError), msg:
-                pass
         try:
             return self.urlopener.open(old_url)
         except (OSError, IOError), msg:
@@ -257,87 +238,6 @@ class MyChecker(Checker):
         
 
 
-
-class MyURLopener(urllib.FancyURLopener):
-
-    http_error_default = urllib.URLopener.http_error_default
-
-    def __init__(*args):
-        self = args[0]
-        apply(urllib.FancyURLopener.__init__, args)
-        self.addheaders = [
-            ('User-agent', 'Transmogrifier-crawler/0.1'),
-            ]
-
-    def http_error_401(self, url, fp, errcode, errmsg, headers):
-        return None
-
-    def open_local_file(self, url):
-        #scheme,netloc,path,parameters,query,fragment = urlparse.urlparse(url)
-        import mimetypes, mimetools, email.utils
-        try:
-            from cStringIO import StringIO
-        except ImportError:
-            from StringIO import StringIO
-        host, file = urllib.splithost(url)
-        localname = urllib.url2pathname(file)
-        path = localname
-        if os.path.isdir(path):
-            if path[-1] != os.sep:
-                url = url + '/'
-            for index in ['index.html','index.htm','index_html']:
-                indexpath = os.path.join(path, index)
-                if os.path.exists(indexpath):
-                    return self.open_file(url + index)
-            try:
-                names = os.listdir(path)
-            except os.error, msg:
-                exc_type, exc_value, exc_tb = sys.exc_info()
-                raise IOError, msg, exc_tb
-            names.sort()
-            s = MyStringIO("file:"+url, {'content-type': 'text/html'})
-            s.write('<BASE HREF="file:%s">\n' %
-                    urllib.quote(os.path.join(path, "")))
-            for name in names:
-                q = urllib.quote(name)
-                s.write('<A HREF="%s">%s</A>\n' % (q, q))
-            s.seek(0)
-            return s
-
-        # add any saved metadata
-        mfile = ConfigParser()
-        mfile.read(path+'.metadata')
-        if mfile.has_section('metadata'):
-            headers = dict(mfile.items('metadata'))
-        else:
-            try:
-                stats = os.stat(localname)
-            except OSError, e:
-                raise IOError(e.errno, e.strerror, e.filename)
-            size = stats.st_size
-            modified = email.utils.formatdate(stats.st_mtime, usegmt=True)
-            mtype = mimetypes.guess_type(url)[0]
-            headers = mimetools.Message(StringIO(
-                'Content-Type: %s\nContent-Length: %d\nLast-modified: %s\n' %
-                (mtype or 'text/plain', size, modified)))
-        if not host:
-            urlfile = file
-            if file[:1] == '/':
-                urlfile = 'file://' + file
-            return urllib.addinfourl(OpenOnRead(localname, 'rb'),
-                              headers, urlfile)
-        host, port = urllib.splitport(host)
-        if not port \
-           and socket.gethostbyname(host) in (urllib.localhost(), urllib.thishost()):
-            urlfile = file
-            if file[:1] == '/':
-                urlfile = 'file://' + file
-            return urllib.addinfourl(OpenOnRead(localname, 'rb'),
-                              headers, urlfile)
-        raise IOError, ('local file error', 'not on local host')
-
-
-webchecker.MyURLopener = MyURLopener
 
 import lxml.html
 import lxml.html.soupparser
@@ -453,7 +353,8 @@ class LXMLPage:
             infos.append((link, rawlink, fragment))
 
         # Need to include any redirects via refresh meta tag
-        # '<meta http-equiv="refresh" content="1;url=http://www.genetics.com.au/home.asp" />'
+        # e.g.'<meta http-equiv="refresh" content="1;url=http://blah.com" />'
+        # TODO: should really be counted as redirect not a link
         for tag in self.parser.iterdescendants(tag='meta'):
             if tag.get('http-equiv','').lower() == 'refresh':
                 _,link = tag.get('content','').split("url=",1)
