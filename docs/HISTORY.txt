@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.0b7 (2011-02-17)
+------------------
+- fix bug in cache check
+
 1.0b6 (2011-02-12)
 ------------------
 -    only open cache files when needed so don't run out of handles
