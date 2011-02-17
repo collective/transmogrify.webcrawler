@@ -9,6 +9,11 @@ import sys
 import urllib
 from sys import stderr
 import ConfigParser
+import mimetypes, mimetools, email.utils
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
 
 _marker = object()
 
@@ -207,8 +212,11 @@ class CachingURLopener(urllib.FancyURLopener):
             url = cache + url[len(self.site_url):]
             if not url.startswith('file:'):
                 url = 'file:'+ url
+            try:
+                f = self.open_local_file(url)
+            except (IOError), msg:
+                return urllib.FancyURLopener.open(self, old_url, data)
 
-            f = urllib.FancyURLopener.open(self, url, data)
             newurl = f.geturl()
             #we need to check if there was a redirection in cache
             newpath = newurl[len(cache):]
@@ -228,11 +236,6 @@ class CachingURLopener(urllib.FancyURLopener):
 
     def open_local_file(self, url):
         #scheme,netloc,path,parameters,query,fragment = urlparse.urlparse(url)
-        import mimetypes, mimetools, email.utils
-        try:
-            from cStringIO import StringIO
-        except ImportError:
-            from StringIO import StringIO
         host, file = urllib.splithost(url)
         localname = urllib.url2pathname(file)
         path = localname
