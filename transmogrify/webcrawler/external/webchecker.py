@@ -432,6 +432,7 @@ class Checker:
         self.markdone(url_pair)
 
     def newlink(self, url, origin):
+        url = tuple([x.encode('utf8') for x in url])
         if self.done.has_key(url):
             self.newdonelink(url, origin)
         else:
