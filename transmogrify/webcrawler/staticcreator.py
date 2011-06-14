@@ -94,10 +94,10 @@ class StaticCreatorSection(object):
             if getattr(fp, 'name', _marker) != path:
                 try:
                     with open(path, "wb") as cachefile:
-                        for content in text:
-                            cachefile.write(content)
+                        content = fp.read()
+                        cachefile.write(content)
                         cachefile.close()
-                    text.close()
+                    fp.close()
                     res = OpenOnRead(path)
                 except IOError, msg:
                     self.logger.error("copying file to cache %s"%path)
