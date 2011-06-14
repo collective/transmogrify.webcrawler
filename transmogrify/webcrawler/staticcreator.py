@@ -15,6 +15,8 @@ try:
 except ImportError:
     from StringIO import StringIO
 
+from transmogrify.webcrawler.external.webchecker import MyStringIO
+
 _marker = object()
 
 class StaticCreatorSection(object):
