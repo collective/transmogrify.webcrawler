@@ -1,7 +1,8 @@
 Crawling - html to import
 =========================
+A source blueprint for crawling content from a site or local html files.
 
-webcrawler imports HTML either from a live website, for a folder on disk, or a folder
+Webcrawler imports HTML either from a live website, for a folder on disk, or a folder
 on disk with html which used to come from a live website and may still have absolute
 links refering to that website.
 
@@ -45,7 +46,7 @@ To skip crawling links by regular expression ::
   ignore = \.mp3
                    \.mp4 
 
-If funnelweb is having trouble parsing the html of some pages you can preprocesses
+If webcrawler is having trouble parsing the html of some pages you can preprocesses
 the html before it is parsed. e.g. ::
 
   [crawler]
@@ -63,38 +64,50 @@ see http://pypi.python.org/pypi/collective.transmogrifier/#condition-section
  condition: python:item.get('_mimetype') not in ['application/x-javascript','text/css','text/plain','application/x-java-byte-code'] and item.get('_path','').split('.')[-1] not in ['class']
 
 
+Options
+-------
 
-transmogrify.webcrawler
-  A source blueprint for crawling content from a site or local html files.
+site_url
+ - the top url to crawl
+
+ignore
+ - list of regex for urls to not crawl
+
+cache
+ - local directory to read crawled items from instead of accessing the site directly
+
+patterns
+ - Regular expressions to substitute before html is parsed. New line seperated
+
+subs
+ - Text to replace each item in patterns. Must be the same number of lines as patterns
+
+maxsize
+ - don't crawl anything larger than this
+
+max
+ - Limit crawling to this number of pages
+
   
-  
-#
-# Crawls site or cache for content
-# see http://pypi.python.org/pypi/transmogrify.webcrawler
-#
-# site_url - the top url to crawl
-# ignore - list of regex for urls to not crawl
-# cache - local directory to read crawled items from instead of accessing the site directly
-# patterns - Regular expressions to substitute before html is parsed. New line seperated 
-# subs - Text to replace each item in patterns. Must be the same number of lines as patterns 
-# maxsize - don't crawl anything larger than this
-# max - Limit crawling to this number of pages
-#
-  
-# WebCrawler will emit items like
-# item = dict(_site_url = "Original site_url used",
-#            _path = "The url crawled without _site_url,
-#            _content = "The raw content returned by the url",
-#            _content_info = "Headers returned with content"
-#            _backlinks    = names,
-#            _sortorder    = "An integer representing the order the url was found within the page/site
-#	     )
+WebCrawler will emit items like ::
+
+ item = dict(_site_url = "Original site_url used",
+            _path = "The url crawled without _site_url,
+            _content = "The raw content returned by the url",
+            _content_info = "Headers returned with content"
+            _backlinks    = names,
+            _sortorder    = "An integer representing the order the url was found within the page/site
+	     )
   
 
 transmogrify.webcrawler.typerecognitor
-  A blueprint for assinging content type based on the mime-type as given by the
-  webcrawler
+======================================
+
+A blueprint for assinging content type based on the mime-type as given by the
+webcrawler
 
 transmogrify.webcrawler.cache
-  A blueprint that saves crawled content into a directory structure
+=============================
+
+A blueprint that saves crawled content into a directory structure
 
