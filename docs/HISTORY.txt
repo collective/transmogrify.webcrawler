@@ -3,14 +3,10 @@ Changelog
 
 1.0 (2011-06-29)
 ----------------
-
--    Merge pull request #2 from simahawk/master
--    many fixes for importing from local directory w/ many languages
--    fix UnicodeEncodeError when file name/language is not english
--    fix iterating over non-sequence
--    fix missing import for MyStringIO
-
-
+-    many fixes for importing from local directory w/ many languages [simahawk]
+-    fix UnicodeEncodeError when file name/language is not english [simahawk]
+-    fix iterating over non-sequence [simahawk]
+-    fix missing import for MyStringIO [simahawk]
 
 1.0b7 (2011-02-17)
 ------------------
