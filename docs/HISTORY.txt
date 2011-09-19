@@ -4,6 +4,8 @@ Changelog
 1.1 (unreleased)
 ----------------
 
+- Provide a logger in the LXMLPage class so the reformat function can 
+  succeed [davidjb]
 - Reformat spacing in webcrawler reformat function [davidjb] 
 
 

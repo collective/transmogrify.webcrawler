@@ -256,6 +256,7 @@ class LXMLPage:
         self.url = url
         self.verbose = verbose
         self.maxpage = maxpage
+        self.logger = logging.getLogger('transmogrify.webcrawler')
         self.checker = checker
         self.options = options
 
@@ -370,6 +371,6 @@ class LXMLPage:
             if p and r:
                 text,n = re.subn(p,r,text)
                 if n:
-                    log.debug( "patching %s with %i * %s" % (url,n,p) )
+                    self.logger.debug( "patching %s with %i * %s" % (url,n,p) )
         return text
 
