@@ -80,7 +80,7 @@ patterns
  - Regular expressions to substitute before html is parsed. New line seperated
 
 subs
- - Text to replace each item in patterns. Must be the same number of lines as patterns
+ - Text to replace each item in patterns. Must be the same number of lines as patterns.  Due to the way buildout handles empty lines, to replace a pattern with nothing (eg to remove the pattern), use ``<EMPTYSTRING>`` as a substitution.
 
 maxsize
  - don't crawl anything larger than this

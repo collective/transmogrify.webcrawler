@@ -367,7 +367,9 @@ class LXMLPage:
     def reformat(self, text, url):
         pattern = self.options.get('patterns','')
         replace = self.options.get('subs','')
-        for p,r in zip(pattern.split('\n'),replace.split('\n')):
+        replace = ['<EMPTYSTRING>' != item and item or '' \
+                   for item in replace.split('\n')]
+        for p,r in zip(pattern.split('\n'),replace):
             if p and r:
                 text,n = re.subn(p,r,text)
                 if n:
