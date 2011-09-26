@@ -1,6 +1,18 @@
 Changelog
 =========
 
+1.1 (unreleased)
+----------------
+
+- Provide ability for the reformat function to substitute patterns with 
+  empty strings (nothing).  Buildout does not support empty lines within
+  configuration, so if a substitution is <EMPTYSTRING> this becomes an empty
+  string. [davidjb]
+- Provide a logger in the LXMLPage class so the reformat function can 
+  succeed [davidjb]
+- Reformat spacing in webcrawler reformat function [davidjb] 
+
+
 1.0 (2011-06-29)
 ----------------
 -    many fixes for importing from local directory w/ many languages [simahawk]

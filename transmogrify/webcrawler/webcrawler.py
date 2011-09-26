@@ -228,14 +228,14 @@ class MyChecker(Checker):
                 self.show(" HREF ", url, "  from", self.todo[url_pair])
             self.setbad(old_pair, msg)
             return None
-        
+
     def setSortOrder(self, link):
         """ give each link a counter as it's encountered to later use in sorting """
         if link not in self.sortorder:
             self.sortorder[link] = self.counter
             self.counter = self.counter + 1
-            
-        
+
+
 
 
 
@@ -256,6 +256,7 @@ class LXMLPage:
         self.url = url
         self.verbose = verbose
         self.maxpage = maxpage
+        self.logger = logging.getLogger('transmogrify.webcrawler')
         self.checker = checker
         self.options = options
 
@@ -363,14 +364,15 @@ class LXMLPage:
 
         return infos
 
-
     def reformat(self, text, url):
-            pattern = self.options.get('patterns','')
-            replace = self.options.get('subs','')
-            for p,r in zip(pattern.split('\n'),replace.split('\n')):
-                if p and r:
-                    text,n = re.subn(p,r,text)
-                    if n:
-                        log.debug( "patching %s with %i * %s" % (url,n,p) )
-            return text
+        pattern = self.options.get('patterns','')
+        replace = self.options.get('subs','')
+        replace = ['<EMPTYSTRING>' != item and item or '' \
+                   for item in replace.split('\n')]
+        for p,r in zip(pattern.split('\n'),replace):
+            if p and r:
+                text,n = re.subn(p,r,text)
+                if n:
+                    self.logger.debug( "patching %s with %i * %s" % (url,n,p) )
+        return text
 
