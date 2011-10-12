@@ -358,8 +358,11 @@ class LXMLPage:
         # TODO: should really be counted as redirect not a link
         for tag in self.parser.iterdescendants(tag='meta'):
             if tag.get('http-equiv','').lower() == 'refresh':
-                _,link = tag.get('content','').split("url=",1)
-                infos.append((link,link,""))
+                url = tag.get('content','')
+                if url:
+                    _,rawlink = url.lower().split("url=",1)
+                    link = urlparse.urljoin(base, rawlink)
+                    infos.append((link,rawlink,""))
 
 
         return infos
