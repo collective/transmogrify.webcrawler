@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 import urllib
+import urlparse
 from sys import stderr
 import ConfigParser
 import mimetypes, mimetools, email.utils
@@ -212,8 +213,8 @@ class CachingURLopener(urllib.FancyURLopener):
         if cache and not url.startswith('file://'):
             cache = cache.rstrip('/')+'/'
             url = cache + url[len(self.site_url):]
-            if not url.startswith('file:'):
-                url = 'file:'+ url
+            #if not url.startswith('file:'):
+            #    url = 'file:'+ url
             try:
                 f = self.open_local_file(url)
             except (IOError), msg:
@@ -237,6 +238,8 @@ class CachingURLopener(urllib.FancyURLopener):
         return None
 
     def open_local_file(self, url):
+        """ Override base urlopener method in order to read our custom metadata
+        """
         #scheme,netloc,path,parameters,query,fragment = urlparse.urlparse(url)
         host, file = urllib.splithost(url)
         localname = urllib.url2pathname(file)
