@@ -88,6 +88,7 @@ class WebCrawler(object):
                          verbose    = self.verbose,
                          maxpage    = self.maxpage,
                          nonames    = self.nonames)
+        self.checker.ignore_robots = options.get('ignore_robots', "false").lower() in ['true','on']
 
         #must take off the '/' for the crawler to work
         self.checker.addroot(self.site_url[:-1])
@@ -235,6 +236,10 @@ class MyChecker(Checker):
             self.sortorder[link] = self.counter
             self.counter = self.counter + 1
 
+    def isallowed(self, root, url):
+        if self.ignore_robots:
+            return True
+        return Checker.isallowed(self, root, url)
 
 
 
