@@ -5,3 +5,6 @@ build
 *.swp
 dist/
 *~
+bin
+parts
+develop-eggs
