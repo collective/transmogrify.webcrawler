@@ -44,7 +44,7 @@ class WebCrawler(object):
 
         self.checkext  = options.get('checkext', CHECKEXT)
         self.verbose   = options.get('verbose', VERBOSE)
-        self.maxpage   = options.get('maxsize', MAXPAGE)
+        self.maxpage   = options.get('maxsize', None)
         self.nonames   = options.get('nonames', NONAMES)
         self.site_url  = options.get('site_url', options.get('url', None))
         self.max = options.get('max',None)
@@ -69,7 +69,7 @@ class WebCrawler(object):
         def pagefactory(text, url, verbose=VERBOSE, maxpage=MAXPAGE, checker=None):
 
             try:
-                page = LXMLPage(text,url,verbose,maxpage,checker,options)
+                page = LXMLPage(text,url,verbose,maxpage,checker,options,self.logger)
             except HTMLParseError, msg:
                 #msg = self.sanitize(msg)
                 ##elf.note(0, "Error parsing %s: %s",
@@ -115,7 +115,6 @@ class WebCrawler(object):
                     self.logger.debug("Ignoring: %s" %str(url))
                     yield dict(_bad_url = url)
                 else:
-                    self.logger.info("Crawling: %s" %str(url))
                     base = self.site_url
                     self.checker.dopage((url,part))
                     page = self.checker.name_table.get(url) #have to usse unredirected
@@ -127,8 +126,8 @@ class WebCrawler(object):
                     info = self.checker.infos.get(url)
                     file = self.checker.files.get(url)
                     sortorder = self.checker.sortorder.get(origin,0)
-                    if info:
-                        text = page and page.html() or file
+                    text = page and page.html() or file
+                    if info and text:
                         item = dict(_path         = path,
                                     _site_url     = base,
                                     _backlinks    = names,
@@ -144,9 +143,18 @@ class WebCrawler(object):
                             item['_origin'] = orig_path
                         if self.feedback:
                             self.feedback.success('webcrawler',msg)
+                        ctype = item.get('_content_info',{}).get('content-type','')
+                        csize = item.get('_content_info',{}).get('content-length',0)
+                        date = item.get('_content_info',{}).get('date','')
+                        self.logger.info("Crawled: %s (%d links, size=%s, %s %s)" % (
+                            str(url),
+                            len(item.get('_backlinks',[])),
+                            csize,
+                            ctype,
+                            date))
                         yield item
                     else:
-                        self.logger.debug("bad_url: %s" %str(url))
+                        self.logger.debug("Error: %s" %str(url))
                         yield dict(_bad_url = origin)
 
 
@@ -256,12 +264,12 @@ from lxml.etree import tostring
 # do tidy and parsing and links via lxml. also try to encode page properly
 class LXMLPage:
 
-    def __init__(self, text, url, verbose=VERBOSE, maxpage=MAXPAGE, checker=None, options=None):
+    def __init__(self, text, url, verbose=VERBOSE, maxpage=MAXPAGE, checker=None, options=None, logger=None):
         self.text = text
         self.url = url
         self.verbose = verbose
         self.maxpage = maxpage
-        self.logger = logging.getLogger('transmogrify.webcrawler')
+        self.logger = logger
         self.checker = checker
         self.options = options
 
@@ -272,13 +280,13 @@ class LXMLPage:
         size = len(self.text)
 
         if self.maxpage and size > self.maxpage:
-            self.note(0, "Skip huge file %s (%.0f Kbytes)", self.url, (size*0.001))
+            self.logger.info("%s Skip huge file (%.0f Kbytes)" % (self.url, (size*0.001)))
             self.parser = None
             return
 
         if options:
             text = self.reformat(text, url)
-        self.checker.note(2, "  Parsing %s (%d bytes)", self.url, size)
+        self.logger.debug("Parsing %s (%d bytes)" %( self.url, size) )
         #text = clean_html(text)
         try:
             converted = UnicodeDammit(text, isHTML=True)
@@ -294,8 +302,10 @@ class LXMLPage:
                                              encoding=unicode,
                                              method="html",
                                              pretty_print=True)
+            assert self._html is not None
             return
         except UnicodeDecodeError, HTMLParseError:
+            self.logger.error("HTMLParseError %s"%url)
             pass
         try:
             self.parser = lxml.html.soupparser.fromstring(text)
@@ -305,7 +315,7 @@ class LXMLPage:
                                              method="html",
                                              pretty_print=True)
         except HTMLParser.HTMLParseError:
-            checker.logger.log(logging.INFO, "webcrawler: HTMLParseError %s"%url)
+            self.logger.log(logging.INFO, "webcrawler: HTMLParseError %s"%url)
             raise
 #        MyHTMLParser(url, verbose=self.verbose,
 #                                   checker=self.checker)
