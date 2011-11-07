@@ -47,6 +47,7 @@ class WebCrawler(object):
         self.maxpage   = options.get('maxsize', None)
         self.nonames   = options.get('nonames', NONAMES)
         self.site_url  = options.get('site_url', options.get('url', None))
+        self.starts    = [u for u in options.get('start-urls', '').strip().split() if u]
         self.max = options.get('max',None)
         self.cache = options.get('cache', None)
         self.context = transmogrifier.context
@@ -93,6 +94,15 @@ class WebCrawler(object):
         #must take off the '/' for the crawler to work
         self.checker.addroot(self.site_url[:-1])
         self.checker.sortorder[self.site_url] = 0
+
+        for url in self.starts:
+            if url == self.site_url[:-1]:
+                continue
+            self.checker.newtodolink((url,''), '<root>')
+            self.checker.sortorder[url] = 0
+
+
+
         #for root in self.alias_bases:
         #    self.checker.addroot(root, add_to_do = 0)
         #    self.checker.sortorder[root] = 0
