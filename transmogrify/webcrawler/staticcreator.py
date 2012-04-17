@@ -193,7 +193,7 @@ class OpenOnRead():
         else:
             self.getFile().seek(pos)
 
-
+#TODO: replace cache code that uses hashes, e.g. http://stackoverflow.com/questions/148853/caching-in-urllib2
 class CachingURLopener(urllib.FancyURLopener):
 
     http_error_default = urllib.URLopener.http_error_default

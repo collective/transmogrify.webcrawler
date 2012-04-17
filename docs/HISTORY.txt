@@ -1,9 +1,15 @@
 Changelog
 =========
 
-1.1 (unreleased)
+1.1 (2012-04-17)
 ----------------
 
+- add start-urls option [djay]
+- add ignore_robots option [djay]
+- fixed bug in http-equiv refresh handling [djay]
+- fixes to disk caching [djay]
+- better logging [djay]
+- default maxsize is unlimited [djay]
 - Provide ability for the reformat function to substitute patterns with 
   empty strings (nothing).  Buildout does not support empty lines within
   configuration, so if a substitution is <EMPTYSTRING> this becomes an empty

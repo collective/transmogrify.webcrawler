@@ -88,6 +88,11 @@ maxsize
 max
  - Limit crawling to this number of pages
 
+start-urls
+ - a list of urls to initially crawl
+
+ignore-robots
+ - if set, will ignore the robots.txt directives and crawl everything
   
 WebCrawler will emit items like ::
 
