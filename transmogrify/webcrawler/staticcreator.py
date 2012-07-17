@@ -35,11 +35,11 @@ class StaticCreatorSection(object):
         self.pathkey = Matcher(*pathkeys)
 
         self.output = options.get('output')
-        self.logger = logging.getLogger('funnelweb')
+        self.logger = logging.getLogger(name)
 
 
     def __iter__(self):
-        base = urllib.url2pathname(self.output)
+        base = urllib.url2pathname(self.output.strip('/'))
         for item in self.previous:
             pathkey = self.pathkey(*item.keys())[0]
 
@@ -92,22 +92,25 @@ class StaticCreatorSection(object):
             fp = text
             while getattr(fp, 'fp', None):
                 fp = fp.fp
-            if getattr(fp, 'name', _marker) != path:
+            # if we are already reading from cache skip it
+            if getattr(fp, 'name', _marker) == path:
+                res = text
+            else:
                 try:
                     with open(path, "wb") as cachefile:
                         content = fp.read()
                         cachefile.write(content)
                         cachefile.close()
+                        self.logger.debug("'%s' wrote %d bytes of data"%(path,len(content)))
                     fp.close()
                     res = OpenOnRead(path)
                 except IOError, msg:
                     self.logger.error("copying file to cache %s"%path)
-            else:
-                res = text
         else:
             try:
                 f = open(path, "wb")
                 f.write(text)
+                self.logger.debug("'%s' wrote %d bytes of text"%(path,len(text)))
             except:
                 self.logger.error("writing text to cache %s"%path)
             finally:
