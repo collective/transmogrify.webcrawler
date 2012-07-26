@@ -18,6 +18,7 @@ import urlparse
 import logging
 from ConfigParser import ConfigParser
 from staticcreator import CachingURLopener
+from collections import OrderedDict
 
 VERBOSE = 0                             # Verbosity level (0-3)
 MAXPAGE = 0                        # Ignore files bigger than this
@@ -91,9 +92,13 @@ class WebCrawler(object):
                          nonames    = self.nonames)
         self.checker.ignore_robots = options.get('ignore_robots', "false").lower() in ['true','on']
 
+        self.checker.resetRun()
         #must take off the '/' for the crawler to work
         self.checker.addroot(self.site_url[:-1])
         self.checker.sortorder[self.site_url] = 0
+
+        # make sure start links go first
+        root = self.checker.todo.popitem()
 
         for url in self.starts:
             if url == self.site_url[:-1]:
@@ -101,12 +106,13 @@ class WebCrawler(object):
             self.checker.newtodolink((url,''), '<root>')
             self.checker.sortorder[url] = 0
 
+        self.checker.todo[root[0]] = root[1]
+
 
 
         #for root in self.alias_bases:
         #    self.checker.addroot(root, add_to_do = 0)
         #    self.checker.sortorder[root] = 0
-
 
         while self.checker.todo:
             if self.max and len(self.checker.done) == int(self.max):
@@ -138,6 +144,18 @@ class WebCrawler(object):
                     sortorder = self.checker.sortorder.get(origin,0)
                     text = page and page.html() or file
                     if info and text:
+                        if origin != url:
+                            # we've been redirected. emit a redir item so we can put in place redirect
+                            orig_path = origin[len(self.site_url):]
+                            orig_path = '/'.join([p for p in orig_path.split('/') if p])
+                            if orig_path:
+                                yield(dict(_path = orig_path,
+                                        _site_url = base,
+                                        _sortorder = sortorder,
+                                        _orig_path = orig_path,
+                                        _redir = path))
+                        else:
+                            orig_path = None
                         item = dict(_path         = path,
                                     _site_url     = base,
                                     _backlinks    = names,
@@ -145,12 +163,12 @@ class WebCrawler(object):
                                     _content      = text,
                                     _content_info = info,
                                     _orig_path    = path)
+                        if orig_path is not None:
+                            # we got redirected, let's rewrite the links
+                            item['_origin'] = orig_path
+
                         if page and page.html():
                             item['_html'] = page.text #so cache save no cleaned version
-                        if origin != url:
-                            orig_path = origin[len(self.site_url):]
-                            orig_path = '/'.join([p for p in orig_path.split('/') if p])
-                            item['_origin'] = orig_path
                         if self.feedback:
                             self.feedback.success('webcrawler',msg)
                         ctype = item.get('_content_info',{}).get('content-type','')
@@ -193,7 +211,7 @@ class MyChecker(Checker):
 
     def resetRun(self):
         self.roots = []
-        self.todo = {}
+        self.todo = OrderedDict()
         self.done = {}
         self.bad = {}
 
