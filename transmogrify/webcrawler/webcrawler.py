@@ -148,6 +148,7 @@ class WebCrawler(object):
                             # we've been redirected. emit a redir item so we can put in place redirect
                             orig_path = origin[len(self.site_url):]
                             orig_path = '/'.join([p for p in orig_path.split('/') if p])
+                            #import pdb; pdb.set_trace()
                             if orig_path:
                                 yield(dict(_path = orig_path,
                                         _site_url = base,
@@ -401,6 +402,7 @@ class LXMLPage:
         # TODO: should really be counted as redirect not a link
         for tag in self.parser.iterdescendants(tag='meta'):
             if tag.get('http-equiv','').lower() == 'refresh':
+                #import pdb; pdb.set_trace()
                 url = tag.get('content','')
                 if url:
                     _,rawlink = url.lower().split("url=",1)
