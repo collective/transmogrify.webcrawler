@@ -11,6 +11,7 @@ from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 
 from transmogrify.webcrawler.external.webchecker import MyURLopener
+import logging
 
 
 class TypeRecognitor(object):
@@ -42,8 +43,10 @@ class TypeRecognitor(object):
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
         self.open_url = MyURLopener().open
-    
+        self.logger = logging.getLogger(name)
+
     def __iter__(self):
+        recognized = {}
         for item in self.previous:
             # dont except bad links 
             if '_bad_url' in item:
@@ -53,6 +56,8 @@ class TypeRecognitor(object):
                 # it's a redirection
                 item['_type'] = 'Link'
                 item['remoteUrl'] = relative_url(item['_path'], item['_redir'])
+                recognized.setdefault( (item['_type'],''), []).append(item)
+                yield item; continue
 
             # needed parameters to be able to recognize
             if '_path' not in item or \
@@ -66,6 +71,7 @@ class TypeRecognitor(object):
 
             url = item['_site_url'] + item['_path']
             item.update(self.getFileType(item.get('_content_info'), url))
+            recognized.setdefault( (item['_type'],item['_mimetype']), []).append(item)
           
             # copy content to appropriate field
             if item['_type'] == 'File':
@@ -83,7 +89,14 @@ class TypeRecognitor(object):
                 del item['_html']
             
             yield item
-        
+
+        #give some helpful summary
+        for key,value in sorted(recognized.items()):
+            _type, mime = key
+            self.logger.info("%s, %s: %d" % (_type,mime, len(value)))
+
+
+
     def getFileType(self, info, file):
         # recognize type of data
             
