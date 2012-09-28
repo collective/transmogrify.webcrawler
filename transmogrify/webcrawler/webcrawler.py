@@ -164,9 +164,10 @@ class WebCrawler(object):
                                     _content      = text,
                                     _content_info = info,
                                     _orig_path    = path)
-                        if orig_path is not None:
-                            # we got redirected, let's rewrite the links
-                            item['_origin'] = orig_path
+# don't rewrite it we have a link object
+#                        if orig_path is not None:
+#                            # we got redirected, let's rewrite the links
+#                            item['_origin'] = orig_path
 
                         if page and page.html():
                             item['_html'] = page.text #so cache save no cleaned version

@@ -1,8 +1,6 @@
 <configure
     xmlns="http://namespaces.zope.org/zope"
     i18n_domain="pretaweb.funnelweb"
-    xmlns:five="http://namespaces.zope.org/five"
-    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
     >
 
 
@@ -16,6 +14,5 @@
 
     <utility component=".staticcreator.StaticCreatorSection"
 		     name="transmogrify.webcrawler.cache" />
-
 
 </configure>
