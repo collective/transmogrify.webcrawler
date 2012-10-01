@@ -83,7 +83,9 @@ class StaticCreatorSection(object):
 
         makedirs(dir)
         if os.path.isdir(path):
-            path = path + "index.html"
+            if path[-1] != '/':
+                path += '/'
+            path = path + ".content"
 
         if getattr(text, 'read', _marker) is not _marker:
             # it's a file
@@ -112,6 +114,7 @@ class StaticCreatorSection(object):
                 f.write(text)
                 self.logger.debug("'%s' wrote %d bytes of text"%(path,len(text)))
             except:
+
                 self.logger.error("writing text to cache %s"%path)
             finally:
                 f.close()
@@ -224,12 +227,19 @@ class CachingURLopener(urllib.FancyURLopener):
                 return urllib.FancyURLopener.open(self, old_url, data)
 
             newurl = f.geturl()
+            if newurl[-1] == '/':
+                # it's a directory, we want to get th real one
+                # can happen if subitem is requested first
+                return urllib.FancyURLopener.open(self, old_url, data)
+            newurl = newurl.lstrip('file:')
+            newurl = newurl.rstrip('/')
+            old_url = old_url.rstrip('/')
             #we need to check if there was a redirection in cache
             newpath = newurl[len(cache):]
             oldpath = old_url[len(self.site_url):]
             diff = newpath[len(oldpath):]
             if diff:
-                f.url = old_url.rstrip('/') + '/' + diff
+                f.url = '/'.join([old_url, diff])
             else:
                 f.url = old_url
             return f
@@ -247,27 +257,20 @@ class CachingURLopener(urllib.FancyURLopener):
         host, file = urllib.splithost(url)
         localname = urllib.url2pathname(file)
         path = localname
+        indexpath = None
         if os.path.isdir(path):
             if path[-1] != os.sep:
                 url += '/'
-            for index in ['index.html','index.htm','index_html']:
+            for index in ['.content','index.html','index.htm','index_html']:
                 indexpath = os.path.join(path, index)
-                if os.path.exists(indexpath):
-                    return self.open_file(url + index)
-            try:
-                names = os.listdir(path)
-            except os.error, msg:
-                exc_type, exc_value, exc_tb = sys.exc_info()
-                raise IOError, msg, exc_tb
-            names.sort()
-            s = MyStringIO("file:"+url, {'content-type': 'text/html'})
-            s.write('<BASE HREF="file:%s">\n' %
-                    urllib.quote(os.path.join(path, "")))
-            for name in names:
-                q = urllib.quote(name)
-                s.write('<A HREF="%s">%s</A>\n' % (q, q))
-            s.seek(0)
-            return s
+                if not os.path.exists(indexpath):
+                    indexpath = None
+                else:
+                    break
+            if not indexpath:
+                return self.dirlisting(path)
+        if indexpath:
+            localname = indexpath
 
         # add any saved metadata
         mfile = ConfigParser.ConfigParser()
@@ -301,3 +304,18 @@ class CachingURLopener(urllib.FancyURLopener):
                               headers, urlfile)
         raise IOError, ('local file error', 'not on local host')
 
+    def dirlisting(selfself, path):
+        try:
+            names = os.listdir(path)
+        except os.error, msg:
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            raise IOError, msg, exc_tb
+        names.sort()
+        s = MyStringIO("file:"+url, {'content-type': 'text/html'})
+        s.write('<BASE HREF="file:%s">\n' %
+                urllib.quote(os.path.join(path, "")))
+        for name in names:
+            q = urllib.quote(name)
+            s.write('<A HREF="%s">%s</A>\n' % (q, q))
+        s.seek(0)
+        return s
