@@ -311,7 +311,7 @@ class CachingURLopener(urllib.FancyURLopener):
             exc_type, exc_value, exc_tb = sys.exc_info()
             raise IOError, msg, exc_tb
         names.sort()
-        s = MyStringIO("file:"+url, {'content-type': 'text/html'})
+        s = MyStringIO("file:"+path, {'content-type': 'text/html'})
         s.write('<BASE HREF="file:%s">\n' %
                 urllib.quote(os.path.join(path, "")))
         for name in names:
