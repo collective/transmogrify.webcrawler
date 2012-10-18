@@ -143,6 +143,10 @@ class WebCrawler(object):
                     file = self.checker.files.get(url)
                     sortorder = self.checker.sortorder.get(origin,0)
                     text = page and page.html() or file
+
+                    # unquote the url as plone id does not support % or + but do support space
+                    path = urllib.unquote_plus(path)
+
                     if info and text:
                         if origin != url:
                             # we've been redirected. emit a redir item so we can put in place redirect
@@ -150,6 +154,8 @@ class WebCrawler(object):
                             orig_path = '/'.join([p for p in orig_path.split('/') if p])
                             #import pdb; pdb.set_trace()
                             if orig_path:
+                                # unquote the url as plone id does not support % or + but do support space
+                                orig_path = urllib.unquote_plus(orig_path)
                                 yield(dict(_path = orig_path,
                                         _site_url = base,
                                         _sortorder = sortorder,
