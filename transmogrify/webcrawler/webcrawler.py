@@ -11,7 +11,7 @@ from transmogrify.webcrawler.external.webchecker import Checker,Page
 from transmogrify.webcrawler.external.webchecker import MyHTMLParser,MyStringIO
 import re
 from htmlentitydefs import entitydefs
-from BeautifulSoup import UnicodeDammit
+from bs4 import UnicodeDammit
 import urllib,os, urlparse
 from sys import stderr
 import urlparse
@@ -121,6 +121,8 @@ class WebCrawler(object):
             #urls.sort()
             del urls[1:]
             for url,part in urls:
+                if 'what-makes-it-tick' in url:
+                    import pdb; pdb.set_trace();
 
                 if not url.startswith(self.site_url[:-1]):
                     self.checker.markdone((url,part))
@@ -318,38 +320,48 @@ class LXMLPage:
             text = self.reformat(text, url)
         self.logger.debug("Parsing %s (%d bytes)" %( self.url, size) )
         #text = clean_html(text)
+
+        self.parser = None
+
         try:
-            converted = UnicodeDammit(text, isHTML=True)
-            if not converted.unicode:
+            # http://stackoverflow.com/questions/2686709/encoding-in-python-with-lxml-complex-solution
+            info = self.checker.infos.get(url)
+            try:
+                http_charset = info.getheader('Content-Type').split('charset=')[1]
+            except:
+                http_charset = ""
+            if http_charset == "":
+                ud = UnicodeDammit(text, is_html=True)
+            else:
+                ud = UnicodeDammit(text, override_encodings=[http_charset], is_html=True)
+            if not ud.unicode_markup:
                 raise UnicodeDecodeError(
                     "Failed to detect encoding, tried [%s]",
                     ', '.join(converted.triedEncodings))
             # print converted.originalEncoding
-            self.parser = lxml.html.fromstring(converted.unicode)
-            #self.parser = lxml.html.soupparser.fromstring(text)
-            self.parser.resolve_base_href()
-            self._html = tostring(self.parser,
-                                             encoding=unicode,
-                                             method="html",
-                                             pretty_print=True)
-            assert self._html is not None
-            return
+            # we shouldn't decode to unicode first http://lxml.de/parsing.html#python-unicode-strings
+            # but we will try it anyway. If there is a conflict we get a ValueError
+            self.parser = lxml.html.fromstring(ud.unicode_markup)
         except UnicodeDecodeError, HTMLParseError:
             self.logger.error("HTMLParseError %s"%url)
             pass
-        try:
-            self.parser = lxml.html.soupparser.fromstring(text)
-            self.parser.resolve_base_href()
-            self._html = tostring(self.parser,
-                                             encoding=unicode,
-                                             method="html",
-                                             pretty_print=True)
-        except HTMLParser.HTMLParseError:
-            self.logger.log(logging.INFO, "webcrawler: HTMLParseError %s"%url)
-            raise
-#        MyHTMLParser(url, verbose=self.verbose,
-#                                   checker=self.checker)
-#        self.parser.feed(self.text)
+        except ValueError:
+            self.logger.error("HTMLParseError %s"%url)
+            pass
+        # fallback to lxml beautifulsoup parser
+        if self.parse is None:
+            try:
+                self.parser = lxml.html.soupparser.fromstring(text)
+            except HTMLParser.HTMLParseError:
+                self.logger.log(logging.INFO, "webcrawler: HTMLParseError %s"%url)
+                raise
+
+        self.parser.resolve_base_href()
+        self._html = tostring(self.parser,
+                                         encoding=unicode,
+                                         method="html",
+                                         pretty_print=True)
+        assert self._html is not None
 
     def note(self, level, msg, *args):
         pass

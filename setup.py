@@ -28,7 +28,7 @@ setup(name='transmogrify.webcrawler',
           'setuptools',
           # -*- Extra requirements: -*-
           'lxml',
-          'BeautifulSoup',
+          'beautifulsoup4',
           'collective.transmogrifier',
           ],
       entry_points="""
