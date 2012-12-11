@@ -355,7 +355,7 @@ class LXMLPage:
             self.logger.error("HTMLParseError %s"%url)
             pass
         # fallback to lxml beautifulsoup parser
-        if self.parse is None:
+        if self.parser is None:
             try:
                 self.parser = lxml.html.soupparser.fromstring(text)
             except HTMLParser.HTMLParseError:
