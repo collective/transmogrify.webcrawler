@@ -5,3 +5,5 @@ Crawling - html to import
 `transmogrify.webcrawler.typerecognitor` aids in setting '_type' based on the crawled mimetype.
 `transmogrify.webcrawler.cache` helps speed up crawling and reduce memory usage by storing items locally.
 
+These blueprints are designed to work with the `funnelweb` pipeline but can be used independently.
+

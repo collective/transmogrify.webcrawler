@@ -3,7 +3,13 @@ Changelog
 
 1.2 (2012-12-28)
 ----------------
-
+- fix cache check to prevent overwriting cache [djay]
+- turn redirects into Link objects [djay]
+- summary stats of which mimetypes were crawled [djay]
+- fixed bug where redirected pages weren't getting uploaded [djay]
+- fixed bugs with storing default pages in cache [djay]
+- fixed bug with space chars in urls [ivanteoh]
+- better handling of charset detection [djay]
 
 
 1.1 (2012-04-17)
@@ -33,44 +39,44 @@ Changelog
 
 1.0b7 (2011-02-17)
 ------------------
-- fix bug in cache check
+- fix bug in cache check [djay]
 
 1.0b6 (2011-02-12)
 ------------------
--    only open cache files when needed so don't run out of handles
--    follow http-equiv refresh links
+-    only open cache files when needed so don't run out of handles [djay]
+-    follow http-equiv refresh links [djay]
 
 1.0b5 (2011-02-06)
 ------------------
-- files use file pointers to reduce memory usage
-- cache saves .metadata files to record and playback headersx
+- files use file pointers to reduce memory usage [djay]
+- cache saves .metadata files to record and playback headersx [djay]
 
 1.0b4 (2010-12-13)
 ------------------
-- improve logging
-- fix encoding bug caused by cache
+- improve logging [djay]
+- fix encoding bug caused by cache [djay]
 
 1.0b3 (2010-11-10)
 ------------------
 
-- Fixed bug in cache that caused many links to be ignored in some cases
-- Fix documentation up
+- Fixed bug in cache that caused many links to be ignored in some cases [djay]
+- Fix documentation up [djay]
 
 1.0b2 (2010-11-09)
 ------------------
 
-- Stopped localhost output when no output set
+- Stopped localhost output when no output set [djay]
 
 1.0b1 (2010-11-08)
 ------------------
 
-- change site_url to just url.
+- change site_url to just url. [djay]
 
-- rename maxpage to maxsize
+- rename maxpage to maxsize [djay]
 
-- fix file: style urls 
+- fix file: style urls  [djay]
 
-- Added cache option to replace base_alias
+- Added cache option to replace base_alias [djay]
 
 - fix _origin key set by webcrawler, instead of url now it is path as expected by further blue
   [Vitaliy Podoba]
@@ -88,6 +94,6 @@ Changelog
 - renamed package from pretaweb.blueprints to transmogrify.webcrawler.
       [djay]
 
-- enhanced import view (djay)
+- enhanced import view [djay]
 
 
