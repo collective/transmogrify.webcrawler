@@ -20,7 +20,7 @@ class TypeRecognitor(object):
 
     types_map = {
         # mimetype                        # plone type  # tranform
-        'text/plain':                     ('Document',  None),
+        'text/plain':                     ('File',  None),
         'text/xhtml':                     ('Document',  None),
         'text/html':                      ('Document',  None),
         'application/msword':             ('File',  'doc_to_html'),
@@ -52,7 +52,11 @@ class TypeRecognitor(object):
             if '_bad_url' in item:
                 yield item; continue
 
-            if not '_type' in item and '_redir' in item:
+            # if type is defined then dont mess with it
+            if '_type' in item:
+                yield item; continue
+
+            if '_redir' in item:
                 # it's a redirection
                 item['_type'] = 'Link'
                 item['remoteUrl'] = relative_url(item['_path'], item['_redir'])
@@ -61,18 +65,14 @@ class TypeRecognitor(object):
 
             # needed parameters to be able to recognize
             if '_path' not in item or \
-               '_site_url' not in item or \
                '_content' not in item:
                 yield item; continue
             
-            # if type is defined then dont mess with it
-            if '_type' in item:
-                yield item; continue
 
-            url = item['_site_url'] + item['_path']
-            item.update(self.getFileType(item.get('_content_info'), url))
+            item.update(self.getFileType(item.get('_content_info'), item['_path']))
             recognized.setdefault( (item['_type'],item['_mimetype']), []).append(item)
-          
+            self.logger.debug('"%(_path)s" is "%(_type)s" from mimetype %(_mimetype)s"' % item)
+
             # copy content to appropriate field
             if item['_type'] == 'File':
                 item['file'] = item['_content']
@@ -97,7 +97,7 @@ class TypeRecognitor(object):
 
 
 
-    def getFileType(self, info, file):
+    def getFileType(self, info, path):
         # recognize type of data
             
         if info is None or info.has_key('content-type'):
@@ -106,7 +106,7 @@ class TypeRecognitor(object):
                 # handle content-type: text/html; charset=iso8859-1 :
                 ctype = ctype.split(';', 1)[0].strip()
         else:
-            ctype, encoding = mimetypes.guess_type(url)
+            ctype, encoding = mimetypes.guess_type(path)
 
         if ctype in self.types_map:
             transform = self.types_map[ctype][1],
