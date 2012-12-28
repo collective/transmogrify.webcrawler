@@ -20,6 +20,23 @@ from transmogrify.webcrawler.external.webchecker import MyStringIO
 
 _marker = object()
 
+"""
+transmogrify.webcrawler.cache
+=============================
+
+A blueprint that saves crawled content into a directory structure
+
+Options:
+
+:path-key:
+  Allows you to override the field path is stored in. Defaults to '_path'
+
+:output:
+  Directory to store cached content in
+
+"""
+
+
 class StaticCreatorSection(object):
     classProvides(ISectionBlueprint)
     implements(ISection)

@@ -3,10 +3,19 @@ import os
 
 version = '1.2'
 
+
+def docstring(file):
+    py = open(os.path.join("transmogrify", "siteanalyser", file)).read()
+    return re.findall('"""(.*?)"""', py, re.DOTALL)[0]
+
+
 setup(name='transmogrify.webcrawler',
       version=version,
       description="Crawling and feeding html content into a transmogrifier pipeline",
       long_description=open('README.txt').read() + '\n' +
+                        docstring('webcrawler.py') + \
+                        docstring('staticcreator.py') + \
+                        docstring('typerecognitor.py') + \
 #                      open(os.path.join("transmogrify", "webcrawler", "webcrawler.txt")).read() + "\n" +
 #                        open(os.path.join("transmogrify", "webcrawler", "typerecognitor.txt")).read() + "\n" +
                         open(os.path.join("docs", "HISTORY.txt")).read(),

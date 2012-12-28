@@ -10,8 +10,15 @@ from zope.interface import classProvides
 from collective.transmogrifier.interfaces import ISectionBlueprint
 from collective.transmogrifier.interfaces import ISection
 
-from transmogrify.webcrawler.external.webchecker import MyURLopener
 import logging
+
+"""
+transmogrify.webcrawler.typerecognitor
+======================================
+
+A blueprint for assigning content type based on the mime-type as given by the
+webcrawler
+"""
 
 
 class TypeRecognitor(object):
@@ -42,7 +49,6 @@ class TypeRecognitor(object):
 
     def __init__(self, transmogrifier, name, options, previous):
         self.previous = previous
-        self.open_url = MyURLopener().open
         self.logger = logging.getLogger(name)
 
     def __iter__(self):
