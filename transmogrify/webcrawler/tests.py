@@ -32,6 +32,7 @@ from os.path import dirname, abspath
 import urllib
 
 from transmogrify.htmltesting import runner
+globs = dict(testtransmogrifier=runner.testtransmogrifier)
 
 def setUp(test):
     baseSetUp(test)
@@ -100,7 +101,6 @@ class TestCase(ptc.FunctionalTestCase):
         self.browser.getControl(name='submit').click()
         self.browser.open(self.portal.absolute_url())
 
-globs = dict(testtransmogrifier=runner.testtransmogrifier)
 
 
 def test_suite():
