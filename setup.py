@@ -9,6 +9,19 @@ def docstring(file):
     py = open(os.path.join("transmogrify", "webcrawler", file)).read()
     return re.findall('"""(.*?)"""', py, re.DOTALL)[0]
 
+install_requires=[
+    'setuptools',
+    # -*- Extra requirements: -*-
+    'lxml',
+    'beautifulsoup4',
+    'collective.transmogrifier',
+    ]
+
+try:
+    from collections import OrderedDict
+except ImportError:
+    # No OrderedDict, add `ordereddict` to requirements
+    install_requires.append('ordereddict')
 
 setup(name='transmogrify.webcrawler',
       version=version,
@@ -34,13 +47,7 @@ setup(name='transmogrify.webcrawler',
       namespace_packages=['transmogrify'],
       include_package_data=True,
       zip_safe=False,
-      install_requires=[
-          'setuptools',
-          # -*- Extra requirements: -*-
-          'lxml',
-          'beautifulsoup4',
-          'collective.transmogrifier',
-          ],
+      install_requires=install_requires,
       entry_points="""
             [z3c.autoinclude.plugin]
             target = transmogrify
