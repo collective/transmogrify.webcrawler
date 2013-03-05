@@ -256,14 +256,16 @@ class WebCrawler(object):
                     url = self.checker.redirected.get(url,url)
                     names = self.checker.link_names.get(url,[])
                     path = url[len(self.site_url):]
-                    path = '/'.join([p for p in path.split('/') if p])
                     info = self.checker.infos.get(url)
                     file = self.checker.files.get(url)
                     sortorder = self.checker.sortorder.get(origin,0)
                     text = page and page.html() or file
 
+                    #clean url. if trailing slash html has already had links rewritten
+                    path = '/'.join([p for p in path.split('/') if p])
                     # unquote the url as plone id does not support % or + but do support space
                     path = urllib.unquote_plus(path)
+
 
                     if info and text:
                         if origin != url:
@@ -281,6 +283,8 @@ class WebCrawler(object):
                                         _redir = path))
                         else:
                             orig_path = None
+
+
                         item = dict(_path         = path,
                                     _site_url     = base,
                                     _backlinks    = names,
@@ -479,6 +483,16 @@ class LXMLPage:
                 raise
 
         self.parser.resolve_base_href()
+
+        if '../images/doh/transparent.gif' in text:
+            pass
+
+        #some sites do this instead of setting the base tag. It messes with funnelweb and plone
+        #so we'll just rewrite all the links so we can take the / off :)
+        self.parser.make_links_absolute(url, resolve_base_href=True)
+        strip = lambda l: l.rstrip('/') if l.startswith(url) else l
+        self.parser.rewrite_links(strip)
+
         self._html = tostring(self.parser,
                                          encoding=unicode,
                                          method="html",
@@ -517,6 +531,9 @@ class LXMLPage:
             # it in the tuples which are returned. See Checker.dopage().
             fragment = t[-1]
             t = t[:-1] + ('',)
+            if '../images/doh/transparent.gif' in rawlink:
+                pass
+
             rawlink = urlparse.urlunparse(t)
             link = urlparse.urljoin(base, rawlink)
             if link[-1] == '/':
@@ -558,4 +575,5 @@ class LXMLPage:
                 if n:
                     self.logger.debug( "patching %s with %i * %s" % (url,n,p) )
         return text
+
 

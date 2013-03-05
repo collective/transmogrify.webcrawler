@@ -67,101 +67,109 @@ class StaticCreatorSection(object):
             path = item[pathkey]
             type = item.get('_type')
             path = os.path.join(base, urllib.url2pathname(path))
-            #TODO replace field in item with file object and make other
-            # blueprints expect a file. This will reduce memory usage.
             meta_data = item.get('_content_info')
             if meta_data:
                 meta_data = dict(meta_data)
-            if type in ['Document']:
-                item['text'] = self.savefile(item['text'], path, meta_data)
+            if '_redir' in item:
+                #important we save redirects to preseve exact behaviour of website
+                meta_data = {'Location':item['_site_url']+item['_redir']}
+                savefile(None, path, meta_data, self.logger)
+            elif type in ['Document']:
+                item['text'] = savefile(item['text'], path, meta_data, self.logger)
             elif type in ['Page']:
-                item['body'] = self.savefile(item['body'], path, meta_data)
+                item['body'] = savefile(item['body'], path, meta_data, self.logger)
             elif type in ['File']:
-                item['file'] = self.savefile(item['file'], path, meta_data)
+                item['file'] = savefile(item['file'], path, meta_data, self.logger)
             elif type in ['Image']:
-                item['image'] = self.savefile(item['image'], path, meta_data)
+                item['image'] = savefile(item['image'], path, meta_data, self.logger)
             elif type in ['Folder', 'ContentFolder']:
                 makedirs(path)
             elif item.get('_html', None) is not None:
-                item['_html'] = self.savefile(item['_html'], path, meta_data)
+                item['_html'] = savefile(item['_html'], path, meta_data, self.logger)
             elif item.get('_content') is not None:
-                item['_content'] = self.savefile(item['_content'], path, meta_data)
+                item['_content'] = savefile(item['_content'], path, meta_data, self.logger)
             yield item
 
 
-    def savefile(self, text, path, metadata):
-        path = self.savefilename(path)
-        if type(text) == type(u''):
-            text = text.encode('utf8')
-        dir, base = os.path.split(path)
-        if text is None:
-            self.logger.debug("None in contents %s", str(path))
-            return
+def savefile(text, path, metadata, logger=None):
+    path = savefilename(path)
+    dir, base = os.path.split(path)
 
-        makedirs(dir)
-        if os.path.isdir(path):
-            if path[-1] != '/':
-                path += '/'
-            path = path + ".content"
+    makedirs(dir)
+    if os.path.isdir(path):
+        if path[-1] != '/':
+            path += '/'
+        path = path + ".content"
 
-        if getattr(text, 'read', _marker) is not _marker:
-            # it's a file
+    if metadata is not None:
+        mfile = ConfigParser.RawConfigParser()
+        mfile.add_section('metadata')
+        for key, value in metadata.items():
+            mfile.set('metadata', key, value)
+        with open(path + '.metadata', 'wb') as configfile:
+            mfile.write(configfile)
+            configfile.close()
 
-            # we might have already read this from the cache
-            fp = text
-            while getattr(fp, 'fp', None):
-                fp = fp.fp
-            # if we are already reading from cache skip it
-            if getattr(fp, 'name', _marker) == path:
-                res = text
-            else:
-                try:
-                    with open(path, "wb") as cachefile:
-                        content = fp.read()
-                        cachefile.write(content)
-                        cachefile.close()
-                        self.logger.debug("'%s' wrote %d bytes of data"%(path,len(content)))
-                    fp.close()
-                    res = OpenOnRead(path)
-                except IOError, msg:
-                    self.logger.error("copying file to cache %s"%path)
+    if type(text) == type(u''):
+        text = text.encode('utf8')
+    if text is None:
+        if logger:
+            logger.debug("None in contents %s", str(path))
+        return
+
+    if getattr(text, 'read', _marker) is not _marker:
+        # it's a file
+
+        # we might have already read this from the cache
+        fp = text
+        while getattr(fp, 'fp', None):
+            fp = fp.fp
+        # if we are already reading from cache skip it
+        if getattr(fp, 'name', _marker) == path:
+            res = text
         else:
             try:
-                f = open(path, "wb")
-                f.write(text)
-                self.logger.debug("'%s' wrote %d bytes of text"%(path,len(text)))
-            except:
+                with open(path, "wb") as cachefile:
+                    content = fp.read()
+                    cachefile.write(content)
+                    cachefile.close()
+                    if logger:
+                        logger.debug("'%s' wrote %d bytes of data"%(path,len(content)))
+                fp.close()
+                res = OpenOnRead(path)
+            except IOError, msg:
+                if logger:
+                    logger.error("copying file to cache %s"%path)
+    else:
+        try:
+            f = open(path, "wb")
+            f.write(text)
+            if logger:
+                logger.debug("'%s' wrote %d bytes of text"%(path,len(text)))
+        except:
+            if logger:
+                logger.error("writing text to cache %s"%path)
+        finally:
+            f.close()
+        res = text
 
-                self.logger.error("writing text to cache %s"%path)
-            finally:
-                f.close()
-            res = text
-        if metadata is not None:
-            mfile = ConfigParser.RawConfigParser()
-            mfile.add_section('metadata')
-            for key, value in metadata.items():
-                mfile.set('metadata', key, value)
-            with open(path + '.metadata', 'wb') as configfile:
-                mfile.write(configfile)
-                configfile.close()
+    return res
 
-        return res
-
-    def savefilename(self, path):
-        #type, rest = urllib.splittype(url)
-        #host, path = urllib.splithost(rest)
-        #path = path.lstrip("/")
-        #user, host = urllib.splituser(host)
-        #host, port = urllib.splitnport(host)
-        #host = host.lower()
-        if not path or path[-1] == "/":
-            path = path + "index.html"
-        if os.sep != "/":
-            path = os.sep.join(path.split("/"))
-            if os.name == "mac":
-                path = os.sep + path
-        path = os.path.join(path)
-        return path
+def savefilename(path):
+    #type, rest = urllib.splittype(url)
+    #host, path = urllib.splithost(rest)
+    #path = path.lstrip("/")
+    #user, host = urllib.splituser(host)
+    #host, port = urllib.splitnport(host)
+    #host = host.lower()
+    if not path or path[-1] == "/":
+        path = path + "index.html"
+    if os.sep != "/":
+        path = os.sep.join(path.split("/"))
+        if os.name == "mac":
+            path = os.sep + path
+    path = os.path.join(path)
+    return path
 
 
 def makedirs(dir):
@@ -224,6 +232,7 @@ class CachingURLopener(urllib.FancyURLopener):
     def __init__(*args, **vargs):
         self = args[0]
         self.cache = vargs.get('cache',None)
+        self.read_only = vargs.get('read_only', False)
         self.site_url = vargs.get('site_url',None)
         apply(urllib.FancyURLopener.__init__, args)
         self.addheaders = [
@@ -239,18 +248,25 @@ class CachingURLopener(urllib.FancyURLopener):
             #if not url.startswith('file:'):
             #    url = 'file:'+ url
             try:
-                f = self.open_local_file(url)
+                f = self.open_local_file(url, old_url=old_url)
             except (IOError), msg:
-                return urllib.FancyURLopener.open(self, old_url, data)
+                fp = urllib.FancyURLopener.open(self, old_url, data)
+                if not self.read_only:
+                    #base = urllib.url2pathname(self.output.strip('/'))
+                    #path = os.path.join(base, urllib.url2pathname(old_url))
+                    metadata = fp.info().dict
+                    return savefile(fp, url, metadata)
+                else:
+                    return fp
 
             newurl = f.geturl()
-            if newurl[-1] == '/':
-                # it's a directory, we want to get th real one
-                # can happen if subitem is requested first
-                return urllib.FancyURLopener.open(self, old_url, data)
+#            if newurl[-1] == '/':
+#                # it's a directory, we want to get th real one
+#                # can happen if subitem is requested first
+#                return urllib.FancyURLopener.open(self, old_url, data)
             newurl = newurl.lstrip('file:')
-            newurl = newurl.rstrip('/')
-            old_url = old_url.rstrip('/')
+#            newurl = newurl.rstrip('/')
+#            old_url = old_url.rstrip('/')
             #we need to check if there was a redirection in cache
             newpath = newurl[len(cache):]
             oldpath = old_url[len(self.site_url):]
@@ -267,7 +283,7 @@ class CachingURLopener(urllib.FancyURLopener):
     def http_error_401(self, url, fp, errcode, errmsg, headers):
         return None
 
-    def open_local_file(self, url):
+    def open_local_file(self, url, old_url):
         """ Override base urlopener method in order to read our custom metadata
         """
         #scheme,netloc,path,parameters,query,fragment = urlparse.urlparse(url)
@@ -305,6 +321,11 @@ class CachingURLopener(urllib.FancyURLopener):
             headers = mimetools.Message(StringIO(
                 'Content-Type: %s\nContent-Length: %d\nLast-modified: %s\n' %
                 (mtype or 'text/plain', size, modified)))
+        if 'location' in headers or 'Location' in headers:
+            # it's a redirect.
+            fp = StringIO("dummy content")
+            return self.http_error_302(old_url, fp, 302, "Redirected via cache", headers, None)
+
         if not host:
             urlfile = file
             if file[:1] == '/':
