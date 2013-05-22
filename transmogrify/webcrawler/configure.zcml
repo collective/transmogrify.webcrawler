@@ -15,4 +15,7 @@
     <utility component=".staticcreator.StaticCreatorSection"
 		     name="transmogrify.webcrawler.cache" />
 
+    <utility component=".itemcache.CacheItems"
+		     name="transmogrify.webcrawler.itemcache" />
+
 </configure>

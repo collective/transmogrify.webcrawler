@@ -255,7 +255,9 @@ class CachingURLopener(urllib.FancyURLopener):
                     #base = urllib.url2pathname(self.output.strip('/'))
                     #path = os.path.join(base, urllib.url2pathname(old_url))
                     metadata = fp.info().dict
-                    return savefile(fp, url, metadata)
+                    return urllib.addinfourl(savefile(fp, url, metadata),
+                              fp.headers, old_url)
+                    return
                 else:
                     return fp
 
@@ -307,7 +309,7 @@ class CachingURLopener(urllib.FancyURLopener):
 
         # add any saved metadata
         mfile = ConfigParser.ConfigParser()
-        mfile.read(path+'.metadata')
+        mfile.read(localname+'.metadata')
         if mfile.has_section('metadata'):
             headers = dict(mfile.items('metadata'))
         else:
