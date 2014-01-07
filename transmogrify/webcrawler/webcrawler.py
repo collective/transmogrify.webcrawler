@@ -121,6 +121,9 @@ Options:
 :ignore-robots:
  - if set, will ignore the robots.txt directives and crawl everything
 
+:post-only:
+ - if 'true' any url with a query string will submit with a POST instead of a GET
+
 WebCrawler will emit items like ::
 
  item = dict(_site_url = "Original site_url used",
@@ -167,6 +170,7 @@ class WebCrawler(object):
         self.starts    = [u for u in options.get('start-urls', '').strip().split() if u]
         self.max = options.get('max',None)
         self.cache = options.get('cache', None)
+        self.postonly = options.get('post-only', 'false').lower() in ["true","yes"]
         self.context = transmogrifier.context
         #self.alias_bases  = [a for a in options.get('alias_bases', '').split() if a]
         # make sure we end with a /
@@ -206,6 +210,7 @@ class WebCrawler(object):
                          verbose    = self.verbose,
                          maxpage    = self.maxpage,
                          nonames    = self.nonames)
+        self.checker.postonly = self.postonly
         self.checker.ignore_robots = options.get('ignore_robots', "false").lower() in ['true','on']
 
         self.checker.resetRun()
@@ -238,7 +243,7 @@ class WebCrawler(object):
             del urls[1:]
             for url,part in urls:
                 ignored = False
-                for pat,patstr in self.ignore_re:
+                for pat, patstr in self.ignore_re:
                     if pat and pat.search(url):
                         ignored = True
                         self.logger.debug("Ignoring: %s due to '%s'" % (str(url), patstr))
@@ -388,8 +393,14 @@ class MyChecker(Checker):
 #                url = realbase+path
 #                break
 
+        if self.postonly and '?' in url:
+            parts = urlparse.urlparse(url)
+            url = urlparse.urlunparse(parts[:4]+('',''))
+            data = parts.query
+        else:
+            data = None
         try:
-            return self.urlopener.open(old_url)
+            return self.urlopener.open(old_url, data=data)
         except (OSError, IOError), msg:
             msg = self.sanitize(msg)
             self.note(0, "Error %s", msg)

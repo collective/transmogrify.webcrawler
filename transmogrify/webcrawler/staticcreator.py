@@ -244,6 +244,8 @@ class CachingURLopener(urllib.FancyURLopener):
         old_url = url
         if cache and not url.startswith('file://'):
             cache = cache.rstrip('/')+'/'
+            if data:
+                url = '?'.join([url,data])
             url = cache + url[len(self.site_url):]
             #if not url.startswith('file:'):
             #    url = 'file:'+ url
