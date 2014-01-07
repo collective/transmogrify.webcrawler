@@ -156,7 +156,7 @@ class WebCrawler(object):
             self.feedback = None
         #self.open_url = MyURLopener().open
         self.options = options
-        self.ignore_re = [re.compile(pat.strip()) for pat in options.get("ignore",'').split('\n') if pat]
+        self.ignore_re = [(re.compile(pat.strip()),pat) for pat in options.get("ignore",'').split('\n') if pat]
         self.logger = logging.getLogger(name)
 
         self.checkext  = options.get('checkext', CHECKEXT)
@@ -237,16 +237,18 @@ class WebCrawler(object):
             #urls.sort()
             del urls[1:]
             for url,part in urls:
-                if 'what-makes-it-tick' in url:
-                    import pdb; pdb.set_trace();
-
-                if not url.startswith(self.site_url[:-1]):
+                ignored = False
+                for pat,patstr in self.ignore_re:
+                    if pat and pat.search(url):
+                        ignored = True
+                        self.logger.debug("Ignoring: %s due to '%s'" % (str(url), patstr))
+                        break
+                if ignored:
+                    self.checker.markdone((url,part))
+                    yield dict(_bad_url = url)
+                elif not url.startswith(self.site_url[:-1]):
                     self.checker.markdone((url,part))
                     self.logger.debug("External: %s" %str(url))
-                    yield dict(_bad_url = url)
-                elif [pat for pat in self.ignore_re if pat and pat.search(url)]:
-                    self.checker.markdone((url,part))
-                    self.logger.debug("Ignoring: %s" %str(url))
                     yield dict(_bad_url = url)
                 else:
                     base = self.site_url
