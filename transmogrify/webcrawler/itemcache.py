@@ -33,9 +33,10 @@ counter = 0
 class CacheItem(OOBTree.OOBTree):
 
     def __getitem__(self, key):
+        # during the middle of processing we want to try and upload objects back to storage
         global counter
-        if counter % 100 == 0:
-            transaction.commit()
+        if counter % 500 == 0:
+            transaction.savepoint(True)
         counter += 1
         return super(CacheItem, self).__getitem__(key)
 
@@ -65,6 +66,6 @@ class CacheItems(object):
                 self.root[i] = cached_item
                 i += 1
                 yield cached_item
-            except:
+            except Exception, e:
                 # our OpenOnRead cache can't be pickled so we'll just leave those out
                 yield item
