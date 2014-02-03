@@ -100,6 +100,9 @@ Options:
 :ignore:
  - list of regex for urls to not crawl
 
+ :whitelist:
+ - list of regex for urls. If enabled only urls that match these expressions will be crawled
+
 :cache:
  - local directory to read crawled items from instead of accessing the site directly
 
@@ -144,6 +147,11 @@ VERBOSE = 0         # Verbosity level (0-3)
 MAXPAGE = 150000    # Ignore files bigger than this
 NONAMES = 0         # Force name anchor checking
 
+def match_first(pat_list, text):
+    """return the first pattern to match the text"""
+    for pat in pat_list:
+        if pat and pat.search(text):
+            return pat.pattern
 
 
 
@@ -159,7 +167,8 @@ class WebCrawler(object):
             self.feedback = None
         #self.open_url = MyURLopener().open
         self.options = options
-        self.ignore_re = [(re.compile(pat.strip()),pat) for pat in options.get("ignore",'').split('\n') if pat]
+        self.ignore_re = [re.compile(pat.strip()) for pat in options.get("ignore",'').split('\n') if pat]
+        self.whitelist_re = [re.compile(pat.strip()) for pat in options.get("whitelist",'').split('\n') if pat]
         self.logger = logging.getLogger(name)
 
         self.checkext  = options.get('checkext', CHECKEXT)
@@ -242,14 +251,15 @@ class WebCrawler(object):
             #urls.sort()
             del urls[1:]
             for url,part in urls:
-                ignored = False
-                for pat, patstr in self.ignore_re:
-                    if pat and pat.search(url):
-                        ignored = True
-                        self.logger.debug("Ignoring: %s due to '%s'" % (str(url), patstr))
-                        break
-                if ignored:
+                ignore_pat = match_first(self.ignore_re, url)
+                whitelist_pat = match_first(self.whitelist_re, url)
+                if ignore_pat:
+                    self.logger.debug("Ignoring: %s due to '%s'" % (str(url), patstr))
                     self.checker.markdone((url,part))
+                    yield dict(_bad_url = url)
+                elif len(self.whitelist_re) > 0 and not whitelist_pat:
+                    self.checker.markdone((url,part))
+                    self.logger.debug("not in whitelist: %s" %str(url))
                     yield dict(_bad_url = url)
                 elif not url.startswith(self.site_url[:-1]):
                     self.checker.markdone((url,part))
