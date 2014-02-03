@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import os
 import re
 
-version = '1.2.1'
+version = '1.2.2'
 
 
 def docstring(file):

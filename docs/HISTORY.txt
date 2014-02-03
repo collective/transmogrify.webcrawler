@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.2.2 (unreleased)
+------------------
+
+- support whitelisting of urls [djay]
+- post-only option to turn GET urls to POST [djay]
+- experimental ZODB cache for items in order to handle larger crawls [djay]
+- support python 2.6 [djay]
+- clean up code and improved logging [djay]
+
 1.2.1 (2012-1-10)
 -----------------
 
