@@ -24,6 +24,11 @@ except ImportError:
     # python 2.6 or earlier, use backport
     from ordereddict import OrderedDict
 
+
+import requests
+from cachecontrol import CacheControl
+
+
 """
 transmogrify.webcrawler
 =======================
@@ -181,7 +186,7 @@ class WebCrawler(object):
         self.cache = options.get('cache', None)
         self.postonly = options.get('post-only', 'false').lower() in ["true","yes"]
         self.context = transmogrifier.context
-        #self.alias_bases  = [a for a in options.get('alias_bases', '').split() if a]
+        self.alias_bases  = [a for a in options.get('alias_bases', '').split() if a]
         # make sure we end with a /
         if self.site_url[-1] != '/':
             self.site_url += '/'
@@ -244,6 +249,7 @@ class WebCrawler(object):
         #    self.checker.addroot(root, add_to_do = 0)
         #    self.checker.sortorder[root] = 0
 
+        crawl_count = 0
         while self.checker.todo:
             if self.max and len(self.checker.done) == int(self.max):
                 break
@@ -253,84 +259,90 @@ class WebCrawler(object):
             for url,part in urls:
                 ignore_pat = match_first(self.ignore_re, url)
                 whitelist_pat = match_first(self.whitelist_re, url)
-                if ignore_pat:
-                    self.logger.debug("Ignoring: %s due to '%s'" % (str(url), patstr))
+                if crawl_count > 9:
+                    import pdb; pdb.set_trace()
+                if not url.startswith(self.site_url[:-1]):
+                    self.checker.markdone((url,part))
+                    self.logger.debug("External: %s" %str(url))
+                    yield dict(_bad_url = url)
+                    continue
+                elif ignore_pat:
+                    self.logger.debug("Ignoring: %s due to '%s'" % (str(url), ignore_pat))
                     self.checker.markdone((url,part))
                     yield dict(_bad_url = url)
+                    continue
                 elif len(self.whitelist_re) > 0 and not whitelist_pat:
                     self.checker.markdone((url,part))
                     self.logger.debug("not in whitelist: %s" %str(url))
                     yield dict(_bad_url = url)
-                elif not url.startswith(self.site_url[:-1]):
-                    self.checker.markdone((url,part))
-                    self.logger.debug("External: %s" %str(url))
-                    yield dict(_bad_url = url)
-                else:
-                    base = self.site_url
-                    self.checker.dopage((url,part))
-                    page = self.checker.name_table.get(url) #have to usse unredirected
-                    origin = url
-                    url = self.checker.redirected.get(url,url)
-                    names = self.checker.link_names.get(url,[])
-                    path = url[len(self.site_url):]
-                    info = self.checker.infos.get(url)
-                    file = self.checker.files.get(url)
-                    sortorder = self.checker.sortorder.get(origin,0)
-                    text = page and page.html() or file
+                    continue
 
-                    #clean url. if trailing slash html has already had links rewritten
-                    path = '/'.join([p for p in path.split('/') if p])
-                    # unquote the url as plone id does not support % or + but do support space
-                    path = urllib.unquote_plus(path)
+                crawl_count += 1
+                base = self.site_url
+                self.checker.dopage((url,part))
+                page = self.checker.name_table.get(url) #have to usse unredirected
+                origin = url
+                url = self.checker.redirected.get(url,url)
+                names = self.checker.link_names.get(url,[])
+                path = url[len(self.site_url):]
+                info = self.checker.infos.get(url)
+                file = self.checker.files.get(url)
+                sortorder = self.checker.sortorder.get(origin,0)
+                text = page and page.html() or file
+
+                #clean url. if trailing slash html has already had links rewritten
+                path = '/'.join([p for p in path.split('/') if p])
+                # unquote the url as plone id does not support % or + but do support space
+                path = urllib.unquote_plus(path)
 
 
-                    if info and text:
-                        if origin != url:
-                            # we've been redirected. emit a redir item so we can put in place redirect
-                            orig_path = origin[len(self.site_url):]
-                            orig_path = '/'.join([p for p in orig_path.split('/') if p])
-                            #import pdb; pdb.set_trace()
-                            if orig_path:
-                                # unquote the url as plone id does not support % or + but do support space
-                                orig_path = urllib.unquote_plus(orig_path)
-                                yield(dict(_path = orig_path,
-                                        _site_url = base,
-                                        _sortorder = sortorder,
-                                        _orig_path = orig_path,
-                                        _redir = path))
-                        else:
-                            orig_path = None
+                if info and text:
+                    if origin != url:
+                        # we've been redirected. emit a redir item so we can put in place redirect
+                        orig_path = origin[len(self.site_url):]
+                        orig_path = '/'.join([p for p in orig_path.split('/') if p])
+                        #import pdb; pdb.set_trace()
+                        if orig_path:
+                            # unquote the url as plone id does not support % or + but do support space
+                            orig_path = urllib.unquote_plus(orig_path)
+                            yield(dict(_path = orig_path,
+                                    _site_url = base,
+                                    _sortorder = sortorder,
+                                    _orig_path = orig_path,
+                                    _redir = path))
+                    else:
+                        orig_path = None
 
 
-                        item = dict(_path         = path,
-                                    _site_url     = base,
-                                    _backlinks    = names,
-                                    _sortorder    = sortorder,
-                                    _content      = text,
-                                    _content_info = info,
-                                    _orig_path    = path)
+                    item = dict(_path         = path,
+                                _site_url     = base,
+                                _backlinks    = names,
+                                _sortorder    = sortorder,
+                                _content      = text,
+                                _content_info = info,
+                                _orig_path    = path)
 # don't rewrite it we have a link object
 #                        if orig_path is not None:
 #                            # we got redirected, let's rewrite the links
 #                            item['_origin'] = orig_path
 
-                        if page and page.html():
-                            item['_html'] = page.text #so cache save no cleaned version
-                        if self.feedback:
-                            self.feedback.success('webcrawler',msg)
-                        ctype = item.get('_content_info',{}).get('content-type','')
-                        csize = item.get('_content_info',{}).get('content-length',0)
-                        date = item.get('_content_info',{}).get('date','')
-                        self.logger.info("Crawled: %s (%d links, size=%s, %s %s)" % (
-                            str(url),
-                            len(item.get('_backlinks',[])),
-                            csize,
-                            ctype,
-                            date))
-                        yield item
-                    else:
-                        self.logger.debug("Error: %s" %str(url))
-                        yield dict(_bad_url = origin)
+                    if page and page.html():
+                        item['_html'] = page.text #so cache save no cleaned version
+                    if self.feedback:
+                        self.feedback.success('webcrawler',msg)
+                    ctype = item.get('_content_info',{}).get('content-type','')
+                    csize = item.get('_content_info',{}).get('content-length',0)
+                    date = item.get('_content_info',{}).get('date','')
+                    self.logger.info("Crawled: %s (%d links, size=%s, %s %s)" % (
+                        str(url),
+                        len(item.get('_backlinks',[])),
+                        csize,
+                        ctype,
+                        date))
+                    yield item
+                else:
+                    self.logger.debug("Error: %s" %str(url))
+                    yield dict(_bad_url = origin)
 
 
 
@@ -353,7 +365,9 @@ class MyChecker(Checker):
         self.sortorder = {}
         self.counter = 0
         Checker.reset(self)
-        self.urlopener = CachingURLopener(cache = self.cache, site_url=self.site_url)
+        #self.urlopener = CachingURLopener(cache = self.cache, site_url=self.site_url)
+        sess = requests.session()
+        self.urlopener = CacheControl(sess)
 
 
     def resetRun(self):
@@ -371,10 +385,26 @@ class MyChecker(Checker):
 
         f = self.openpage(url_pair)
         if f:
-            url = f.geturl()
+            try:
+                url = f.geturl()
+                self.infos[url] = info = f.info()
+            except:
+                url = f.url
+                #HACK due to lack of headers.has_key
+                self.infos[url] = info = dict(**f.headers)
+                class MockFile(object):
+                    def __init__(self, response):
+                        self.response = response
+                    def read(self):
+                        return self.response.content
+                    def close(self):
+                        self.response.close()
+                    def info(self):
+                        return dict(**self.response.headers)
+                f = MockFile(f)
+
             if url != oldurl:
                 self.redirected[oldurl] = url
-            self.infos[url] = info = f.info()
             #Incement counter to get ordering of links within pages over whole site
             if not self.checkforhtml(info, url):
                 #self.files[url] = f.read()
@@ -410,7 +440,13 @@ class MyChecker(Checker):
         else:
             data = None
         try:
-            return self.urlopener.open(old_url, data=data)
+            #return self.urlopener.open(old_url, data=data)
+            if data:
+                data = dict(urlparse.parse_qsl(data))
+                return self.urlopener.post(old_url, data=data, stream=True)
+            else:
+                return self.urlopener.get(old_url, stream=True)
+
         except (OSError, IOError), msg:
             msg = self.sanitize(msg)
             self.note(0, "Error %s", msg)

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import os
 import re
 
-version = '1.2.2'
+version = '1.3'
 
 
 def docstring(file):
@@ -15,6 +15,8 @@ install_requires=[
     'lxml',
     'beautifulsoup4',
     'collective.transmogrifier',
+    'requests',
+    'cachecontrol'
     ]
 
 try:
