@@ -28,9 +28,6 @@ except ImportError:
 
 
 import requests
-from cachecontrol import CacheControl
-from cachecontrol.caches import FileCache
-
 from requests_cache.core import CachedSession
 
 
