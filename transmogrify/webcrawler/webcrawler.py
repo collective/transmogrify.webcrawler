@@ -1,4 +1,6 @@
 from _socket import socket
+from copy import deepcopy
+from requests_cache.backends import BaseCache
 from transmogrify.webcrawler.staticcreator import OpenOnRead
 from zope.interface import implements
 from zope.interface import classProvides
@@ -27,6 +29,9 @@ except ImportError:
 
 import requests
 from cachecontrol import CacheControl
+from cachecontrol.caches import FileCache
+
+from requests_cache.core import CachedSession
 
 
 """
@@ -193,6 +198,9 @@ class WebCrawler(object):
         if os.path.exists(self.site_url):
             self.site_url = 'file://'+urllib.pathname2url(self.site_url)
 
+        self.domains_re = [self.site_url[:-1]] + self.alias_bases
+        self.domains_re = [re.compile("^%s"%d) for d in self.domains_re]
+
     def __iter__(self):
         for item in self.previous:
             yield item
@@ -229,7 +237,8 @@ class WebCrawler(object):
 
         self.checker.resetRun()
         #must take off the '/' for the crawler to work
-        self.checker.addroot(self.site_url[:-1])
+        for root in [self.site_url[:-1]] + self.alias_bases:
+            self.checker.addroot(root)
         self.checker.sortorder[self.site_url] = 0
 
         # make sure start links go first
@@ -251,17 +260,18 @@ class WebCrawler(object):
 
         crawl_count = 0
         while self.checker.todo:
-            if self.max and len(self.checker.done) == int(self.max):
-                break
+            #if self.max and len(self.checker.done) == int(self.max):
+            #    break
             urls = self.checker.todo.keys()
             #urls.sort()
             del urls[1:]
             for url,part in urls:
+                if self.max and crawl_count > self.max:
+                    break
                 ignore_pat = match_first(self.ignore_re, url)
                 whitelist_pat = match_first(self.whitelist_re, url)
-                if crawl_count > 9:
-                    import pdb; pdb.set_trace()
-                if not url.startswith(self.site_url[:-1]):
+                internal_pat = match_first(self.domains_re, url)
+                if not internal_pat:
                     self.checker.markdone((url,part))
                     self.logger.debug("External: %s" %str(url))
                     yield dict(_bad_url = url)
@@ -278,13 +288,21 @@ class WebCrawler(object):
                     continue
 
                 crawl_count += 1
-                base = self.site_url
+
                 self.checker.dopage((url,part))
                 page = self.checker.name_table.get(url) #have to usse unredirected
                 origin = url
                 url = self.checker.redirected.get(url,url)
                 names = self.checker.link_names.get(url,[])
-                path = url[len(self.site_url):]
+                # handle if url is from site_aliases
+                base = self.site_url
+                for abase in [self.site_url] + self.alias_bases:
+                    if url.startswith(abase):
+                        if abase[-1] != '/':
+                            abase += "/"
+                        base = abase
+                        break
+                path = url[len(base):]
                 info = self.checker.infos.get(url)
                 file = self.checker.files.get(url)
                 sortorder = self.checker.sortorder.get(origin,0)
@@ -299,7 +317,7 @@ class WebCrawler(object):
                 if info and text:
                     if origin != url:
                         # we've been redirected. emit a redir item so we can put in place redirect
-                        orig_path = origin[len(self.site_url):]
+                        orig_path = origin[len(base):]
                         orig_path = '/'.join([p for p in orig_path.split('/') if p])
                         #import pdb; pdb.set_trace()
                         if orig_path:
@@ -366,8 +384,14 @@ class MyChecker(Checker):
         self.counter = 0
         Checker.reset(self)
         #self.urlopener = CachingURLopener(cache = self.cache, site_url=self.site_url)
+        #TODO we need a way to overwrite the cache headers to ensure somethings always cache
         sess = requests.session()
-        self.urlopener = CacheControl(sess)
+        #self.urlopener = CacheControl(sess, cache=FileCache('.web_cache', forever=True))
+        #self.urlopener = sess
+        #TODO a way to determine if we should cache POST requests, or what not to cache.
+        self.urlopener = CachedSession('funnelweb_cache', backend=ZODBCache(),
+                                       allowable_methods=["GET"])
+
 
 
     def resetRun(self):
@@ -398,7 +422,11 @@ class MyChecker(Checker):
                     def read(self):
                         return self.response.content
                     def close(self):
-                        self.response.close()
+                        try:
+                            self.response.close()
+                        except:
+                            pass
+                            # might be due to strange caching errors
                     def info(self):
                         return dict(**self.response.headers)
                 f = MockFile(f)
@@ -443,13 +471,15 @@ class MyChecker(Checker):
             #return self.urlopener.open(old_url, data=data)
             if data:
                 data = dict(urlparse.parse_qsl(data))
-                return self.urlopener.post(old_url, data=data, stream=True)
+                return self.urlopener.post(old_url, data=data, stream=False)
             else:
-                return self.urlopener.get(old_url, stream=True)
+                return self.urlopener.get(old_url, stream=False)
 
         except (OSError, IOError), msg:
             msg = self.sanitize(msg)
             self.note(0, "Error %s", msg)
+            #self.logger.debug("Error %s " %( url, msg) )
+
             if self.verbose > 0:
                 self.show(" HREF ", url, "  from", self.todo[url_pair])
             self.setbad(old_pair, msg)
@@ -636,3 +666,62 @@ class LXMLPage:
         return text
 
 
+from ZODB.FileStorage import FileStorage
+from ZODB.DB import DB
+import transaction
+
+class ZODBCache(BaseCache):
+    """ sqlite cache backend.
+
+    Reading is fast, saving is a bit slower. It can store big amount of data
+    with low memory usage.
+    """
+    def __init__(self, location='cache'):
+        """
+        :param location: database filename prefix (default: ``'cache'``))
+        """
+        super(ZODBCache, self).__init__()
+        storage = FileStorage(location)
+        from ZODB.DB import DB
+        db = DB(storage)
+        self.connection = db.open()
+        root = self.connection.root()
+        if 'responses' not in root:
+            from BTrees.OOBTree import OOBTree
+            root['responses'] = OOBTree()
+        if 'keys_map' not in root:
+            from BTrees.OOBTree import OOBTree
+            root['keys_map'] = OOBTree()
+        self.responses = root['responses']
+        self.keys_map = root['keys_map']
+
+    def save_response(self, key, response):
+        #due to ZODB transparent nature we have to copy it to ensure later changes
+        # don't get recorded
+        super(ZODBCache, self).save_response(key, response)
+        transaction.commit()
+
+    def add_key_mapping(self, new_key, key_to_response):
+        super(ZODBCache, self).save_response(new_key, key_to_response)
+        transaction.commit()
+
+
+    def delete(self, key):
+        super(ZODBCache, self).delete(key)
+        transaction.commit()
+
+    def reduce_response(self, response):
+        """ Reduce response object to make it compatible with ``pickle``
+        """
+        result = super(ZODBCache, self).reduce_response(response)
+        # do we need to copy here to prevent ZODB bloat?
+        return result
+
+    def restore_response(self, response):
+        """ Restore response object after unpickling
+        """
+        #due to ZODB transparent nature we have to copy it to ensure later changes
+        # don't get recorded
+        response = deepcopy(response)
+        result = super(ZODBCache, self).restore_response(response)
+        return result

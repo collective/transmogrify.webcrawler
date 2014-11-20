@@ -16,7 +16,10 @@ install_requires=[
     'beautifulsoup4',
     'collective.transmogrifier',
     'requests',
-    'cachecontrol'
+    'cachecontrol',
+    'lockfile',
+    'requests_cache',
+    'pysqlite',
     ]
 
 try:
